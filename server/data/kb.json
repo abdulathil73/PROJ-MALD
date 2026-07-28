@@ -1,0 +1,32 @@
+[
+  {
+    "id": "kb1",
+    "title": "Godown Setup & Specifications",
+    "content": "Spice Route Trading Co. operates three distinct warehouses, each optimized for specific cargo types. Godown A: Specializes in dry, ventilated storage for spices (Cardamom, Turmeric, Black Pepper, Saffron). Temperature is kept at 20-25°C with low humidity (< 60%) to prevent mold. Godown B: Temperature-controlled room (10-15°C) with medium humidity for dry fruits (Almonds, Cashews, Pistachios, Walnuts) to prevent oil rancidity and insect infestation. Godown C: Cold storage unit (2-6°C) equipped with ethylene filtration for perishables (Mangoes, Pomegranates, Tomatoes, Onions) to retard ripening and preserve freshness.",
+    "tags": ["godown", "warehouse", "capacity", "temperature", "humidity", "refrigeration"]
+  },
+  {
+    "id": "kb2",
+    "title": "Perishable Storage & Ethylene Control",
+    "content": "Perishable goods like Mangoes, Pomegranates, Tomatoes, and Onions require strict temperature and gas monitoring. Mangoes and tomatoes release high amounts of ethylene gas, which accelerates ripening in other items. In Godown C, fresh mangoes must be stored in isolated chambers far from green vegetables. Cold chain storage at 4°C extends the shelf life of tomatoes to 7 days and mangoes to 10 days. Onions require dry ventilation (approx 12-14°C) rather than wet cold storage, and are stored in specialized bins with high airflow.",
+    "tags": ["perishable", "mango", "tomato", "onion", "ethylene", "cold chain", "shelf life"]
+  },
+  {
+    "id": "kb3",
+    "title": "Spice Export Regulations & Quality Grades",
+    "content": "Exporting spices from India to major markets like the EU, USA, and Gulf (Dubai) requires adhering to pesticide residue limits and aflatoxin testing. Quality grades: Cardamom is graded by capsule size (e.g., Bold 8mm, Medium 7mm) and green color intensity. Turmeric is graded by curcumin content (target > 3.5% for export). Saffron is graded by crocin concentration (Grade I, II, III). All export batches must obtain a phytosanitary certificate and a certificate of origin prior to port dispatch.",
+    "tags": ["spice", "export", "quality", "cardamom", "turmeric", "saffron", "certificates", "regulations"]
+  },
+  {
+    "id": "kb4",
+    "title": "Dry Fruits Handling & Rancidity Prevention",
+    "content": "Dry fruits such as Almonds, Cashews, Pistachios, and Walnuts are rich in unsaturated fatty acids. If exposed to temperatures above 25°C or direct sunlight, they undergo oxidation, leading to rancidity and bitter taste. Best practices: Store dry fruits in double-layered sacks or vacuum-sealed cases inside Godown B. Humidity must be maintained strictly between 50-55%. High humidity promotes Aspergillus mold, which produces toxic aflatoxins.",
+    "tags": ["dry fruit", "almond", "cashew", "pistachio", "rancidity", "humidity", "mold"]
+  },
+  {
+    "id": "kb5",
+    "title": "Logistics & Customs Clearances",
+    "content": "Our logistical pipeline connects regional supply centers (e.g., Kerala for spices, Kabul for almonds, Maharashtra for tomatoes) with global hubs. Exports go through maritime freight (JNPT Port) or air cargo (Mumbai Air Cargo). UAE (Dubai) customs clearance typically takes 24 hours under the CEPA agreement, requiring commercial invoice, packing list, and phytosanitary certificates. Shipments to Germany/EU undergo stringent border inspections for pesticide residues and heavy metals.",
+    "tags": ["logistics", "shipping", "customs", "dubai", "germany", "export", "air cargo", "sea freight"]
+  }
+]
