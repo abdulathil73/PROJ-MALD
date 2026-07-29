@@ -1424,10 +1424,218 @@ function DashboardPage({ products, entries, analytics, onRefresh }: { products: 
 
 // ─── Inventory Page ──────────────────────────────────────────────────────────
 
-function InventoryPage({ products, onAddProduct }: { products: Product[]; onAddProduct: (p: any) => Promise<boolean> }) {
+// ─── 360 Product Audit & History Modal ──────────────────────────────────────
+
+function ProductHistoryModal({
+  product,
+  entries = [],
+  isOpen,
+  onClose,
+}: {
+  product: Product | null;
+  entries?: StockEntry[];
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  if (!isOpen || !product) return null;
+
+  // Filter purchase entries containing this product (Where it came from & from whom)
+  const purchaseHistory = (entries || [])
+    .filter(e => e.type === "in")
+    .flatMap(e => {
+      const item = (e.items || []).find(it => it.productId === product.id || (it.name && it.name.toLowerCase() === product.name.toLowerCase()));
+      if (!item) return [];
+      return [{
+        entryId: e.id,
+        invoiceNo: e.invoiceNo || e.id.slice(0, 8),
+        date: e.date,
+        partner: e.partner || "Unknown Supplier",
+        qty: item.quantity,
+        rate: item.rate,
+        total: item.amount || (item.quantity * item.rate),
+        subType: e.subType || "purchase"
+      }];
+    });
+
+  // Filter sales entries containing this product (How & to whom it was sold)
+  const salesHistory = (entries || [])
+    .filter(e => e.type === "out")
+    .flatMap(e => {
+      const item = (e.items || []).find(it => it.productId === product.id || (it.name && it.name.toLowerCase() === product.name.toLowerCase()));
+      if (!item) return [];
+      return [{
+        entryId: e.id,
+        invoiceNo: e.invoiceNo || e.id.slice(0, 8),
+        date: e.date,
+        partner: e.partner || "Walk-in Customer",
+        qty: item.quantity,
+        rate: item.rate,
+        total: item.amount || (item.quantity * item.rate),
+        subType: e.subType || "sale"
+      }];
+    });
+
+  const totalBoughtQty = purchaseHistory.reduce((sum, h) => sum + (h.qty || 0), 0);
+  const totalSoldQty = salesHistory.reduce((sum, h) => sum + (h.qty || 0), 0);
+  const totalRevenueMvr = salesHistory.reduce((sum, h) => sum + (h.total || 0), 0);
+  const totalPurchaseCostMvr = purchaseHistory.reduce((sum, h) => sum + (h.total || 0), 0);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card text-card-foreground border-border p-6 font-mono space-y-5">
+        <DialogHeader className="border-b border-border pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-blue-500/10 border border-blue-500/20 text-blue-600 rounded-xl">
+                <BoxIcon size={24} />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold font-serif text-foreground">
+                  {product.name}
+                </DialogTitle>
+                <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-2 mt-0.5">
+                  <span className="px-2 py-0.5 bg-secondary rounded text-[10px] uppercase font-bold">{product.category}</span>
+                  <span>• Unit: <strong className="text-foreground">{product.unit}</strong></span>
+                  <span>• Buy: <strong className="text-muted-foreground">{fmt(product.buyPrice)}</strong></span>
+                  <span>• Sell: <strong className="text-emerald-600">{fmt(product.sellPrice)}</strong></span>
+                </div>
+              </div>
+            </div>
+            <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground rounded-lg">
+              <X size={18} />
+            </button>
+          </div>
+        </DialogHeader>
+
+        {/* 360 Audit Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="p-3 bg-secondary/30 border border-border rounded-xl">
+            <span className="text-[10px] text-muted-foreground uppercase font-bold block">Current Stock</span>
+            <span className="text-lg font-extrabold text-foreground">{product.stock} {product.unit}s</span>
+          </div>
+
+          <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+            <span className="text-[10px] text-blue-600 dark:text-blue-400 uppercase font-bold block">Total Purchased</span>
+            <span className="text-lg font-extrabold text-blue-600 dark:text-blue-400">{totalBoughtQty} {product.unit}s</span>
+            <span className="text-[10px] text-muted-foreground block">{fmt(totalPurchaseCostMvr)}</span>
+          </div>
+
+          <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-bold block">Total Sold</span>
+            <span className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">{totalSoldQty} {product.unit}s</span>
+            <span className="text-[10px] text-emerald-600 block">{fmt(totalRevenueMvr)}</span>
+          </div>
+
+          <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl">
+            <span className="text-[10px] text-purple-600 dark:text-purple-400 uppercase font-bold block">Unit Profit Margin</span>
+            <span className="text-lg font-extrabold text-purple-600 dark:text-purple-400">
+              {fmt(product.sellPrice - product.buyPrice)}
+            </span>
+          </div>
+        </div>
+
+        {/* Purchase History (Where it came from & from whom) */}
+        <div className="space-y-2">
+          <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <ArrowDownToLine size={14} className="text-blue-600" />
+            <span>Purchase History (Where it came from & from whom)</span>
+          </h4>
+
+          {purchaseHistory.length === 0 ? (
+            <div className="p-4 border border-dashed border-border rounded-xl text-center text-muted-foreground text-xs font-mono">
+              No purchase bills recorded for this product yet.
+            </div>
+          ) : (
+            <div className="border border-border rounded-xl overflow-hidden text-xs">
+              <table className="w-full text-left">
+                <thead className="bg-secondary/40 border-b border-border text-[10px] uppercase text-muted-foreground font-bold">
+                  <tr>
+                    <th className="p-2.5">Date</th>
+                    <th className="p-2.5">Bill / GRN #</th>
+                    <th className="p-2.5">Supplier / Partner</th>
+                    <th className="p-2.5 text-right">Qty Received</th>
+                    <th className="p-2.5 text-right">Purchase Price</th>
+                    <th className="p-2.5 text-right">Total (MVR)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {purchaseHistory.map((h, idx) => (
+                    <tr key={idx} className="hover:bg-secondary/20 transition-colors">
+                      <td className="p-2.5 text-muted-foreground">{new Date(h.date).toLocaleDateString()}</td>
+                      <td className="p-2.5 font-bold text-foreground">{h.invoiceNo}</td>
+                      <td className="p-2.5 font-semibold text-blue-600 dark:text-blue-400">{h.partner}</td>
+                      <td className="p-2.5 text-right font-bold">{h.qty} {product.unit}</td>
+                      <td className="p-2.5 text-right text-muted-foreground">{fmt(h.rate)}</td>
+                      <td className="p-2.5 text-right font-extrabold text-foreground">{fmt(h.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Sales History (How & to whom it was sold) */}
+        <div className="space-y-2 pt-2">
+          <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <ArrowUpFromLine size={14} className="text-emerald-600" />
+            <span>Sales History (How & to whom it was sold)</span>
+          </h4>
+
+          {salesHistory.length === 0 ? (
+            <div className="p-4 border border-dashed border-border rounded-xl text-center text-muted-foreground text-xs font-mono">
+              No sales invoices recorded for this product yet.
+            </div>
+          ) : (
+            <div className="border border-border rounded-xl overflow-hidden text-xs">
+              <table className="w-full text-left">
+                <thead className="bg-secondary/40 border-b border-border text-[10px] uppercase text-muted-foreground font-bold">
+                  <tr>
+                    <th className="p-2.5">Date</th>
+                    <th className="p-2.5">Invoice #</th>
+                    <th className="p-2.5">Customer Name</th>
+                    <th className="p-2.5 text-right">Qty Sold</th>
+                    <th className="p-2.5 text-right">Sale Price</th>
+                    <th className="p-2.5 text-right">Total Revenue</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {salesHistory.map((h, idx) => (
+                    <tr key={idx} className="hover:bg-secondary/20 transition-colors">
+                      <td className="p-2.5 text-muted-foreground">{new Date(h.date).toLocaleDateString()}</td>
+                      <td className="p-2.5 font-bold text-foreground">{h.invoiceNo}</td>
+                      <td className="p-2.5 font-semibold text-emerald-600 dark:text-emerald-400">{h.partner}</td>
+                      <td className="p-2.5 text-right font-bold">{h.qty} {product.unit}</td>
+                      <td className="p-2.5 text-right text-muted-foreground">{fmt(h.rate)}</td>
+                      <td className="p-2.5 text-right font-extrabold text-emerald-600">{fmt(h.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Inventory Page ──────────────────────────────────────────────────────────
+
+function InventoryPage({
+  products = [],
+  entries = [],
+  onAddProduct,
+}: {
+  products: Product[];
+  entries?: StockEntry[];
+  onAddProduct: (p: any) => Promise<boolean>;
+}) {
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState<Category | "All">("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [selectedProductForHistory, setSelectedProductForHistory] = useState<Product | null>(null);
 
   // Global Ctrl + C hotkey listener
   useEffect(() => {
@@ -1451,6 +1659,28 @@ function InventoryPage({ products, onAddProduct }: { products: Product[]; onAddP
       .sort((a, b) => a.stock - b.stock);
   }, [products, search, filterCat]);
 
+  // Reset selectedIndex to 0 whenever search or category filter changes
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [search, filterCat]);
+
+  // Handle Keyboard Arrow Navigation & Enter Selection
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex(prev => Math.min(filtered.length - 1, prev + 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex(prev => Math.max(0, prev - 1));
+    } else if (e.key === "Enter" && filtered.length > 0) {
+      e.preventDefault();
+      const prod = filtered[selectedIndex] || filtered[0];
+      if (prod) {
+        setSelectedProductForHistory(prod);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
@@ -1472,8 +1702,9 @@ function InventoryPage({ products, onAddProduct }: { products: Product[]; onAddP
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search products..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-input-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            onKeyDown={handleKeyDown}
+            placeholder="Search products (Use ↑ ↓ arrow keys to select, Press Enter for history)..."
+            className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-input-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
           />
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -1503,50 +1734,93 @@ function InventoryPage({ products, onAddProduct }: { products: Product[]; onAddP
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p, i) => {
-                return (
-                  <tr key={p.id} className={`border-b border-border last:border-0 hover:bg-secondary/30 transition-colors ${i % 2 === 0 ? "" : "bg-secondary/10"}`}>
-                    <td className="px-4 py-3">
-                      <div className="font-semibold text-sm text-foreground">{p.name}</div>
-                      <div className="text-[10px] text-muted-foreground font-mono">per {p.unit}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge label={p.category} color={CATEGORY_COLORS[p.category]} />
-                    </td>
-                    <td className="px-4 py-3">
-                      {p.isPerishable ? (
-                        <span className="text-[10px] font-mono text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">
-                          Yes ({p.expiryDays}d)
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-mono text-muted-foreground">No</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <span className={`font-mono text-sm font-semibold ${p.stock === 0 ? "text-muted-foreground" : "text-foreground"}`}>{p.stock}</span>
-                    </td>
-                    <td className="px-4 py-3 text-right font-mono text-sm text-muted-foreground">{fmt(p.buyPrice)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-sm text-primary font-semibold">{fmt(p.sellPrice)}</td>
-                  </tr>
-                );
-              })}
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-8 text-muted-foreground text-xs font-mono">
+                    No products matching "{search}"
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((p, i) => {
+                  const isSelected = i === selectedIndex;
+                  return (
+                    <tr
+                      key={p.id}
+                      onClick={() => {
+                        setSelectedIndex(i);
+                        setSelectedProductForHistory(p);
+                      }}
+                      className={`border-b border-border cursor-pointer transition-all ${
+                        isSelected
+                          ? "bg-blue-600/15 border-l-4 border-l-blue-600 ring-2 ring-blue-500/40 text-blue-900 dark:text-blue-200 font-bold shadow-sm"
+                          : i % 2 === 0 ? "hover:bg-secondary/30" : "bg-secondary/10 hover:bg-secondary/30"
+                      }`}
+                    >
+                      <td className="px-4 py-3">
+                        <div className={`font-semibold text-sm ${isSelected ? "text-blue-600 dark:text-blue-400 font-bold" : "text-foreground"}`}>
+                          {isSelected && <span className="mr-1.5 font-mono text-blue-600">▶</span>}
+                          {p.name}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground font-mono">per {p.unit}</div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge label={p.category} color={CATEGORY_COLORS[p.category]} />
+                      </td>
+                      <td className="px-4 py-3">
+                        {p.isPerishable ? (
+                          <span className="text-[10px] font-mono text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">
+                            Yes ({p.expiryDays}d)
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-mono text-muted-foreground">No</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className={`font-mono text-sm font-semibold ${p.stock === 0 ? "text-muted-foreground" : "text-foreground"}`}>{p.stock}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-muted-foreground">{fmt(p.buyPrice)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-primary font-semibold">{fmt(p.sellPrice)}</td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
       {/* Keyboard helper bar */}
-      <div className="bg-secondary/20 border border-border p-3 rounded-lg flex items-center gap-3 text-xs text-muted-foreground no-print mt-4">
-        <Keyboard className="text-primary" size={16} />
-        <div>
-          <span className="font-semibold text-foreground">Keyboard Shortcut: </span>
-          <span className="font-mono">
-            [Ctrl + C] Add New Product
-          </span>
+      <div className="bg-secondary/20 border border-border p-3 rounded-lg flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground no-print mt-4">
+        <div className="flex items-center gap-3">
+          <Keyboard className="text-primary" size={16} />
+          <div>
+            <span className="font-semibold text-foreground">Shortcuts: </span>
+            <span className="font-mono">
+              [↑ / ↓ Arrow Keys] Select Row • [Enter] View Product 360° History • [Ctrl + C] Add Product
+            </span>
+          </div>
         </div>
+
+        {filtered[selectedIndex] && (
+          <button
+            type="button"
+            onClick={() => setSelectedProductForHistory(filtered[selectedIndex])}
+            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 shadow"
+          >
+            <span>View History of "{filtered[selectedIndex].name}"</span>
+          </button>
+        )}
       </div>
 
       <AddProductModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={onAddProduct} />
+
+      {/* 360 Audit & History Modal */}
+      <ProductHistoryModal
+        product={selectedProductForHistory}
+        entries={entries}
+        isOpen={!!selectedProductForHistory}
+        onClose={() => setSelectedProductForHistory(null)}
+      />
     </div>
   );
 }
@@ -11405,7 +11679,7 @@ function VouchersPage({
     const getPageComponent = () => {
       switch (page) {
         case "dashboard": return <DashboardPage products={products} entries={entries} analytics={analytics} onRefresh={loadData} />;
-        case "inventory": return <InventoryPage products={products} onAddProduct={handleAddProduct} />;
+        case "inventory": return <InventoryPage products={products} entries={entries} onAddProduct={handleAddProduct} />;
         case "sales":
         case "sales-billing":
           return <SalesPage products={products} customers={customers} suppliers={suppliers} entries={entries} onAddEntry={handleAddEntry} onAddCustomer={handleAddCustomer} isInvoiceOpen={isInvoiceOpen} paymentType={salesPaymentType} setPaymentType={setSalesPaymentType} setPage={setPage} darkMode={darkMode} setDarkMode={setDarkMode} voiceHandlersRef={globalVoiceHandlers} transactionType="billing" onViewInvoice={(inv) => { setActiveInvoice(inv); setIsInvoiceOpen(true); }} />;
