@@ -2805,11 +2805,27 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
   const [selectedPullDeliveryNoteId, setSelectedPullDeliveryNoteId] = useState("");
 
   const quotationEntries = useMemo(() => {
-    return (entries || []).filter(e => e.type === "out" && (e.subType === "quotation" || (e.invoiceNo && e.invoiceNo.startsWith("QTN"))));
+    return (entries || []).filter(e => 
+      e.type === "out" && 
+      (
+        e.subType === "quotation" || 
+        e.subType === "sales-quotation" || 
+        (e.invoiceNo && e.invoiceNo.startsWith("QTN")) || 
+        (e.note && e.note.toLowerCase().includes("quotation"))
+      )
+    );
   }, [entries]);
 
   const deliveryNoteEntries = useMemo(() => {
-    return (entries || []).filter(e => e.type === "out" && (e.subType === "delivery_note" || (e.invoiceNo && e.invoiceNo.startsWith("DN"))));
+    return (entries || []).filter(e => 
+      e.type === "out" && 
+      (
+        e.subType === "delivery_note" || 
+        e.subType === "sales-delivery" || 
+        (e.invoiceNo && (e.invoiceNo.startsWith("DLN") || e.invoiceNo.startsWith("DN"))) || 
+        (e.note && e.note.toLowerCase().includes("delivery note"))
+      )
+    );
   }, [entries]);
 
   const handlePullQuotation = (quotationId: string) => {
@@ -10304,7 +10320,8 @@ export default function App() {
       }
 
       const entry: StockEntry = await res.json();
-      toast.success("Billing Invoice recorded successfully!");
+      const docName = entry.subType === "quotation" ? "Sales Quotation" : entry.subType === "delivery_note" ? "Delivery Note" : entry.subType === "credit_note" ? "Credit Note" : "Sales Invoice";
+      toast.success(`${docName} #${entry.invoiceNo || entry.id.slice(0, 6)} recorded successfully!`);
       
       // Confetti effect on Sales (out)
       if (newEntryData.type === "out") {

@@ -2154,6 +2154,38 @@
           "expiryDate": "2027-07-26"
         }
       ]
+    },
+    {
+      "id": "e_mfsduwb",
+      "productId": "p1",
+      "godown": "A",
+      "type": "out",
+      "quantity": 5,
+      "pricePerUnit": 1550,
+      "expiryDate": "2027-07-29",
+      "date": "2026-07-29",
+      "partner": "Gulf Spice General Trading",
+      "note": "Sales Quotation",
+      "paymentType": "cash",
+      "partnerAddress": "Wholesale Hub, Sector 4, Dubai, UAE",
+      "partnerPhone": "+971-50-1234567",
+      "partnerGST": "DXB99283A",
+      "gstPercent": 12,
+      "subTotal": 7750,
+      "grandTotal": 8680,
+      "invoiceNo": "INV-260729-0088",
+      "items": [
+        {
+          "productId": "p1",
+          "godown": "A",
+          "quantity": 5,
+          "pricePerUnit": 1550,
+          "gstPercent": 12,
+          "subTotal": 7750,
+          "grandTotal": 8680,
+          "expiryDate": "2027-07-29"
+        }
+      ]
     }
   ],
   "customers": [

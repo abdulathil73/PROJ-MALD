@@ -125,7 +125,8 @@ app.post("/api/entries", (req, res) => {
   try {
     const { 
       productId, godown, type, quantity, pricePerUnit, date, partner, note,
-      paymentType, partnerAddress, partnerPhone, partnerGST, gstPercent, subTotal, grandTotal, items
+      paymentType, partnerAddress, partnerPhone, partnerGST, gstPercent, subTotal, grandTotal, items,
+      subType, payments, quotationNo, deliveryNoteNo, dueDate, expiryDate
     } = req.body;
     
     if (!date || !partner || !type) {
@@ -139,8 +140,11 @@ app.post("/api/entries", (req, res) => {
       quantity: quantity !== undefined ? Number(quantity) : undefined,
       pricePerUnit: pricePerUnit !== undefined ? Number(pricePerUnit) : undefined,
       date,
+      dueDate,
+      expiryDate,
       partner,
       note: note || "",
+      subType,
       paymentType,
       partnerAddress,
       partnerPhone,
@@ -149,7 +153,10 @@ app.post("/api/entries", (req, res) => {
       subTotal: subTotal !== undefined ? Number(subTotal) : undefined,
       grandTotal: grandTotal !== undefined ? Number(grandTotal) : undefined,
       items,
-    });
+      payments,
+      quotationNo,
+      deliveryNoteNo,
+    } as any);
 
     res.status(201).json(newEntry);
   } catch (error: any) {
