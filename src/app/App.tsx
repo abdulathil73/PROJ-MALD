@@ -5,7 +5,7 @@ import {
 import {
   Package, TrendingUp, TrendingDown, Warehouse, ArrowDownToLine, ArrowUpFromLine,
   Sparkles, ChevronRight, Search, Plus, Check, AlertCircle, LayoutDashboard,
-  BoxIcon, BarChart2, Bot, Menu, Ship, MapPin, Truck, RefreshCw, Calendar, AlertTriangle, Moon, Sun, Database as DbIcon, Printer, X, PlusCircle, CreditCard, DollarSign, Building, Trash2, Keyboard, Play, Lock, User,
+  BoxIcon, BarChart2, Bot, Menu, Ship, MapPin, Truck, RefreshCw, Calendar, AlertTriangle, Moon, Sun, Database as DbIcon, Printer, X, PlusCircle, CreditCard, DollarSign, Building, Trash2, Keyboard, Play, Lock, User, Coins,
   Mic, MicOff, Volume2, VolumeX, HelpCircle, Eye, Edit, FileText, Download, Filter, ShieldAlert, CheckCircle2, MessageSquare, PhoneCall, Send, Copy, ShoppingCart, Receipt, BookOpen, FileCheck, History, ArrowLeft, Percent, PackageCheck
 } from "lucide-react";
 import { Toaster, toast } from "sonner";
@@ -2799,6 +2799,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
   
   // Cart Items State
   const [cartItems, setCartItems] = useState<InvoiceItem[]>([]);
+  const [billingCurrency, setBillingCurrency] = useState<"MVR" | "USD" | "EUR">("MVR");
 
   // Pull Quotation & Delivery Note State
   const [selectedPullQuotationId, setSelectedPullQuotationId] = useState("");
@@ -3791,13 +3792,38 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
               )}
             </div>
 
-            {/* Live Total Display Panel */}
-            <div className="bg-black/95 text-green-400 rounded-xl p-4 flex flex-col justify-between shadow-inner border border-gray-800 h-full min-h-[110px]">
-              <div className="text-[10px] font-mono tracking-widest text-green-500 uppercase font-bold">TOTAL AMOUNT</div>
-              <div className="text-2xl md:text-3xl font-mono font-extrabold text-right tracking-tight select-all">
-                {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(invoiceTotals.grandTotal)}
+            {/* Live Total Display Panel with Multi-Currency Selector */}
+            <div className="bg-black/95 text-green-400 rounded-xl p-4 flex flex-col justify-between shadow-inner border border-gray-800 h-full min-h-[140px]">
+              <div className="flex items-center justify-between border-b border-gray-800 pb-2">
+                <span className="text-[10px] font-mono tracking-widest text-green-500 uppercase font-bold flex items-center gap-1">
+                  <Coins size={12} /> BILLING CURRENCY
+                </span>
+                <div className="flex bg-gray-900 border border-gray-800 rounded-lg p-0.5 text-[9px] font-mono font-bold">
+                  {(["MVR", "USD", "EUR"] as const).map(curr => (
+                    <button
+                      key={curr}
+                      type="button"
+                      onClick={() => setBillingCurrency(curr)}
+                      className={`px-2 py-0.5 rounded transition-all ${billingCurrency === curr ? "bg-emerald-600 text-white font-extrabold" : "text-gray-400 hover:text-white"}`}
+                    >
+                      {curr === "MVR" ? "🇲🇻 MVR" : curr === "USD" ? "🇺🇸 USD" : "🇪🇺 EUR"}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="text-[9px] font-mono text-green-600 text-right uppercase">
+
+              <div className="py-1">
+                <div className="text-2xl md:text-3xl font-mono font-extrabold text-right tracking-tight text-emerald-400 select-all">
+                  {billingCurrency === "USD" ? `$ ${(invoiceTotals.grandTotal / 15.42).toFixed(2)} USD` : billingCurrency === "EUR" ? `€ ${(invoiceTotals.grandTotal / 16.75).toFixed(2)} EUR` : `MVR ${invoiceTotals.grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                </div>
+                <div className="text-[10px] font-mono text-gray-400 text-right">
+                  {billingCurrency !== "MVR" && `(MVR ${invoiceTotals.grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}) • `}
+                  {billingCurrency !== "USD" && `$${(invoiceTotals.grandTotal / 15.42).toFixed(2)} USD • `}
+                  {billingCurrency !== "EUR" && `€${(invoiceTotals.grandTotal / 16.75).toFixed(2)} EUR`}
+                </div>
+              </div>
+
+              <div className="text-[9px] font-mono text-green-600 text-right uppercase border-t border-gray-900 pt-1">
                 {cartItems.length} lines added
               </div>
             </div>
@@ -4231,6 +4257,7 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
   
   // Cart Items State
   const [cartItems, setCartItems] = useState<InvoiceItem[]>([]);
+  const [billingCurrency, setBillingCurrency] = useState<"MVR" | "USD" | "EUR">("MVR");
 
   // Pull Purchase Order & GRN State
   const [selectedPullPoId, setSelectedPullPoId] = useState("");
@@ -4977,13 +5004,38 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
               </div>
             </div>
 
-            {/* Live Total Display Panel */}
-            <div className="bg-black/95 text-green-400 rounded-xl p-4 flex flex-col justify-between shadow-inner border border-gray-800 h-full min-h-[110px]">
-              <div className="text-[10px] font-mono tracking-widest text-green-500 uppercase font-bold">TOTAL ACQUISITION</div>
-              <div className="text-2xl md:text-3xl font-mono font-extrabold text-right tracking-tight select-all">
-                {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(invoiceTotals.grandTotal)}
+            {/* Live Total Display Panel with Multi-Currency Selector */}
+            <div className="bg-black/95 text-green-400 rounded-xl p-4 flex flex-col justify-between shadow-inner border border-gray-800 h-full min-h-[140px]">
+              <div className="flex items-center justify-between border-b border-gray-800 pb-2">
+                <span className="text-[10px] font-mono tracking-widest text-green-500 uppercase font-bold flex items-center gap-1">
+                  <Coins size={12} /> ACQUISITION CURRENCY
+                </span>
+                <div className="flex bg-gray-900 border border-gray-800 rounded-lg p-0.5 text-[9px] font-mono font-bold">
+                  {(["MVR", "USD", "EUR"] as const).map(curr => (
+                    <button
+                      key={curr}
+                      type="button"
+                      onClick={() => setBillingCurrency(curr)}
+                      className={`px-2 py-0.5 rounded transition-all ${billingCurrency === curr ? "bg-emerald-600 text-white font-extrabold" : "text-gray-400 hover:text-white"}`}
+                    >
+                      {curr === "MVR" ? "🇲🇻 MVR" : curr === "USD" ? "🇺🇸 USD" : "🇪🇺 EUR"}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="text-[9px] font-mono text-green-600 text-right uppercase">
+
+              <div className="py-1">
+                <div className="text-2xl md:text-3xl font-mono font-extrabold text-right tracking-tight text-emerald-400 select-all">
+                  {billingCurrency === "USD" ? `$ ${(invoiceTotals.grandTotal / 15.42).toFixed(2)} USD` : billingCurrency === "EUR" ? `€ ${(invoiceTotals.grandTotal / 16.75).toFixed(2)} EUR` : `MVR ${invoiceTotals.grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                </div>
+                <div className="text-[10px] font-mono text-gray-400 text-right">
+                  {billingCurrency !== "MVR" && `(MVR ${invoiceTotals.grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}) • `}
+                  {billingCurrency !== "USD" && `$${(invoiceTotals.grandTotal / 15.42).toFixed(2)} USD • `}
+                  {billingCurrency !== "EUR" && `€${(invoiceTotals.grandTotal / 16.75).toFixed(2)} EUR`}
+                </div>
+              </div>
+
+              <div className="text-[9px] font-mono text-green-600 text-right uppercase border-t border-gray-900 pt-1">
                 {cartItems.length} lines added
               </div>
             </div>
@@ -9943,6 +9995,246 @@ function CostingPage({
   );
 }
 
+// ─── Currency & FX Exchange Rates Console ────────────────────────────────────
+
+function CurrencyPage({
+  rates = { USD: 15.42, EUR: 16.75, INR: 0.185 },
+}: {
+  rates?: { USD: number; EUR: number; INR: number };
+}) {
+  const [usdRate, setUsdRate] = useState<number>(rates.USD || 15.42);
+  const [eurRate, setEurRate] = useState<number>(rates.EUR || 16.75);
+
+  // FX Calculator State
+  const [calcAmount, setCalcAmount] = useState<string>("100");
+  const [fromCurr, setFromCurr] = useState<"MVR" | "USD" | "EUR">("USD");
+  const [toCurr, setToCurr] = useState<"MVR" | "USD" | "EUR">("MVR");
+
+  // Calculate conversion
+  const convertedResult = useMemo(() => {
+    const amt = parseFloat(calcAmount) || 0;
+    if (amt <= 0) return 0;
+
+    // Convert from source currency to MVR base
+    let mvrVal = amt;
+    if (fromCurr === "USD") mvrVal = amt * usdRate;
+    else if (fromCurr === "EUR") mvrVal = amt * eurRate;
+
+    // Convert from MVR base to target currency
+    if (toCurr === "MVR") return mvrVal;
+    if (toCurr === "USD") return mvrVal / usdRate;
+    if (toCurr === "EUR") return mvrVal / eurRate;
+
+    return mvrVal;
+  }, [calcAmount, fromCurr, toCurr, usdRate, eurRate]);
+
+  return (
+    <div className="space-y-6">
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card border border-border p-5 rounded-2xl shadow-sm">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground font-serif tracking-tight flex items-center gap-2.5">
+            <Coins className="text-emerald-600" size={26} /> Currency & FX Exchange Rates Engine
+          </h1>
+          <p className="text-xs text-muted-foreground font-mono mt-0.5">
+            Live money conversions between Maldives Rufiyaa (MVR), US Dollar ($ USD), and Euro (€ EUR) for Sales & Purchase billing
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl text-xs font-mono text-emerald-800 dark:text-emerald-300 font-bold">
+          <span>Central Bank Reference: MMA 2026</span>
+        </div>
+      </div>
+
+      {/* Exchange Rates Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* USD Card */}
+        <div className="bg-card border border-border p-5 rounded-2xl shadow-sm space-y-3 border-t-4 border-t-emerald-500">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🇺🇸</span>
+              <div>
+                <h3 className="font-bold text-foreground text-sm font-mono">US Dollar (USD)</h3>
+                <span className="text-[10px] text-muted-foreground font-mono">USD → MVR</span>
+              </div>
+            </div>
+            <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 font-mono font-bold text-[10px] rounded border border-emerald-500/20">$ USD</span>
+          </div>
+
+          <div className="p-3 bg-secondary/30 rounded-xl border border-border space-y-1">
+            <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold block">1 USD to MVR Rate</span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs text-muted-foreground font-bold">MVR</span>
+              <input
+                type="number"
+                step="0.01"
+                value={usdRate}
+                onChange={e => setUsdRate(parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-sm font-mono font-extrabold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right"
+              />
+            </div>
+          </div>
+
+          <div className="text-[11px] font-mono text-muted-foreground flex justify-between pt-1">
+            <span>$100 USD =</span>
+            <span className="font-bold text-foreground">MVR {(100 * usdRate).toFixed(2)}</span>
+          </div>
+        </div>
+
+        {/* EUR Card */}
+        <div className="bg-card border border-border p-5 rounded-2xl shadow-sm space-y-3 border-t-4 border-t-blue-500">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🇪🇺</span>
+              <div>
+                <h3 className="font-bold text-foreground text-sm font-mono">Euro (EUR)</h3>
+                <span className="text-[10px] text-muted-foreground font-mono">EUR → MVR</span>
+              </div>
+            </div>
+            <span className="px-2 py-0.5 bg-blue-500/10 text-blue-600 font-mono font-bold text-[10px] rounded border border-blue-500/20">€ EUR</span>
+          </div>
+
+          <div className="p-3 bg-secondary/30 rounded-xl border border-border space-y-1">
+            <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold block">1 EUR to MVR Rate</span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs text-muted-foreground font-bold">MVR</span>
+              <input
+                type="number"
+                step="0.01"
+                value={eurRate}
+                onChange={e => setEurRate(parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-sm font-mono font-extrabold focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              />
+            </div>
+          </div>
+
+          <div className="text-[11px] font-mono text-muted-foreground flex justify-between pt-1">
+            <span>€100 EUR =</span>
+            <span className="font-bold text-foreground">MVR {(100 * eurRate).toFixed(2)}</span>
+          </div>
+        </div>
+
+        {/* MVR Base Card */}
+        <div className="bg-card border border-border p-5 rounded-2xl shadow-sm space-y-3 border-t-4 border-t-amber-500">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🇲🇻</span>
+              <div>
+                <h3 className="font-bold text-foreground text-sm font-mono">Maldives Rufiyaa (MVR)</h3>
+                <span className="text-[10px] text-muted-foreground font-mono">Base Currency</span>
+              </div>
+            </div>
+            <span className="px-2 py-0.5 bg-amber-500/10 text-amber-600 font-mono font-bold text-[10px] rounded border border-amber-500/20">MVR</span>
+          </div>
+
+          <div className="p-3 bg-secondary/30 rounded-xl border border-border space-y-1">
+            <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold block">Domestic Reference</span>
+            <div className="text-sm font-extrabold text-foreground font-mono text-right py-1">
+              1 MVR = 1.00 MVR
+            </div>
+          </div>
+
+          <div className="text-[11px] font-mono text-muted-foreground flex justify-between pt-1">
+            <span>MVR 1,000 =</span>
+            <span className="font-bold text-foreground">${(1000 / usdRate).toFixed(2)} USD</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Interactive FX Calculator Console */}
+      <div className="bg-card border border-border p-6 rounded-2xl shadow-sm space-y-5">
+        <div className="border-b border-border pb-3">
+          <h2 className="text-base font-bold text-foreground font-mono uppercase tracking-wider flex items-center gap-2">
+            <RefreshCw size={18} className="text-emerald-600" />
+            <span>Interactive Multi-Currency Money Converter</span>
+          </h2>
+          <p className="text-xs text-muted-foreground font-mono mt-0.5">
+            Convert any amount between MVR, USD, and EUR in real-time
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+          {/* Amount Input */}
+          <div className="md:col-span-4">
+            <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">Enter Amount</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={calcAmount}
+              onChange={e => setCalcAmount(e.target.value)}
+              placeholder="100.00"
+              className="w-full px-4 py-2.5 border border-border rounded-xl bg-input-background text-foreground text-base font-mono font-extrabold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          {/* From Currency */}
+          <div className="md:col-span-3">
+            <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">From Currency</label>
+            <select
+              value={fromCurr}
+              onChange={e => setFromCurr(e.target.value as any)}
+              className="w-full px-3 py-2.5 border border-border rounded-xl bg-card text-foreground text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+            >
+              <option value="MVR">🇲🇻 MVR (Maldives Rufiyaa)</option>
+              <option value="USD">🇺🇸 USD (US Dollars $)</option>
+              <option value="EUR">🇪🇺 EUR (Euro €)</option>
+            </select>
+          </div>
+
+          {/* To Currency */}
+          <div className="md:col-span-3">
+            <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">To Currency</label>
+            <select
+              value={toCurr}
+              onChange={e => setToCurr(e.target.value as any)}
+              className="w-full px-3 py-2.5 border border-border rounded-xl bg-card text-foreground text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+            >
+              <option value="MVR">🇲🇻 MVR (Maldives Rufiyaa)</option>
+              <option value="USD">🇺🇸 USD (US Dollars $)</option>
+              <option value="EUR">🇪🇺 EUR (Euro €)</option>
+            </select>
+          </div>
+
+          {/* Swap Button */}
+          <div className="md:col-span-2">
+            <button
+              type="button"
+              onClick={() => {
+                const temp = fromCurr;
+                setFromCurr(toCurr);
+                setToCurr(temp);
+              }}
+              className="w-full py-2.5 bg-secondary hover:bg-secondary/80 border border-border text-foreground rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 shadow-sm"
+            >
+              <RefreshCw size={14} /> Swap ⇄
+            </button>
+          </div>
+        </div>
+
+        {/* Calculation Result Banner */}
+        <div className="p-5 bg-gradient-to-r from-emerald-950 to-teal-900 text-white rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg border border-emerald-500/30">
+          <div>
+            <span className="text-[11px] font-mono text-emerald-400 uppercase tracking-widest block font-bold">
+              CONVERTED EQUIVALENT RESULT
+            </span>
+            <span className="text-xs text-emerald-200 font-mono">
+              {calcAmount} {fromCurr} = {convertedResult.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {toCurr}
+            </span>
+          </div>
+
+          <div className="text-right font-mono">
+            <div className="text-3xl font-extrabold text-emerald-300">
+              {toCurr === "USD" ? "$" : toCurr === "EUR" ? "€" : "MVR "}
+              {convertedResult.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {toCurr}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main App ────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -11634,6 +11926,7 @@ function VouchersPage({
     { id: "sales", label: "Sales", icon: ArrowUpFromLine },
     { id: "purchase", label: "Purchase", icon: ArrowDownToLine },
     { id: "costing", label: "Costing Engine", icon: DollarSign },
+    { id: "currency", label: "Currency Converter", icon: Coins },
     { id: "vouchers", label: "Vouchers", icon: Receipt },
     { id: "godowns", label: "Godowns Status", icon: Warehouse },
     { id: "perishables", label: "Perishables Monitor", icon: AlertTriangle },
@@ -11719,6 +12012,7 @@ function VouchersPage({
         case "costing-inward":
         case "costing-outward":
           return <CostingPage products={products} entries={entries} suppliers={suppliers} currentPage={page} setPage={setPage} onRefresh={loadData} />;
+        case "currency": return <CurrencyPage />;
         case "stock-transfer": return <StockTransferPage products={products} onAddEntry={handleAddEntry} onRefresh={loadData} />;
         case "physical-stock": return <PhysicalStockPage products={products} onAddEntry={handleAddEntry} onRefresh={loadData} />;
         case "payroll-attendance": return <AttendancePage />;
