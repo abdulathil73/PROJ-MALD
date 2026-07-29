@@ -2799,7 +2799,6 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
   
   // Cart Items State
   const [cartItems, setCartItems] = useState<InvoiceItem[]>([]);
-  const [billingCurrency, setBillingCurrency] = useState<"MVR" | "USD" | "EUR">("MVR");
 
   // Pull Quotation & Delivery Note State
   const [selectedPullQuotationId, setSelectedPullQuotationId] = useState("");
@@ -3792,38 +3791,13 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
               )}
             </div>
 
-            {/* Live Total Display Panel with Multi-Currency Selector */}
-            <div className="bg-black/95 text-green-400 rounded-xl p-4 flex flex-col justify-between shadow-inner border border-gray-800 h-full min-h-[140px]">
-              <div className="flex items-center justify-between border-b border-gray-800 pb-2">
-                <span className="text-[10px] font-mono tracking-widest text-green-500 uppercase font-bold flex items-center gap-1">
-                  <Coins size={12} /> BILLING CURRENCY
-                </span>
-                <div className="flex bg-gray-900 border border-gray-800 rounded-lg p-0.5 text-[9px] font-mono font-bold">
-                  {(["MVR", "USD", "EUR"] as const).map(curr => (
-                    <button
-                      key={curr}
-                      type="button"
-                      onClick={() => setBillingCurrency(curr)}
-                      className={`px-2 py-0.5 rounded transition-all ${billingCurrency === curr ? "bg-emerald-600 text-white font-extrabold" : "text-gray-400 hover:text-white"}`}
-                    >
-                      {curr === "MVR" ? "🇲🇻 MVR" : curr === "USD" ? "🇺🇸 USD" : "🇪🇺 EUR"}
-                    </button>
-                  ))}
-                </div>
+            {/* Live Total Display Panel */}
+            <div className="bg-black/95 text-green-400 rounded-xl p-4 flex flex-col justify-between shadow-inner border border-gray-800 h-full min-h-[110px]">
+              <div className="text-[10px] font-mono tracking-widest text-green-500 uppercase font-bold">TOTAL AMOUNT</div>
+              <div className="text-2xl md:text-3xl font-mono font-extrabold text-right tracking-tight select-all">
+                {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(invoiceTotals.grandTotal)}
               </div>
-
-              <div className="py-1">
-                <div className="text-2xl md:text-3xl font-mono font-extrabold text-right tracking-tight text-emerald-400 select-all">
-                  {billingCurrency === "USD" ? `$ ${(invoiceTotals.grandTotal / 15.42).toFixed(2)} USD` : billingCurrency === "EUR" ? `€ ${(invoiceTotals.grandTotal / 16.75).toFixed(2)} EUR` : `MVR ${invoiceTotals.grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                </div>
-                <div className="text-[10px] font-mono text-gray-400 text-right">
-                  {billingCurrency !== "MVR" && `(MVR ${invoiceTotals.grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}) • `}
-                  {billingCurrency !== "USD" && `$${(invoiceTotals.grandTotal / 15.42).toFixed(2)} USD • `}
-                  {billingCurrency !== "EUR" && `€${(invoiceTotals.grandTotal / 16.75).toFixed(2)} EUR`}
-                </div>
-              </div>
-
-              <div className="text-[9px] font-mono text-green-600 text-right uppercase border-t border-gray-900 pt-1">
+              <div className="text-[9px] font-mono text-green-600 text-right uppercase">
                 {cartItems.length} lines added
               </div>
             </div>
@@ -4257,7 +4231,6 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
   
   // Cart Items State
   const [cartItems, setCartItems] = useState<InvoiceItem[]>([]);
-  const [billingCurrency, setBillingCurrency] = useState<"MVR" | "USD" | "EUR">("MVR");
 
   // Pull Purchase Order & GRN State
   const [selectedPullPoId, setSelectedPullPoId] = useState("");
@@ -5004,38 +4977,13 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
               </div>
             </div>
 
-            {/* Live Total Display Panel with Multi-Currency Selector */}
-            <div className="bg-black/95 text-green-400 rounded-xl p-4 flex flex-col justify-between shadow-inner border border-gray-800 h-full min-h-[140px]">
-              <div className="flex items-center justify-between border-b border-gray-800 pb-2">
-                <span className="text-[10px] font-mono tracking-widest text-green-500 uppercase font-bold flex items-center gap-1">
-                  <Coins size={12} /> ACQUISITION CURRENCY
-                </span>
-                <div className="flex bg-gray-900 border border-gray-800 rounded-lg p-0.5 text-[9px] font-mono font-bold">
-                  {(["MVR", "USD", "EUR"] as const).map(curr => (
-                    <button
-                      key={curr}
-                      type="button"
-                      onClick={() => setBillingCurrency(curr)}
-                      className={`px-2 py-0.5 rounded transition-all ${billingCurrency === curr ? "bg-emerald-600 text-white font-extrabold" : "text-gray-400 hover:text-white"}`}
-                    >
-                      {curr === "MVR" ? "🇲🇻 MVR" : curr === "USD" ? "🇺🇸 USD" : "🇪🇺 EUR"}
-                    </button>
-                  ))}
-                </div>
+            {/* Live Total Display Panel */}
+            <div className="bg-black/95 text-green-400 rounded-xl p-4 flex flex-col justify-between shadow-inner border border-gray-800 h-full min-h-[110px]">
+              <div className="text-[10px] font-mono tracking-widest text-green-500 uppercase font-bold">TOTAL ACQUISITION</div>
+              <div className="text-2xl md:text-3xl font-mono font-extrabold text-right tracking-tight select-all">
+                {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(invoiceTotals.grandTotal)}
               </div>
-
-              <div className="py-1">
-                <div className="text-2xl md:text-3xl font-mono font-extrabold text-right tracking-tight text-emerald-400 select-all">
-                  {billingCurrency === "USD" ? `$ ${(invoiceTotals.grandTotal / 15.42).toFixed(2)} USD` : billingCurrency === "EUR" ? `€ ${(invoiceTotals.grandTotal / 16.75).toFixed(2)} EUR` : `MVR ${invoiceTotals.grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                </div>
-                <div className="text-[10px] font-mono text-gray-400 text-right">
-                  {billingCurrency !== "MVR" && `(MVR ${invoiceTotals.grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}) • `}
-                  {billingCurrency !== "USD" && `$${(invoiceTotals.grandTotal / 15.42).toFixed(2)} USD • `}
-                  {billingCurrency !== "EUR" && `€${(invoiceTotals.grandTotal / 16.75).toFixed(2)} EUR`}
-                </div>
-              </div>
-
-              <div className="text-[9px] font-mono text-green-600 text-right uppercase border-t border-gray-900 pt-1">
+              <div className="text-[9px] font-mono text-green-600 text-right uppercase">
                 {cartItems.length} lines added
               </div>
             </div>
