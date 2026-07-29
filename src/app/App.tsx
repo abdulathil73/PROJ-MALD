@@ -9052,16 +9052,18 @@ function CostingPage({
   products = [],
   entries = [],
   suppliers = [],
+  currentPage,
   setPage,
   onRefresh,
 }: {
   products?: Product[];
   entries?: StockEntry[];
   suppliers?: Supplier[];
+  currentPage?: string;
   setPage: (p: string) => void;
   onRefresh?: () => void;
 }) {
-  const [activeSubTab, setActiveSubTab] = useState<"inward" | "outward">("inward");
+  const activeSubTab = currentPage === "costing-outward" ? "outward" : "inward";
 
   // Currency Converter Exchange Rate (USD -> MVR)
   const [usdToMvrRate, setUsdToMvrRate] = useState<number>(15.42); // Central Bank Reference Rate: 1 USD = 15.42 MVR
@@ -9259,44 +9261,6 @@ function CostingPage({
 
   return (
     <div className="space-y-6">
-      {/* Module Title Header & Sub-Tab Switcher */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card border border-border p-5 rounded-2xl shadow-sm">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground font-serif tracking-tight flex items-center gap-2.5">
-            <DollarSign className="text-emerald-600" size={26} /> Costing & Landed Overhead Engine
-          </h1>
-          <p className="text-xs text-muted-foreground font-mono mt-0.5">
-            Calculate true landed costs for imported goods (USD → MVR) & outward export pricing margins
-          </p>
-        </div>
-
-        <div className="flex bg-secondary p-1 rounded-xl gap-1 border border-border">
-          <button
-            type="button"
-            onClick={() => setActiveSubTab("inward")}
-            className={`px-4 py-2 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-2 ${
-              activeSubTab === "inward"
-                ? "bg-emerald-600 text-white shadow-md"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <ArrowDownToLine size={15} /> Costing Inward (Import USD → MVR)
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveSubTab("outward")}
-            className={`px-4 py-2 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-2 ${
-              activeSubTab === "outward"
-                ? "bg-blue-600 text-white shadow-md"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <ArrowUpFromLine size={15} /> Costing Outward (Export Pricing)
-          </button>
-        </div>
-      </div>
-
       {activeSubTab === "inward" ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: USD to MVR Currency Converter & Purchase Bill Input */}
@@ -11408,7 +11372,7 @@ function VouchersPage({
         case "costing":
         case "costing-inward":
         case "costing-outward":
-          return <CostingPage products={products} entries={entries} suppliers={suppliers} setPage={setPage} onRefresh={loadData} />;
+          return <CostingPage products={products} entries={entries} suppliers={suppliers} currentPage={page} setPage={setPage} onRefresh={loadData} />;
         case "stock-transfer": return <StockTransferPage products={products} onAddEntry={handleAddEntry} onRefresh={loadData} />;
         case "physical-stock": return <PhysicalStockPage products={products} onAddEntry={handleAddEntry} onRefresh={loadData} />;
         case "payroll-attendance": return <AttendancePage />;
@@ -12044,6 +12008,35 @@ function VouchersPage({
                   }`}
                 >
                   <CreditCard size={11} /> Credit Purchase
+                </button>
+              </div>
+            )}
+
+            {/* Costing Engine sub-tab switcher */}
+            {page.startsWith("costing") && (
+              <div className="flex bg-secondary p-1 rounded-xl gap-1 border border-border ml-2 md:ml-4">
+                <button
+                  type="button"
+                  onClick={() => setPage("costing-inward")}
+                  className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+                    page === "costing-inward" || page === "costing"
+                      ? "bg-emerald-600 text-white shadow-md"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <ArrowDownToLine size={13} /> Costing Inward (Import USD → MVR)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPage("costing-outward")}
+                  className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+                    page === "costing-outward"
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <ArrowUpFromLine size={13} /> Costing Outward (Export Pricing)
                 </button>
               </div>
             )}
