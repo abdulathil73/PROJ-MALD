@@ -9874,6 +9874,63 @@ export default function App() {
     return () => window.removeEventListener("keydown", handleGlobalShortcut, true);
   }, [page]);
 
+  // Global Enter Key Form Focus Navigation Engine (Tally / ERP Fast Typing)
+  useEffect(() => {
+    const handleEnterNavigation = (e: KeyboardEvent) => {
+      // Only trigger on Enter key without Shift/Ctrl/Alt modifier combinations
+      if (e.key !== "Enter" || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) {
+        return;
+      }
+
+      const activeEl = document.activeElement as HTMLElement | null;
+      if (!activeEl) return;
+
+      const tagName = activeEl.tagName.toUpperCase();
+
+      // Don't intercept Enter on standard buttons so buttons can be clicked naturally
+      if (tagName === "BUTTON") return;
+
+      // Allow multiline textareas to type newlines
+      if (tagName === "TEXTAREA") {
+        return;
+      }
+
+      // Intercept Enter key on INPUT and SELECT elements
+      if (tagName === "INPUT" || tagName === "SELECT") {
+        // Find the current parent form or container scope
+        const container = activeEl.closest("form") || activeEl.closest("[data-focus-container]") || document.body;
+
+        // Query all focusable input controls inside container
+        const focusables = Array.from(
+          container.querySelectorAll<HTMLElement>(
+            'input:not([type="hidden"]):not([disabled]):not([readonly]), select:not([disabled]), textarea:not([disabled]), button[type="submit"]:not([disabled])'
+          )
+        ).filter(el => {
+          // Ensure element is visible
+          return el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0;
+        });
+
+        const currentIndex = focusables.indexOf(activeEl);
+
+        if (currentIndex !== -1 && currentIndex < focusables.length - 1) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const nextEl = focusables[currentIndex + 1];
+          nextEl.focus();
+
+          // Highlight existing text in the next input for instant overwriting
+          if (nextEl instanceof HTMLInputElement) {
+            nextEl.select?.();
+          }
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleEnterNavigation, false);
+    return () => window.removeEventListener("keydown", handleEnterNavigation, false);
+  }, []);
+
   // Close drawer when switching to sales/purchase
   useEffect(() => {
     if (page === "sales" || page === "purchase") {
