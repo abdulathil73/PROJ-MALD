@@ -9072,7 +9072,11 @@ function CostingPage({
   const [supplierName, setSupplierName] = useState<string>("");
   const [billNotes, setBillNotes] = useState<string>("");
 
-  // Inward Landed Fee Rows (Entered in MVR)
+  // Active single fee input row state (POS / Add to cart style)
+  const [selectedFeeName, setSelectedFeeName] = useState<string>("🚢 Freight & Ocean Shipping");
+  const [inputFeeAmountMvr, setInputFeeAmountMvr] = useState<string>("");
+
+  // Inward Landed Fee Rows (Entered in MVR and appended down)
   const [feeRows, setFeeRows] = useState<InwardFeeItem[]>([
     { id: "fee-1", name: "🚢 Freight & Ocean Shipping", amountMvr: 1200 },
     { id: "fee-2", name: "🛃 Customs Duty & Import Tariff", amountMvr: 3500 },
@@ -9138,18 +9142,23 @@ function CostingPage({
     toast.success(`Loaded Purchase Bill #${bill.invoiceNo || bill.id.slice(0, 6)}!`);
   };
 
-  // Fee management handlers
-  const handleAddFeeRow = () => {
+  // Fee management handlers (POS Add to Cart workflow)
+  const handleAddFeeToLedger = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const amt = parseFloat(inputFeeAmountMvr);
+    if (isNaN(amt) || amt <= 0) {
+      toast.error("Please enter a valid fee amount in MVR.");
+      return;
+    }
+
     const newId = `fee-${Date.now()}`;
-    setFeeRows(prev => [...prev, { id: newId, name: "🚢 Freight & Ocean Shipping", amountMvr: 0 }]);
+    setFeeRows(prev => [...prev, { id: newId, name: selectedFeeName, amountMvr: amt }]);
+    toast.success(`Added ${selectedFeeName} (MVR ${amt.toLocaleString("en-IN")}) to Inward Costing Ledger!`);
+    setInputFeeAmountMvr("");
   };
 
   const handleRemoveFeeRow = (id: string) => {
     setFeeRows(prev => prev.filter(f => f.id !== id));
-  };
-
-  const handleUpdateFee = (id: string, updates: Partial<InwardFeeItem>) => {
-    setFeeRows(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
   };
 
   // Outward Costing State
@@ -9402,83 +9411,126 @@ function CostingPage({
           <div className="lg:col-span-2 space-y-5">
             {/* Fees Entry Panel */}
             <div className="bg-card border border-border p-5 rounded-2xl shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-border pb-3">
-                <div>
-                  <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
-                    <Building size={16} className="text-blue-600" />
-                    <span>Inward Import Fees & Landed Overheads</span>
-                  </h3>
-                  <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
-                    Select fee types & enter corresponding fee amounts in Maldives Rufiyaa (MVR)
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleAddFeeRow}
-                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 shadow transition-all"
-                >
-                  <Plus size={14} /> + Add Fee Row
-                </button>
+              <div className="border-b border-border pb-3">
+                <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
+                  <Building size={16} className="text-blue-600" />
+                  <span>Inward Import Fees & Landed Overheads</span>
+                </h3>
+                <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
+                  Select fee type, enter fee price in MVR, and click "Add Fee" to push into inward cost ledger
+                </p>
               </div>
 
-              {/* Dynamic Fee Input Rows */}
-              <div className="space-y-3">
+              {/* Single Master Control Input Row (POS / Add-to-Cart Style) */}
+              <form onSubmit={handleAddFeeToLedger} className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl space-y-3">
+                <div className="text-xs font-mono font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-2">
+                  <PlusCircle size={15} /> Add Import Fee Entry
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                  {/* Dropdown Input: Which Fee */}
+                  <div className="md:col-span-6">
+                    <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">Select Fee Type</label>
+                    <select
+                      value={selectedFeeName}
+                      onChange={e => setSelectedFeeName(e.target.value)}
+                      className="w-full px-3 py-2 border border-border rounded-xl bg-card text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+                    >
+                      {FEE_OPTIONS.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Input Box: Fee Price in MVR */}
+                  <div className="md:col-span-4">
+                    <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">Fee Price (MVR)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2.5 text-xs font-mono text-muted-foreground font-bold">MVR</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={inputFeeAmountMvr}
+                        onChange={e => setInputFeeAmountMvr(e.target.value)}
+                        placeholder="0.00"
+                        onKeyDown={e => {
+                          if (e.key === "Enter") {
+                            handleAddFeeToLedger(e);
+                          }
+                        }}
+                        className="w-full pl-12 pr-3 py-2 border border-border rounded-xl bg-card text-foreground text-xs font-mono font-extrabold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right shadow-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Add Fee Button */}
+                  <div className="md:col-span-2">
+                    <button
+                      type="submit"
+                      className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg transition-all uppercase tracking-wider"
+                    >
+                      <Plus size={15} /> Add Fee
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              {/* Added Fees Ledger List (Goes Downward) */}
+              <div className="space-y-2 pt-1">
+                <div className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between px-1">
+                  <span>Inward Landed Fees Ledger ({feeRows.length} Fees Added)</span>
+                  {feeRows.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => { setFeeRows([]); toast.info("Cleared all fee entries."); }}
+                      className="text-[10px] text-red-500 hover:underline font-mono"
+                    >
+                      Clear All
+                    </button>
+                  )}
+                </div>
+
                 {feeRows.length === 0 ? (
-                  <div className="p-8 text-center border border-dashed border-border rounded-xl text-muted-foreground text-xs font-mono">
-                    No import fees added yet. Click "+ Add Fee Row" above to enter freight, customs, or port fees!
+                  <div className="p-8 text-center border border-dashed border-border rounded-xl text-muted-foreground text-xs font-mono space-y-1">
+                    <Building size={24} className="mx-auto text-muted-foreground/50 mb-2" />
+                    <p className="font-semibold text-foreground">No Import Fees Added Yet</p>
+                    <p className="text-[11px]">Select a fee type above, enter the price in MVR, and click "Add Fee" to push it into this ledger!</p>
                   </div>
                 ) : (
-                  feeRows.map((fee, idx) => (
-                    <div key={fee.id} className="grid grid-cols-12 gap-3 items-center bg-secondary/20 p-3 rounded-xl border border-border/60 hover:border-primary/40 transition-colors">
-                      <div className="col-span-1 text-center font-mono text-xs font-bold text-muted-foreground">
-                        #{idx + 1}
-                      </div>
-
-                      {/* Dropdown Input: Which Fee */}
-                      <div className="col-span-6">
-                        <label className="block text-[9px] font-mono text-muted-foreground mb-1 uppercase font-semibold">Select Fee Type</label>
-                        <select
-                          value={fee.name}
-                          onChange={e => handleUpdateFee(fee.id, { name: e.target.value })}
-                          className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-ring"
-                        >
-                          {FEE_OPTIONS.map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Input Box: Fee Price in MVR */}
-                      <div className="col-span-4">
-                        <label className="block text-[9px] font-mono text-muted-foreground mb-1 uppercase font-semibold">Fee Price (MVR)</label>
-                        <div className="relative">
-                          <span className="absolute left-2.5 top-1.5 text-[10px] font-mono text-muted-foreground font-bold">MVR</span>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={fee.amountMvr || ""}
-                            onChange={e => handleUpdateFee(fee.id, { amountMvr: parseFloat(e.target.value) || 0 })}
-                            placeholder="0.00"
-                            className="w-full pl-11 pr-2 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs font-mono font-extrabold focus:outline-none focus:ring-2 focus:ring-ring text-right"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Remove Button */}
-                      <div className="col-span-1 text-center pt-4">
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveFeeRow(fee.id)}
-                          className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                          title="Remove fee entry"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </div>
-                  ))
+                  <div className="border border-border rounded-xl overflow-hidden shadow-sm">
+                    <table className="w-full text-left text-xs font-mono">
+                      <thead className="bg-secondary/40 border-b border-border text-[10px] uppercase text-muted-foreground font-bold">
+                        <tr>
+                          <th className="p-3 w-12 text-center">#</th>
+                          <th className="p-3">Fee Type / Description</th>
+                          <th className="p-3 text-right">Fee Price (MVR)</th>
+                          <th className="p-3 w-16 text-center">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/60 bg-card">
+                        {feeRows.map((fee, idx) => (
+                          <tr key={fee.id} className="hover:bg-secondary/20 transition-colors">
+                            <td className="p-3 text-center text-muted-foreground font-bold">{idx + 1}</td>
+                            <td className="p-3 font-semibold text-foreground">{fee.name}</td>
+                            <td className="p-3 text-right font-extrabold text-emerald-600 dark:text-emerald-400">
+                              MVR {(Number(fee.amountMvr) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
+                            <td className="p-3 text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveFeeRow(fee.id)}
+                                className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                title="Remove fee entry"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
 
