@@ -1481,31 +1481,29 @@ function ProductHistoryModal({
   const totalPurchaseCostMvr = purchaseHistory.reduce((sum, h) => sum + (h.total || 0), 0);
 
   return (
-    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card text-card-foreground border-border p-6 font-mono space-y-5">
-        <DialogHeader className="border-b border-border pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-500/10 border border-blue-500/20 text-blue-600 rounded-xl">
-                <BoxIcon size={24} />
-              </div>
-              <div>
-                <DialogTitle className="text-xl font-bold font-serif text-foreground">
-                  {product.name}
-                </DialogTitle>
-                <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-2 mt-0.5">
-                  <span className="px-2 py-0.5 bg-secondary rounded text-[10px] uppercase font-bold">{product.category}</span>
-                  <span>• Unit: <strong className="text-foreground">{product.unit}</strong></span>
-                  <span>• Buy: <strong className="text-muted-foreground">{fmt(product.buyPrice)}</strong></span>
-                  <span>• Sell: <strong className="text-emerald-600">{fmt(product.sellPrice)}</strong></span>
-                </div>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-card text-card-foreground border border-border rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 font-mono space-y-5">
+        <div className="border-b border-border pb-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-blue-500/10 border border-blue-500/20 text-blue-600 rounded-xl">
+              <Package size={24} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold font-serif text-foreground">
+                {product.name}
+              </h2>
+              <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-2 mt-0.5">
+                <span className="px-2 py-0.5 bg-secondary rounded text-[10px] uppercase font-bold">{product.category}</span>
+                <span>• Unit: <strong className="text-foreground">{product.unit}</strong></span>
+                <span>• Est Buy: <strong className="text-muted-foreground">{fmt(product.buyPrice)}</strong></span>
+                <span>• Est Sell: <strong className="text-emerald-600">{fmt(product.sellPrice)}</strong></span>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground rounded-lg">
-              <X size={18} />
-            </button>
           </div>
-        </DialogHeader>
+          <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary/40 rounded-xl transition-colors">
+            <X size={20} />
+          </button>
+        </div>
 
         {/* 360 Audit Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1615,8 +1613,8 @@ function ProductHistoryModal({
             </div>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
 
