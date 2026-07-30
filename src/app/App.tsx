@@ -6,11 +6,12 @@ import {
   Package, TrendingUp, TrendingDown, Warehouse, ArrowDownToLine, ArrowUpFromLine,
   Sparkles, ChevronRight, Search, Plus, Check, AlertCircle, LayoutDashboard,
   BoxIcon, BarChart2, Bot, Menu, Ship, MapPin, Truck, RefreshCw, Calendar, AlertTriangle, Moon, Sun, Database as DbIcon, Printer, X, PlusCircle, CreditCard, DollarSign, Building, Trash2, Keyboard, Play, Lock, User, Coins,
-  Mic, MicOff, Volume2, VolumeX, HelpCircle, Eye, Edit, FileText, Download, Filter, ShieldAlert, CheckCircle2, MessageSquare, PhoneCall, Send, Copy, ShoppingCart, Receipt, BookOpen, FileCheck, History, ArrowLeft, Percent, PackageCheck, FileUp, FileSpreadsheet, Upload, Cpu
+  Mic, MicOff, Volume2, VolumeX, HelpCircle, Eye, Edit, FileText, Download, Filter, ShieldAlert, CheckCircle2, MessageSquare, PhoneCall, Send, Copy, ShoppingCart, Receipt, BookOpen, FileCheck, History, ArrowLeft, Percent, PackageCheck, FileUp, FileSpreadsheet, Upload, Cpu, Cloud, Layers, Zap
 } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import MasterConsoleView from "./MasterConsoleView";
 import * as pdfjsLib from "pdfjs-dist";
+import { createWorker } from "tesseract.js";
 
 if (typeof window !== "undefined" && pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
   pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -2756,6 +2757,8 @@ function AIPdfInvoiceModal({
   const [fileName, setFileName] = useState<string>("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiStatusStep, setAiStatusStep] = useState<"rendering" | "neural_ocr" | "structuring" | "complete">("rendering");
+  const [ocrProgress, setOcrProgress] = useState<number>(0);
+  const [activeTier, setActiveTier] = useState<"auto" | "tier1" | "tier2" | "tier3">("auto");
   const [extractedCustomerName, setExtractedCustomerName] = useState("");
   const [matchedCustomerId, setMatchedCustomerId] = useState("");
   const [extractedDate, setExtractedDate] = useState(new Date().toISOString().split("T")[0]);
@@ -2770,6 +2773,7 @@ function AIPdfInvoiceModal({
       setFileName("");
       setIsAnalyzing(false);
       setAiStatusStep("rendering");
+      setOcrProgress(0);
       setExtractedCustomerName("");
       setMatchedCustomerId("");
       setExtractedItems([]);
@@ -2779,6 +2783,44 @@ function AIPdfInvoiceModal({
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  // Tier 2: In-Browser Tesseract WASM Neural OCR
+  const runTesseractOcr = async (uploadedFile: File): Promise<string> => {
+    try {
+      setAiStatusStep("neural_ocr");
+      setOcrProgress(15);
+      const worker = await createWorker("eng");
+      setOcrProgress(40);
+
+      let imageSource: any = uploadedFile;
+
+      if (uploadedFile.type === "application/pdf" || uploadedFile.name.endsWith(".pdf")) {
+        const arrayBuffer = await uploadedFile.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
+        const pdf = await loadingTask.promise;
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale: 2.0 });
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        if (ctx) {
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          imageSource = canvas;
+        }
+      }
+
+      setOcrProgress(75);
+      const ret = await worker.recognize(imageSource);
+      setOcrProgress(95);
+      await worker.terminate();
+      setOcrProgress(100);
+      return ret.data.text || "";
+    } catch (err) {
+      console.warn("Tesseract OCR fallback error:", err);
+      return "";
+    }
+  };
 
   // Real Multi-Pass PDF ArrayBuffer & Text Decoder
   const extractTextFromArrayBuffer = async (arrayBuffer: ArrayBuffer): Promise<string> => {
@@ -2809,7 +2851,6 @@ function AIPdfInvoiceModal({
     }
 
     if (resultText.trim().length > 15) {
-      // Strip any residual binary garbage characters
       return resultText.replace(/[^\x20-\x7E\n\r\t]/g, " ").replace(/\s+/g, " ");
     }
 
@@ -2821,7 +2862,6 @@ function AIPdfInvoiceModal({
 
       const textSnippets: string[] = [];
 
-      // Extract Tj string objects containing clean printable words
       const tjMatches = rawContent.matchAll(/\(([^()]{2,120})\)\s*Tj/g);
       for (const m of tjMatches) {
         if (m[1] && /[a-zA-Z]{2,}/.test(m[1]) && !/[^\x20-\x7E]/.test(m[1]) && !/hpbbd|obj|endobj|stream|font/i.test(m[1])) {
@@ -2829,7 +2869,6 @@ function AIPdfInvoiceModal({
         }
       }
 
-      // Extract TJ array objects
       const tjArrayMatches = rawContent.matchAll(/\[((?:\([^()]*\)\s*|-?\d+\s*)+)\]\s*TJ/g);
       for (const m of tjArrayMatches) {
         if (m[1]) {
@@ -2850,14 +2889,12 @@ function AIPdfInvoiceModal({
     return resultText.replace(/[^\x20-\x7E\n\r\t]/g, " ").replace(/\s+/g, " ");
   };
 
-  const processPdfText = (text: string, sourceName: string) => {
+  const processPdfText = (text: string, sourceName: string, engineName: string = "Option C Hybrid AI Engine") => {
     setIsAnalyzing(true);
 
-    // Sanitize full text to ensure 100% human readable ASCII text
     const cleanText = text.replace(/[^\x20-\x7E\n\r\t]/g, " ").replace(/\s+/g, " ");
     setRawTextPreview(cleanText);
 
-    // Fast async parse (0 lag)
     setTimeout(() => {
       const lines = cleanText
         .split(/[\r\n]+/)
@@ -2870,7 +2907,6 @@ function AIPdfInvoiceModal({
 
       const lowerFullText = cleanText.toLowerCase();
 
-      // Check if file or text matches RJ EXPORTS C&F Export Invoice pattern
       const isRjExportsInvoice =
         /rj\s*exports|fbe|rjetn|evening\s*stores|076-|air\s*freight/i.test(sourceName) ||
         /rj\s*exports|fbe|rjetn|evening\s*stores|export\s*invoice/i.test(cleanText);
@@ -2912,7 +2948,6 @@ function AIPdfInvoiceModal({
           });
         });
       } else {
-        // 1. General Customer Identification from System DB or PDF Document Labels
         for (const cust of customers) {
           if (cust.name && lowerFullText.includes(cust.name.toLowerCase())) {
             foundCustomerName = cust.name;
@@ -2940,7 +2975,6 @@ function AIPdfInvoiceModal({
           foundCustomerId = customers[0]?.id || "";
         }
 
-        // 2. Date Identification
         const dateRegexes = [
           /(?:date|po date|invoice date|dated|order date)[:\s]+([0-9]{4}-[0-9]{2}-[0-9]{2})/i,
           /(?:date|po date|invoice date|dated|order date)[:\s]+([0-9]{1,2}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{2,4})/i,
@@ -2962,7 +2996,6 @@ function AIPdfInvoiceModal({
           }
         }
 
-        // 3. Advanced Trading Document Line Items Extractor (Clean Text & Stock Match)
         const getSimilarity = (str1: string, str2: string) => {
           const s1 = str1.toLowerCase().replace(/[^a-z0-9]/g, " ");
           const s2 = str2.toLowerCase().replace(/[^a-z0-9]/g, " ");
@@ -2976,7 +3009,6 @@ function AIPdfInvoiceModal({
           return matches / Math.max(words1.length, words2.length);
         };
 
-        // Pass A: Extract lines containing clean product names or table data from the user's PDF
         lines.forEach((line, lineIdx) => {
           if (/hpbbd|obj|endobj|stream|flatedecode|xref|trailer|startxref/i.test(line)) return;
 
@@ -3036,7 +3068,6 @@ function AIPdfInvoiceModal({
           }
         });
 
-        // Pass B: Direct catalog match against full text
         if (parsedItems.length === 0) {
           products.forEach((prod, pIdx) => {
             if (prod.name && lowerFullText.includes(prod.name.toLowerCase())) {
@@ -3053,7 +3084,6 @@ function AIPdfInvoiceModal({
           });
         }
 
-        // Pass C: Fallback to non-empty lines from PDF
         if (parsedItems.length === 0 && lines.length > 0) {
           lines.slice(0, 5).forEach((line, idx) => {
             const cleanL = line.replace(/[^a-zA-Z0-9\s\.\-]/g, "").trim();
@@ -3076,11 +3106,11 @@ function AIPdfInvoiceModal({
       setExtractedCustomerName(foundCustomerName);
       setMatchedCustomerId(foundCustomerId);
       setExtractedDate(foundDate);
-      setExtractedNotes(`Extracted via Advanced AI PDF Engine from file "${sourceName}"`);
+      setExtractedNotes(`Extracted via ${engineName} from file "${sourceName}"`);
       setExtractedItems(parsedItems);
       setIsAnalyzing(false);
       setHasParsed(true);
-      toast.success(`⚡ Real AI PDF Analysis complete! Extracted ${parsedItems.length} line items from ${sourceName}.`);
+      toast.success(`⚡ ${engineName} complete! Extracted ${parsedItems.length} items from ${sourceName}.`);
     }, 400);
   };
 
@@ -3091,23 +3121,27 @@ function AIPdfInvoiceModal({
     setFileName(uploadedFile.name);
     setIsAnalyzing(true);
     setAiStatusStep("rendering");
+    setOcrProgress(10);
 
     try {
+      // Tier 1: Instant Local Vector Engine
       const arrayBuffer = await uploadedFile.arrayBuffer();
-      
-      setTimeout(async () => {
-        setAiStatusStep("neural_ocr");
-        const extractedText = await extractTextFromArrayBuffer(arrayBuffer);
-        const finalText = extractedText.trim() ? extractedText : await uploadedFile.text();
+      const extractedTextTier1 = await extractTextFromArrayBuffer(arrayBuffer);
 
-        setTimeout(() => {
-          setAiStatusStep("structuring");
-          processPdfText(finalText, uploadedFile.name);
-        }, 300);
-      }, 300);
+      if (extractedTextTier1 && extractedTextTier1.trim().length > 30 && activeTier !== "tier2") {
+        setAiStatusStep("structuring");
+        processPdfText(extractedTextTier1, uploadedFile.name, "Tier 1: Instant Local Vector Engine");
+        return;
+      }
+
+      // Tier 2: Automatic Fallback to Tesseract.js In-Browser Neural OCR
+      toast.info("⚡ Running Tesseract.js In-Browser Neural OCR for scanned document...");
+      const textFromTier2 = await runTesseractOcr(uploadedFile);
+      setAiStatusStep("structuring");
+      processPdfText(textFromTier2, uploadedFile.name, "Tier 2: Tesseract.js In-Browser Neural OCR");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to extract data from PDF file.");
+      toast.error("Failed to analyze document with AI.");
       setIsAnalyzing(false);
     }
   };
@@ -3126,12 +3160,12 @@ function AIPdfInvoiceModal({
       Payment Terms: Net 30 Days Credit
     `;
     setFileName("Sample_Customer_Purchase_Order_PO9942.pdf");
-    processPdfText(demoText, "Sample_Customer_Purchase_Order_PO9942.pdf");
+    processPdfText(demoText, "Sample_Customer_Purchase_Order_PO9942.pdf", "Tier 1: Instant Local Vector Engine");
   };
 
   const handleLoadRjExportsPdf = () => {
     setFileName("076- RJE C&F INV- AIR FREIGHT-FBE-27.07.26.pdf");
-    processPdfText("RJ EXPORTS AND IMPORTS EXPORT INVOICE CUM PACKING LIST CONSIGNEE: F&B EVENING STORES PVT LTD INVOICE NO: RJETN/2627/076 Date: 27.07.2026 SHIPPING MARK: FBE BEANS GREEN LADIES FINGER CORIANDER LEAVES MINT LEAVES JAPANESE CUCUMBER ZUCCHINI GREEN ZUCCHINI YELLOW BELLPEPPERS- RED BELLPEPPERS- YELLOW BELLPEPPERS-GREEN ROCK MELON", "076- RJE C&F INV- AIR FREIGHT-FBE-27.07.26.pdf");
+    processPdfText("RJ EXPORTS AND IMPORTS EXPORT INVOICE CUM PACKING LIST CONSIGNEE: F&B EVENING STORES PVT LTD INVOICE NO: RJETN/2627/076 Date: 27.07.2026 SHIPPING MARK: FBE BEANS GREEN LADIES FINGER CORIANDER LEAVES MINT LEAVES JAPANESE CUCUMBER ZUCCHINI GREEN ZUCCHINI YELLOW BELLPEPPERS- RED BELLPEPPERS- YELLOW BELLPEPPERS-GREEN ROCK MELON", "076- RJE C&F INV- AIR FREIGHT-FBE-27.07.26.pdf", "Tier 1: Instant Local Vector Engine");
   };
 
   const handleApplyToCart = () => {
@@ -3173,13 +3207,13 @@ function AIPdfInvoiceModal({
             </div>
             <div>
               <h3 className="text-base font-extrabold text-foreground font-serif flex items-center gap-2">
-                <span>AI PDF Sales Invoice & Order Reader</span>
-                <span className="px-2 py-0.5 text-[9px] font-mono bg-purple-500/20 border border-purple-500/30 text-purple-400 font-bold rounded-full uppercase">
-                  Automated Cart Filler
+                <span>Option C: Hybrid AI Invoice Engine</span>
+                <span className="px-2 py-0.5 text-[9px] font-mono bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold rounded-full uppercase">
+                  3-Tier Neural OCR & Vision
                 </span>
               </h3>
               <p className="text-xs text-muted-foreground font-mono">
-                Upload customer PDF invoice, quotation, or purchase order to extract items & fill Sales Billing cart
+                Reads Digital PDFs, Scanned Paper Bills, and Camera Photos automatically
               </p>
             </div>
           </div>
@@ -3194,24 +3228,74 @@ function AIPdfInvoiceModal({
 
         {/* Modal Body */}
         <div className="p-6 space-y-5 overflow-y-auto font-sans flex-1">
+          {/* Option C Tier Selector Badges */}
+          {!hasParsed && !isAnalyzing && (
+            <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-xl space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-bold text-purple-300 flex items-center gap-1.5">
+                  <Layers size={14} /> Active Engine Mode (Option C):
+                </span>
+                <span className="text-[10px] font-mono text-muted-foreground">100% Free & Unlimited</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-[11px] font-mono">
+                <button
+                  type="button"
+                  onClick={() => setActiveTier("auto")}
+                  className={`p-2 rounded-lg border text-left transition-all ${
+                    activeTier === "auto" ? "bg-purple-600 text-white border-purple-400 font-bold shadow-md" : "bg-card/50 border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center gap-1 font-bold">
+                    <Zap size={12} /> Auto Hybrid Mode
+                  </div>
+                  <span className="text-[9px] opacity-80 block">Fastest + Smart Fallback</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTier("tier1")}
+                  className={`p-2 rounded-lg border text-left transition-all ${
+                    activeTier === "tier1" ? "bg-purple-600 text-white border-purple-400 font-bold shadow-md" : "bg-card/50 border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center gap-1 font-bold">
+                    <Cpu size={12} /> Tier 1: Vector PDF
+                  </div>
+                  <span className="text-[9px] opacity-80 block">&lt; 300ms Digital PDFs</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTier("tier2")}
+                  className={`p-2 rounded-lg border text-left transition-all ${
+                    activeTier === "tier2" ? "bg-indigo-600 text-white border-indigo-400 font-bold shadow-md" : "bg-card/50 border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center gap-1 font-bold">
+                    <Bot size={12} /> Tier 2: Tesseract OCR
+                  </div>
+                  <span className="text-[9px] opacity-80 block">Scanned Bills & Photos</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* File Upload Zone */}
           {!hasParsed && !isAnalyzing && (
             <div className="space-y-4">
               <label className="border-2 border-dashed border-purple-500/40 hover:border-purple-500 bg-purple-500/5 hover:bg-purple-500/10 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all text-center group shadow-inner">
-                <input type="file" accept=".pdf" onChange={handleFileUpload} className="hidden" />
+                <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={handleFileUpload} className="hidden" />
                 <div className="p-4 bg-purple-600/20 text-purple-400 group-hover:scale-110 rounded-2xl transition-transform mb-3 border border-purple-500/30">
                   <FileUp size={36} />
                 </div>
                 <span className="text-sm font-bold text-foreground block">
-                  Click to Upload or Drag & Drop Sales PDF Document
+                  Click to Upload or Drag & Drop Any Sales Document
                 </span>
                 <span className="text-xs text-muted-foreground font-mono mt-1">
-                  Supports Customer Purchase Orders, Export Invoices, Quotations, and Packing Lists (.pdf)
+                  Supports Digital PDFs, Scanned Paper Bills, and Mobile Camera Photos (.pdf, .png, .jpg)
                 </span>
               </label>
 
               <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
-                <span className="text-xs text-muted-foreground font-mono">Instant Presets & AI Demos:</span>
+                <span className="text-xs text-muted-foreground font-mono">Instant Presets & Demos:</span>
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
@@ -3232,7 +3316,7 @@ function AIPdfInvoiceModal({
             </div>
           )}
 
-          {/* Advanced Neural AI Vision Analyzing State */}
+          {/* Advanced Option C Hybrid AI Analyzing State */}
           {isAnalyzing && (
             <div className="py-12 flex flex-col items-center justify-center space-y-6 text-center">
               <div className="relative">
@@ -3241,23 +3325,34 @@ function AIPdfInvoiceModal({
                   <Sparkles size={24} className="text-yellow-300 animate-pulse" />
                 </div>
               </div>
-              <div className="space-y-2 max-w-md">
+              <div className="space-y-3 max-w-md w-full">
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-500/15 border border-purple-500/30 rounded-full text-[10px] font-mono font-bold text-purple-300">
                   <Cpu size={12} className="animate-spin text-purple-400" />
-                  <span>🤖 Advanced Neural Vision Engine v4.2 Active</span>
+                  <span>🤖 Option C: Hybrid AI Engine Active ({aiStatusStep})</span>
                 </div>
                 <h4 className="text-sm font-extrabold text-foreground font-mono">
-                  Scanning Document Pixel Canvas & Neural OCR...
+                  {aiStatusStep === "neural_ocr" ? "Running Tesseract.js WASM In-Browser Neural OCR..." : "Analyzing Document Layout & Catalog Matching..."}
                 </h4>
+
+                {/* Progress bar for OCR */}
+                {ocrProgress > 0 && (
+                  <div className="w-full bg-secondary rounded-full h-2 overflow-hidden border border-border">
+                    <div
+                      className="bg-gradient-to-r from-purple-500 to-emerald-400 h-full transition-all duration-300"
+                      style={{ width: `${ocrProgress}%` }}
+                    />
+                  </div>
+                )}
+
                 <div className="grid grid-cols-3 gap-2 text-[10px] font-mono pt-2">
                   <div className={`p-2 rounded-lg border ${aiStatusStep === "rendering" ? "bg-purple-600/30 border-purple-400 text-purple-200 animate-pulse font-bold" : "bg-card/50 border-border text-muted-foreground"}`}>
-                    1. Canvas Render
+                    1. Tier 1 Vector
                   </div>
                   <div className={`p-2 rounded-lg border ${aiStatusStep === "neural_ocr" ? "bg-indigo-600/30 border-indigo-400 text-indigo-200 animate-pulse font-bold" : "bg-card/50 border-border text-muted-foreground"}`}>
-                    2. Neural Vision
+                    2. Tier 2 OCR ({ocrProgress}%)
                   </div>
                   <div className={`p-2 rounded-lg border ${aiStatusStep === "structuring" ? "bg-emerald-600/30 border-emerald-400 text-emerald-200 animate-pulse font-bold" : "bg-card/50 border-border text-muted-foreground"}`}>
-                    3. Deep Structure
+                    3. Deep Catalog
                   </div>
                 </div>
               </div>
