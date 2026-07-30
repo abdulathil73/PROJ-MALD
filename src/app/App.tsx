@@ -6,7 +6,7 @@ import {
   Package, TrendingUp, TrendingDown, Warehouse, ArrowDownToLine, ArrowUpFromLine,
   Sparkles, ChevronRight, Search, Plus, Check, AlertCircle, LayoutDashboard,
   BoxIcon, BarChart2, Bot, Menu, Ship, MapPin, Truck, RefreshCw, Calendar, AlertTriangle, Moon, Sun, Database as DbIcon, Printer, X, PlusCircle, CreditCard, DollarSign, Building, Trash2, Keyboard, Play, Lock, User, Coins,
-  Mic, MicOff, Volume2, VolumeX, HelpCircle, Eye, Edit, FileText, Download, Filter, ShieldAlert, CheckCircle2, MessageSquare, PhoneCall, Send, Copy, ShoppingCart, Receipt, BookOpen, FileCheck, History, ArrowLeft, Percent, PackageCheck, FileUp, FileSpreadsheet, Upload
+  Mic, MicOff, Volume2, VolumeX, HelpCircle, Eye, Edit, FileText, Download, Filter, ShieldAlert, CheckCircle2, MessageSquare, PhoneCall, Send, Copy, ShoppingCart, Receipt, BookOpen, FileCheck, History, ArrowLeft, Percent, PackageCheck, FileUp, FileSpreadsheet, Upload, Cpu
 } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import MasterConsoleView from "./MasterConsoleView";
