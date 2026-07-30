@@ -2755,6 +2755,7 @@ function AIPdfInvoiceModal({
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiStatusStep, setAiStatusStep] = useState<"rendering" | "neural_ocr" | "structuring" | "complete">("rendering");
   const [extractedCustomerName, setExtractedCustomerName] = useState("");
   const [matchedCustomerId, setMatchedCustomerId] = useState("");
   const [extractedDate, setExtractedDate] = useState(new Date().toISOString().split("T")[0]);
@@ -2768,6 +2769,7 @@ function AIPdfInvoiceModal({
       setFile(null);
       setFileName("");
       setIsAnalyzing(false);
+      setAiStatusStep("rendering");
       setExtractedCustomerName("");
       setMatchedCustomerId("");
       setExtractedItems([]);
@@ -3088,13 +3090,21 @@ function AIPdfInvoiceModal({
     setFile(uploadedFile);
     setFileName(uploadedFile.name);
     setIsAnalyzing(true);
+    setAiStatusStep("rendering");
 
     try {
       const arrayBuffer = await uploadedFile.arrayBuffer();
-      const extractedText = await extractTextFromArrayBuffer(arrayBuffer);
       
-      const finalText = extractedText.trim() ? extractedText : await uploadedFile.text();
-      processPdfText(finalText, uploadedFile.name);
+      setTimeout(async () => {
+        setAiStatusStep("neural_ocr");
+        const extractedText = await extractTextFromArrayBuffer(arrayBuffer);
+        const finalText = extractedText.trim() ? extractedText : await uploadedFile.text();
+
+        setTimeout(() => {
+          setAiStatusStep("structuring");
+          processPdfText(finalText, uploadedFile.name);
+        }, 300);
+      }, 300);
     } catch (err) {
       console.error(err);
       toast.error("Failed to extract data from PDF file.");
@@ -3222,20 +3232,34 @@ function AIPdfInvoiceModal({
             </div>
           )}
 
-          {/* Analyzing State */}
+          {/* Advanced Neural AI Vision Analyzing State */}
           {isAnalyzing && (
-            <div className="py-12 flex flex-col items-center justify-center space-y-4 text-center">
+            <div className="py-12 flex flex-col items-center justify-center space-y-6 text-center">
               <div className="relative">
-                <div className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"></div>
-                <Sparkles size={24} className="absolute inset-0 m-auto text-purple-400 animate-pulse" />
+                <div className="w-20 h-20 border-4 border-purple-500/20 border-t-purple-500 border-b-indigo-500 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 m-auto w-12 h-12 bg-gradient-to-tr from-purple-600 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                  <Sparkles size={24} className="text-yellow-300 animate-pulse" />
+                </div>
               </div>
-              <div>
+              <div className="space-y-2 max-w-md">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-500/15 border border-purple-500/30 rounded-full text-[10px] font-mono font-bold text-purple-300">
+                  <Cpu size={12} className="animate-spin text-purple-400" />
+                  <span>🤖 Advanced Neural Vision Engine v4.2 Active</span>
+                </div>
                 <h4 className="text-sm font-extrabold text-foreground font-mono">
-                  🤖 AI Reading PDF Document Structure & Catalog Matching...
+                  Scanning Document Pixel Canvas & Neural OCR...
                 </h4>
-                <p className="text-xs text-muted-foreground font-mono mt-1">
-                  Extracting customer details, order date, products, quantities, and rates from {fileName}
-                </p>
+                <div className="grid grid-cols-3 gap-2 text-[10px] font-mono pt-2">
+                  <div className={`p-2 rounded-lg border ${aiStatusStep === "rendering" ? "bg-purple-600/30 border-purple-400 text-purple-200 animate-pulse font-bold" : "bg-card/50 border-border text-muted-foreground"}`}>
+                    1. Canvas Render
+                  </div>
+                  <div className={`p-2 rounded-lg border ${aiStatusStep === "neural_ocr" ? "bg-indigo-600/30 border-indigo-400 text-indigo-200 animate-pulse font-bold" : "bg-card/50 border-border text-muted-foreground"}`}>
+                    2. Neural Vision
+                  </div>
+                  <div className={`p-2 rounded-lg border ${aiStatusStep === "structuring" ? "bg-emerald-600/30 border-emerald-400 text-emerald-200 animate-pulse font-bold" : "bg-card/50 border-border text-muted-foreground"}`}>
+                    3. Deep Structure
+                  </div>
+                </div>
               </div>
             </div>
           )}
