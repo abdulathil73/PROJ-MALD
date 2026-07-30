@@ -13,7 +13,7 @@ import MasterConsoleView from "./MasterConsoleView";
 import * as pdfjsLib from "pdfjs-dist";
 
 if (typeof window !== "undefined" && pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version || "3.11.174"}/pdf.worker.min.js`;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 }
 
 interface ErrorBoundaryState {
@@ -2782,7 +2782,7 @@ function AIPdfInvoiceModal({
   const extractTextFromArrayBuffer = async (arrayBuffer: ArrayBuffer): Promise<string> => {
     let resultText = "";
 
-    // Pass 1: pdfjs-dist page text extraction
+    // Pass 1: pdfjs-dist page text extraction with local worker
     try {
       if (pdfjsLib && pdfjsLib.getDocument) {
         const loadingTask = pdfjsLib.getDocument({
@@ -2797,6 +2797,7 @@ function AIPdfInvoiceModal({
           const textContent = await page.getTextContent();
           const pageText = textContent.items
             .map((item: any) => (item.str ? item.str : ""))
+            .filter((str: string) => str && /[a-zA-Z0-9]/.test(str))
             .join(" ");
           resultText += pageText + "\n";
         }
@@ -2806,10 +2807,11 @@ function AIPdfInvoiceModal({
     }
 
     if (resultText.trim().length > 15) {
-      return resultText;
+      // Strip any residual binary garbage characters
+      return resultText.replace(/[^\x20-\x7E\n\r\t]/g, " ").replace(/\s+/g, " ");
     }
 
-    // Pass 2: Direct Binary Stream Text String Extractor for (Text) Tj and [(Text)] TJ
+    // Pass 2: Fallback Binary Stream Text String Extractor (Clean text only)
     try {
       const bytes = new Uint8Array(arrayBuffer);
       const decoder = new TextDecoder("latin1");
@@ -2817,10 +2819,10 @@ function AIPdfInvoiceModal({
 
       const textSnippets: string[] = [];
 
-      // Extract Tj string objects
+      // Extract Tj string objects containing clean printable words
       const tjMatches = rawContent.matchAll(/\(([^()]{2,120})\)\s*Tj/g);
       for (const m of tjMatches) {
-        if (m[1] && !/^[\x00-\x1F\x7F-\x9F]+$/.test(m[1])) {
+        if (m[1] && /[a-zA-Z]{2,}/.test(m[1]) && !/[^\x20-\x7E]/.test(m[1]) && !/hpbbd|obj|endobj|stream|font/i.test(m[1])) {
           textSnippets.push(m[1]);
         }
       }
@@ -2831,19 +2833,11 @@ function AIPdfInvoiceModal({
         if (m[1]) {
           const innerMatches = m[1].matchAll(/\(([^()]+)\)/g);
           for (const inner of innerMatches) {
-            if (inner[1]) textSnippets.push(inner[1]);
+            if (inner[1] && /[a-zA-Z]{2,}/.test(inner[1]) && !/[^\x20-\x7E]/.test(inner[1])) {
+              textSnippets.push(inner[1]);
+            }
           }
         }
-      }
-
-      // Extract uncompressed text streams
-      if (textSnippets.length === 0) {
-        const lines = rawContent.split(/\r?\n/);
-        lines.forEach(l => {
-          if (/[a-zA-Z0-9]{3,}/.test(l) && !l.startsWith("%") && !l.includes("obj") && !l.includes("endobj")) {
-            textSnippets.push(l);
-          }
-        });
       }
 
       resultText = textSnippets.join(" ");
@@ -2851,25 +2845,28 @@ function AIPdfInvoiceModal({
       console.warn("Stream text extraction error:", err);
     }
 
-    return resultText;
+    return resultText.replace(/[^\x20-\x7E\n\r\t]/g, " ").replace(/\s+/g, " ");
   };
 
   const processPdfText = (text: string, sourceName: string) => {
     setIsAnalyzing(true);
-    setRawTextPreview(text);
+
+    // Sanitize full text to ensure 100% human readable ASCII text
+    const cleanText = text.replace(/[^\x20-\x7E\n\r\t]/g, " ").replace(/\s+/g, " ");
+    setRawTextPreview(cleanText);
 
     // Fast async parse (0 lag)
     setTimeout(() => {
-      const lines = text
+      const lines = cleanText
         .split(/[\r\n]+/)
-        .map(l => l.replace(/\\/g, "").trim())
-        .filter(Boolean);
+        .map(l => l.trim())
+        .filter(l => l.length > 2 && /[a-zA-Z0-9]/.test(l));
 
       let foundCustomerName = "";
       let foundCustomerId = "";
       let foundDate = new Date().toISOString().split("T")[0];
 
-      const lowerFullText = text.toLowerCase();
+      const lowerFullText = cleanText.toLowerCase();
 
       // 1. Customer Identification from System DB or PDF Document Labels
       for (const cust of customers) {
@@ -2886,9 +2883,9 @@ function AIPdfInvoiceModal({
           /(?:to|attn|attention)[:\s]+([A-Za-z0-9\s\.\&\,\-]{3,40})/i,
         ];
         for (const rx of custRegexes) {
-          const m = text.match(rx);
-          if (m && m[1] && m[1].trim().length > 2) {
-            foundCustomerName = m[1].trim();
+          const m = cleanText.match(rx);
+          if (m && m[1] && m[1].trim().length > 2 && /[a-zA-Z]/.test(m[1])) {
+            foundCustomerName = m[1].trim().replace(/[^a-zA-Z0-9\s\.\,\-]/g, "");
             break;
           }
         }
@@ -2907,7 +2904,7 @@ function AIPdfInvoiceModal({
         /([0-9]{1,2}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{2,4})/,
       ];
       for (const rx of dateRegexes) {
-        const dMatch = text.match(rx);
+        const dMatch = cleanText.match(rx);
         if (dMatch && dMatch[1]) {
           const rawD = dMatch[1].replace(/[\/\.]/g, "-");
           if (rawD.length === 10 && rawD.includes("-")) {
@@ -2921,7 +2918,7 @@ function AIPdfInvoiceModal({
         }
       }
 
-      // 3. Advanced Trading Document Line Items Extractor
+      // 3. Advanced Trading Document Line Items Extractor (Clean Text & Stock Match)
       const parsedItems: ExtractedPdfLineItem[] = [];
 
       const getSimilarity = (str1: string, str2: string) => {
@@ -2937,14 +2934,27 @@ function AIPdfInvoiceModal({
         return matches / Math.max(words1.length, words2.length);
       };
 
-      // Pass A: Extract lines containing product names or table data from the user's PDF
+      // Pass A: Extract lines containing clean product names or table data from the user's PDF
       lines.forEach((line, lineIdx) => {
+        // Skip binary garbage lines or header keywords
+        if (/hpbbd|obj|endobj|stream|flatedecode|xref|trailer|startxref/i.test(line)) return;
+
         const numbersInLine = line.match(/(\d+(?:,\d{3})*(?:\.\d+)?)/g);
         
         if (numbersInLine && numbersInLine.length >= 1) {
-          const descCandidate = line.replace(/(\d+(?:,\d{3})*(?:\.\d+)?)/g, "").replace(/[$€MVR,\:\-\|]+/g, " ").trim();
+          // Clean product candidate description
+          let descCandidate = line
+            .replace(/(\d+(?:,\d{3})*(?:\.\d+)?)/g, "")
+            .replace(/[$€MVR,\:\-\|]+/g, " ")
+            .replace(/[^a-zA-Z0-9\s\.\&\(\)\/]/g, "")
+            .trim();
           
-          if (descCandidate.length >= 3 && !/total|subtotal|tax|gst|date|invoice|page|bank|phone|email|sl|no/i.test(descCandidate)) {
+          // Must contain readable words (at least 2 letters) and not be system keywords
+          if (
+            descCandidate.length >= 3 &&
+            /[a-zA-Z]{2,}/.test(descCandidate) &&
+            !/total|subtotal|tax|gst|date|invoice|page|bank|phone|email|sl|no|freight|charge/i.test(descCandidate)
+          ) {
             const cleanNums = numbersInLine.map(n => parseFloat(n.replace(/,/g, ""))).filter(n => n > 0 && n < 1000000);
             
             let qty = 1;
@@ -2972,15 +2982,18 @@ function AIPdfInvoiceModal({
             const matchedProduct = maxScore > 0.2 ? bestProd : products[lineIdx % products.length] || products[0];
             const confidenceScore = maxScore > 0.4 ? Math.round(maxScore * 100) : 85;
 
-            parsedItems.push({
-              id: `real-pdf-${Date.now()}-${lineIdx}`,
-              extractedName: descCandidate || matchedProduct?.name || `Extracted PDF Item #${lineIdx + 1}`,
-              matchedProductId: matchedProduct ? matchedProduct.id : "",
-              quantity: qty,
-              rate: rate || matchedProduct?.price || 100,
-              subTotal: qty * (rate || matchedProduct?.price || 100),
-              confidence: Math.min(99, Math.max(75, confidenceScore)),
-            });
+            // Prevent duplicate or garbage items
+            if (parsedItems.length < 50 && !parsedItems.some(i => i.extractedName === descCandidate)) {
+              parsedItems.push({
+                id: `real-pdf-${Date.now()}-${lineIdx}`,
+                extractedName: descCandidate || matchedProduct?.name || `Clean PDF Item #${lineIdx + 1}`,
+                matchedProductId: matchedProduct ? matchedProduct.id : "",
+                quantity: qty,
+                rate: rate || matchedProduct?.price || 100,
+                subTotal: qty * (rate || matchedProduct?.price || 100),
+                confidence: Math.min(99, Math.max(75, confidenceScore)),
+              });
+            }
           }
         }
       });
@@ -3005,11 +3018,12 @@ function AIPdfInvoiceModal({
       // Pass C: Fallback to non-empty lines from PDF
       if (parsedItems.length === 0 && lines.length > 0) {
         lines.slice(0, 5).forEach((line, idx) => {
-          if (line.length > 3 && !/total|invoice|date|phone|email/i.test(line)) {
+          const cleanL = line.replace(/[^a-zA-Z0-9\s\.\-]/g, "").trim();
+          if (cleanL.length > 3 && /[a-zA-Z]{2,}/.test(cleanL) && !/total|invoice|date|phone|email/i.test(cleanL)) {
             const defaultProd = products[idx % products.length] || products[0];
             parsedItems.push({
               id: `custom-pdf-${Date.now()}-${idx}`,
-              extractedName: line.slice(0, 40),
+              extractedName: cleanL.slice(0, 40),
               matchedProductId: defaultProd ? defaultProd.id : "",
               quantity: 1,
               rate: defaultProd?.price || 100,
