@@ -13841,10 +13841,18 @@ export default function App() {
   // Add Customer
   async function handleAddCustomer(customerData: Omit<Customer, "id">): Promise<Customer | null> {
     try {
+      const sanitized = {
+        ...customerData,
+        name: customerData.name?.trim() || "",
+        address: customerData.address?.trim() || "N/A",
+        phone: customerData.phone?.trim() || "N/A",
+        gstNo: customerData.gstNo?.trim() ? customerData.gstNo.trim().toUpperCase() : "URP",
+      };
+
       const res = await fetch("/api/customers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(customerData),
+        body: JSON.stringify(sanitized),
       });
 
       if (!res.ok) {
@@ -13865,10 +13873,18 @@ export default function App() {
   // Add Supplier
   async function handleAddSupplier(supplierData: Omit<Supplier, "id">): Promise<Supplier | null> {
     try {
+      const sanitized = {
+        ...supplierData,
+        name: supplierData.name?.trim() || "",
+        address: supplierData.address?.trim() || "N/A",
+        phone: supplierData.phone?.trim() || "N/A",
+        gstNo: supplierData.gstNo?.trim() ? supplierData.gstNo.trim().toUpperCase() : "URP",
+      };
+
       const res = await fetch("/api/suppliers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(supplierData),
+        body: JSON.stringify(sanitized),
       });
 
       if (!res.ok) {

@@ -88,15 +88,15 @@ app.get("/api/customers", (req, res) => {
 app.post("/api/customers", (req, res) => {
   try {
     const { name, address, phone, gstNo, email, creditLimitDays, creditLimitAmount } = req.body;
-    if (!name || !address || !phone || !gstNo) {
-      return res.status(400).json({ error: "Missing customer fields. Address, Phone, and GST are required." });
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: "Customer Name is required." });
     }
 
     const newCustomer = Database.addCustomer({
-      name,
-      address,
-      phone,
-      gstNo,
+      name: name.trim(),
+      address: (address && address.trim()) ? address.trim() : "N/A",
+      phone: (phone && phone.trim()) ? phone.trim() : "N/A",
+      gstNo: (gstNo && gstNo.trim()) ? gstNo.trim() : "URP",
       email: email || "",
       creditLimitDays: Number(creditLimitDays || 0),
       creditLimitAmount: Number(creditLimitAmount || 0),
@@ -138,11 +138,17 @@ app.get("/api/suppliers", (req, res) => {
 app.post("/api/suppliers", (req, res) => {
   try {
     const { name, address, phone, gstNo, email } = req.body;
-    if (!name || !address || !phone || !gstNo) {
-      return res.status(400).json({ error: "Missing supplier fields. Address, Phone, and GST are required." });
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: "Supplier Name is required." });
     }
 
-    const newSupplier = Database.addSupplier({ name, address, phone, gstNo, email: email || "" });
+    const newSupplier = Database.addSupplier({
+      name: name.trim(),
+      address: (address && address.trim()) ? address.trim() : "N/A",
+      phone: (phone && phone.trim()) ? phone.trim() : "N/A",
+      gstNo: (gstNo && gstNo.trim()) ? gstNo.trim() : "URP",
+      email: email || ""
+    });
     res.status(201).json(newSupplier);
   } catch (error: any) {
     res.status(400).json({ error: error.message });

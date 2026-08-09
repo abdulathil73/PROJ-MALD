@@ -2676,10 +2676,9 @@ export default function MasterConsoleView({
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Supplier Contact Phone *</label>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Supplier Contact Phone</label>
                       <input
                         type="text"
-                        required
                         placeholder="+91-XXXXX-XXXXX"
                         value={supplierForm.phone}
                         onChange={e => setSupplierForm(prev => ({ ...prev, phone: e.target.value }))}
@@ -2687,10 +2686,9 @@ export default function MasterConsoleView({
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">GST / Tax Registration (GSTIN) *</label>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">GST / Tax Registration (GSTIN)</label>
                       <input
                         type="text"
-                        required
                         placeholder="15-digit GSTIN"
                         value={supplierForm.gstNo}
                         onChange={e => setSupplierForm(prev => ({ ...prev, gstNo: e.target.value }))}
