@@ -16217,6 +16217,10 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
       switch (page) {
         case "dashboard": return <DashboardPage products={products} entries={entries} analytics={analytics} onRefresh={loadData} />;
         case "inventory": return <InventoryPage products={products} entries={entries} onAddProduct={handleAddProduct} />;
+        case "godowns":
+        case "godown-hub":
+        case "inventory-godowns":
+          return <GodownsPage products={products} analytics={analytics} />;
         case "sales":
         case "sales-billing":
           return <SalesPage products={products} customers={customers} suppliers={suppliers} entries={entries} onAddEntry={handleAddEntry} onAddCustomer={handleAddCustomer} isInvoiceOpen={isInvoiceOpen} paymentType={salesPaymentType} setPaymentType={setSalesPaymentType} setPage={setPage} darkMode={darkMode} setDarkMode={setDarkMode} voiceHandlersRef={globalVoiceHandlers} transactionType="billing" onViewInvoice={(inv) => { setActiveInvoice(inv); setIsInvoiceOpen(true); }} activeEditRecord={activeEditRecord} />;
@@ -16248,6 +16252,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
           return <CurrencyConvertPage products={products} entries={entries} />;
         case "expiry":
         case "expiry-sale":
+        case "perishables":
           return <ExpiryPage products={products} entries={entries} onRefresh={loadData} onLoadClearancePromo={handleApplyClearancePromo} />;
         case "offers":
           return <OffersPage products={products} entries={entries} onRefresh={loadData} />;
