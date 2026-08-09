@@ -10605,7 +10605,9 @@ function GodownsPage({ products, analytics }: { products: Product[]; analytics: 
     return [...ALL_GODOWNS];
   });
 
+  const [activeViewMode, setActiveViewMode] = useState<"grid" | "focus" | "matrix">("grid");
   const [activeGodown, setActiveGodown] = useState<string>("A");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // New Godown Form State
@@ -10614,6 +10616,20 @@ function GodownsPage({ products, analytics }: { products: Product[]; analytics: 
   const [climateCategory, setClimateCategory] = useState("Ambient Dry Storage (20-25°C)");
   const [maxCapacity, setMaxCapacity] = useState("");
   const [locationAddress, setLocationAddress] = useState("");
+
+  // Helper for climate label
+  const getGodownClimateLabel = (g: string) => {
+    const stored = localStorage.getItem("custom_godowns_metadata");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed[g]?.climate) return parsed[g].climate;
+      } catch (e) {}
+    }
+    if (["A", "B", "C", "D", "E", "F"].includes(g)) return "Ambient Dry Storage (20-25°C)";
+    if (["G", "H", "I", "J", "K", "L"].includes(g)) return "Cold Storage (2-8°C)";
+    return "Dehumidified Spice Vault (<50% RH)";
+  };
 
   // Global Keyboard Shortcut: Ctrl + C (or Cmd + C) to trigger Godown Creation Modal
   useEffect(() => {
@@ -10646,7 +10662,6 @@ function GodownsPage({ products, analytics }: { products: Product[]; analytics: 
     setGodownsList(newList);
     localStorage.setItem("custom_godowns_list", JSON.stringify(newList));
 
-    // Store custom climate / details
     const storedDetails = JSON.parse(localStorage.getItem("custom_godowns_metadata") || "{}");
     storedDetails[code] = {
       name: godownName.trim() || `Godown ${code}`,
@@ -10659,7 +10674,6 @@ function GodownsPage({ products, analytics }: { products: Product[]; analytics: 
     setActiveGodown(code);
     toast.success(`New Warehouse Godown "${code}" created successfully!`);
 
-    // Reset form
     setGodownCode("");
     setGodownName("");
     setMaxCapacity("");
@@ -10672,6 +10686,55 @@ function GodownsPage({ products, analytics }: { products: Product[]; analytics: 
     return analytics.godownStats;
   }, [analytics]);
 
+  // Comprehensive breakdown for all godowns
+  const allGodownsData = useMemo(() => {
+    return godownsList.map(g => {
+      const storedItems = products.map(p => {
+        const qty = p.godownStocks?.[g as Godown] || 0;
+        return { product: p, qty };
+      }).filter(item => {
+        if (item.qty <= 0) return false;
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase().trim();
+        return item.product.name.toLowerCase().includes(q) || item.product.category.toLowerCase().includes(q);
+      });
+
+      const totalQty = storedItems.reduce((acc, curr) => acc + curr.qty, 0);
+      const totalValue = storedItems.reduce((acc, curr) => acc + (curr.qty * (curr.product.sellPrice || 0)), 0);
+
+      return {
+        godown: g,
+        climate: getGodownClimateLabel(g),
+        items: storedItems,
+        totalQty,
+        totalValue,
+        uniqueProductsCount: storedItems.length,
+      };
+    });
+  }, [godownsList, products, searchQuery]);
+
+  // Overall totals across all godowns
+  const totalsSummary = useMemo(() => {
+    let grandQty = 0;
+    let grandValue = 0;
+    let occupiedGodowns = 0;
+
+    allGodownsData.forEach(gData => {
+      grandQty += gData.totalQty;
+      grandValue += gData.totalValue;
+      if (gData.totalQty > 0) occupiedGodowns++;
+    });
+
+    return {
+      grandQty,
+      grandValue,
+      totalGodowns: godownsList.length,
+      occupiedGodowns,
+      emptyGodowns: godownsList.length - occupiedGodowns
+    };
+  }, [allGodownsData, godownsList]);
+
+  // Active single godown focus items
   const activeProducts = useMemo(() => {
     return products.map(p => {
       const current = p.godownStocks?.[activeGodown as Godown] || 0;
@@ -10683,89 +10746,402 @@ function GodownsPage({ products, analytics }: { products: Product[]; analytics: 
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
+      {/* Header Cockpit Title */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
           <h1 className="text-3xl font-semibold text-foreground font-serif flex items-center gap-2.5">
-            <Warehouse className="text-primary" size={28} /> Warehouse & Godowns Monitor
+            <Warehouse className="text-primary" size={28} /> 18 Godowns Logistics Hub (A to R)
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Layout status of {godownsList.length} warehouses • Press <kbd className="font-mono bg-muted px-1.5 py-0.5 rounded border text-xs">Ctrl + C</kbd> for quick creation
+            Real-time stock location tracking across all 18 Godowns (A to R) • Press <kbd className="font-mono bg-muted px-1.5 py-0.5 rounded border text-xs">Ctrl + C</kbd> to add godown
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsCreateModalOpen(true)}
-          className="px-4 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 font-mono font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2"
-          title="Create New Godown [Shortcut: Ctrl + C]"
-        >
-          <Plus size={16} /> Create New Godown <span className="text-[10px] opacity-80 border border-primary-foreground/30 px-1.5 py-0.5 rounded">Ctrl + C</span>
-        </button>
-      </div>
-
-      <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-9 gap-3">
-        {godownsList.map(g => {
-          const stats = godownStats.find(gs => gs.godown === g);
-          const currentQty = stats?.current || 0;
-          const isActive = activeGodown === g;
-
-          return (
+        <div className="flex flex-wrap items-center gap-3">
+          {/* View Mode Switchers */}
+          <div className="bg-secondary/40 border border-border p-1 rounded-xl flex items-center gap-1 font-mono text-xs font-bold">
             <button
-              key={g}
-              onClick={() => setActiveGodown(g)}
-              className={`p-2.5 rounded-lg border text-center transition-all hover:scale-[1.03] ${isActive ? "border-primary bg-primary text-primary-foreground shadow" : "border-border bg-card text-card-foreground"}`}
+              type="button"
+              onClick={() => setActiveViewMode("grid")}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${
+                activeViewMode === "grid" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"
+              }`}
             >
-              <div className="font-bold text-sm font-serif">{g}</div>
-              <div className="text-[9px] font-mono opacity-80 mt-1">{currentQty} units</div>
+              <LayoutGrid size={14} /> All 18 Godowns Grid
             </button>
-          );
-        })}
+            <button
+              type="button"
+              onClick={() => setActiveViewMode("matrix")}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${
+                activeViewMode === "matrix" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Boxes size={14} /> Products Matrix Table
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveViewMode("focus")}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${
+                activeViewMode === "focus" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Layers size={14} /> Single Inspector
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsCreateModalOpen(true)}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-mono font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2"
+            title="Create New Godown [Shortcut: Ctrl + C]"
+          >
+            <Plus size={16} /> + New Godown <span className="text-[10px] opacity-80 border border-emerald-400/40 px-1.5 py-0.5 rounded">[Ctrl + C]</span>
+          </button>
+        </div>
       </div>
 
-      <div className="bg-card rounded-xl border border-border p-5 space-y-4">
-        <div className="flex justify-between items-center border-b border-border pb-3">
-          <h3 className="font-semibold text-foreground font-serif">
-            Stock Allocations in Godown {activeGodown}
-          </h3>
-          <div className="text-xs font-mono text-muted-foreground">
-            Climate category: {getGodownClimateLabel(activeGodown)}
-          </div>
+      {/* KPI Stats Summary Bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-mono">
+        <div className="bg-card border border-border p-4 rounded-xl shadow-sm space-y-1">
+          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Total Warehouses Monitored</span>
+          <div className="text-2xl font-extrabold text-foreground">{totalsSummary.totalGodowns} Godowns (A to R)</div>
+          <span className="text-[10px] text-emerald-600 font-semibold">{totalsSummary.occupiedGodowns} Occupied • {totalsSummary.emptyGodowns} Empty</span>
         </div>
 
-        {activeProducts.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground text-sm">No products stored in Godown {activeGodown} currently.</div>
-        ) : (
-          <div className="divide-y divide-border">
-            {activeProducts.map(p => {
-              const totalGodownStock = currentActiveStats?.current || 1;
-              const pctOfGodown = Math.round((p.current / totalGodownStock) * 100);
+        <div className="bg-card border border-border p-4 rounded-xl shadow-sm space-y-1">
+          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Total Units Stored</span>
+          <div className="text-2xl font-extrabold text-emerald-600">{totalsSummary.grandQty.toLocaleString()} Units</div>
+          <span className="text-[10px] text-muted-foreground">Consolidated physical inventory</span>
+        </div>
+
+        <div className="bg-card border border-border p-4 rounded-xl shadow-sm space-y-1">
+          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Total Stock Value in Vaults</span>
+          <div className="text-2xl font-extrabold text-primary">
+            ₹{totalsSummary.grandValue.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+          </div>
+          <span className="text-[10px] text-muted-foreground">Estimated selling value</span>
+        </div>
+
+        <div className="bg-card border border-border p-4 rounded-xl shadow-sm flex flex-col justify-center space-y-2">
+          <label className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1">
+            <Search size={12} /> Filter Products Across All 18 Godowns
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search product (e.g. Cardamom, Rice)..."
+              className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-bold"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1.5 text-xs text-muted-foreground hover:text-foreground font-bold"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* GODOWN NAVIGATION RIBBON */}
+      <div className="bg-card border border-border p-3 rounded-xl shadow-sm space-y-2">
+        <div className="flex justify-between items-center text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider">
+          <span>Quick Select 18 Godowns Layout (A to R)</span>
+          <span>Click any Godown designation below to jump or inspect</span>
+        </div>
+
+        <div className="grid grid-cols-6 sm:grid-cols-9 lg:grid-cols-18 gap-2 font-mono">
+          {godownsList.map(g => {
+            const gData = allGodownsData.find(d => d.godown === g);
+            const currentQty = gData?.totalQty || 0;
+            const isCurrentActive = activeGodown === g;
+
+            return (
+              <button
+                key={g}
+                type="button"
+                onClick={() => {
+                  setActiveGodown(g);
+                  if (activeViewMode === "matrix") setActiveViewMode("grid");
+                }}
+                className={`p-2 rounded-lg border text-center transition-all hover:scale-105 ${
+                  isCurrentActive 
+                    ? "border-primary bg-primary text-primary-foreground font-bold shadow-md ring-2 ring-primary/30" 
+                    : currentQty > 0 
+                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold" 
+                      : "border-border bg-card text-muted-foreground opacity-60 hover:opacity-100"
+                }`}
+              >
+                <div className="text-xs font-bold font-serif">{g}</div>
+                <div className="text-[9px] truncate font-mono mt-0.5">
+                  {currentQty > 0 ? `${currentQty}` : "0"}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* VIEW MODE 1: ALL 18 GODOWNS GRID OVERVIEW (DEFAULT & PROMINENT) */}
+      {activeViewMode === "grid" && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center border-b border-border pb-2">
+            <h2 className="text-lg font-bold text-foreground font-serif flex items-center gap-2">
+              <Boxes size={20} className="text-primary" /> Master 18 Godowns Inventory Manifest ({godownsList.length} Vaults)
+            </h2>
+            <span className="text-xs font-mono text-muted-foreground">
+              Showing stored products for every godown from A to R
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {allGodownsData.map(gData => {
+              const { godown: g, climate, items, totalQty, totalValue, uniqueProductsCount } = gData;
+              const isSelected = activeGodown === g;
+
               return (
-                <div key={p.id} className="py-4 flex items-center gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="font-semibold text-sm text-foreground">{p.name}</span>
-                      <Badge label={p.category} color={CATEGORY_COLORS[p.category]} />
-                      {p.isPerishable && (
-                        <span className="text-[9px] font-mono text-red-600 bg-red-50 px-1.5 py-0.2 rounded border border-red-200">Perishable</span>
+                <div
+                  key={g}
+                  onClick={() => setActiveGodown(g)}
+                  className={`bg-card border rounded-2xl p-5 shadow-sm transition-all flex flex-col justify-between space-y-4 cursor-pointer relative overflow-hidden group ${
+                    isSelected ? "border-primary ring-2 ring-primary/20 shadow-md" : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <div className="space-y-3">
+                    {/* Card Top Banner */}
+                    <div className="flex justify-between items-start border-b border-border/60 pb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-serif font-extrabold text-xl text-foreground">Godown {g}</span>
+                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full uppercase border ${
+                            totalQty > 0 ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" : "bg-muted text-muted-foreground border-border"
+                          }`}>
+                            {totalQty > 0 ? `${totalQty} Units` : "Empty"}
+                          </span>
+                        </div>
+                        <span className="text-[10.5px] font-mono text-muted-foreground block mt-1">
+                          🌡️ {climate}
+                        </span>
+                      </div>
+
+                      <div className="text-right font-mono">
+                        <span className="text-xs font-bold text-primary block">
+                          ₹{totalValue.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {uniqueProductsCount} product{uniqueProductsCount === 1 ? "" : "s"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Products List inside this Godown */}
+                    <div className="space-y-2 min-h-[140px] max-h-[220px] overflow-y-auto pr-1">
+                      {items.length === 0 ? (
+                        <div className="h-32 flex flex-col justify-center items-center text-center text-muted-foreground italic border border-dashed border-border/60 rounded-xl p-4">
+                          <Warehouse size={24} className="opacity-30 mb-1.5" />
+                          <span className="text-xs font-mono">No products stored in Godown {g}</span>
+                          <span className="text-[10px] opacity-75 mt-0.5">Ready to receive cargo stock</span>
+                        </div>
+                      ) : (
+                        items.map(({ product: p, qty }) => (
+                          <div
+                            key={p.id}
+                            className="p-2.5 bg-secondary/20 hover:bg-secondary/40 border border-border/50 rounded-xl flex justify-between items-center transition-colors font-sans text-xs"
+                          >
+                            <div className="flex items-center gap-2 truncate">
+                              <span className="font-semibold text-foreground truncate">{p.name}</span>
+                              <Badge label={p.category} color={CATEGORY_COLORS[p.category]} />
+                            </div>
+
+                            <div className="text-right font-mono flex-shrink-0 ml-2">
+                              <span className="font-extrabold text-foreground text-xs block">
+                                {qty} {p.unit}
+                              </span>
+                              <span className="text-[9px] text-muted-foreground">
+                                ₹{(qty * (p.sellPrice || 0)).toLocaleString("en-IN")}
+                              </span>
+                            </div>
+                          </div>
+                        ))
                       )}
                     </div>
-                    <div className="w-full bg-muted rounded-full h-1.5">
-                      <div
-                        className="h-1.5 rounded-full transition-all"
-                        style={{ width: `${pctOfGodown}%`, background: CATEGORY_COLORS[p.category] }}
-                      />
-                    </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <div className="font-mono text-sm font-semibold text-foreground">{p.current} {p.unit}</div>
-                    <div className="text-[10px] font-mono text-muted-foreground">{pctOfGodown}% of Godown space</div>
+
+                  {/* Card Footer Actions */}
+                  <div className="pt-3 border-t border-border/50 flex justify-between items-center text-xs font-mono">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveGodown(g);
+                        setActiveViewMode("focus");
+                      }}
+                      className="text-primary hover:underline font-bold text-[11px] flex items-center gap-1"
+                    >
+                      <Layers size={13} /> Deep Inspector →
+                    </button>
+                    <span className="text-[10px] text-muted-foreground font-semibold">
+                      {totalQty > 0 ? `${uniqueProductsCount} Types Allocated` : "0 Stock"}
+                    </span>
                   </div>
                 </div>
               );
             })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* VIEW MODE 2: SINGLE GODOWN FOCUS INSPECTOR */}
+      {activeViewMode === "focus" && (
+        <div className="bg-card rounded-2xl border border-border p-6 space-y-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center border-b border-border pb-4 gap-2">
+            <div>
+              <h3 className="font-semibold text-2xl text-foreground font-serif flex items-center gap-2">
+                Detailed Stock Allocations in Godown {activeGodown}
+              </h3>
+              <p className="text-xs font-mono text-muted-foreground mt-0.5">
+                Climate environment: <strong className="text-foreground">{getGodownClimateLabel(activeGodown)}</strong>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveViewMode("grid")}
+              className="px-3.5 py-1.5 bg-secondary hover:bg-secondary/80 border border-border rounded-lg text-xs font-mono font-bold self-start sm:self-auto"
+            >
+              ← Back to All 18 Godowns Grid
+            </button>
+          </div>
+
+          {activeProducts.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground text-sm font-mono space-y-2">
+              <Warehouse size={36} className="mx-auto opacity-40 mb-2" />
+              <p className="font-bold text-foreground">No products stored in Godown {activeGodown} currently.</p>
+              <p className="text-xs opacity-75">Use Sales & Purchase Billing or Master Console to allocate stock to Godown {activeGodown}.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border/60">
+              {activeProducts.map(p => {
+                const totalGodownStock = currentActiveStats?.current || 1;
+                const pctOfGodown = Math.round((p.current / totalGodownStock) * 100);
+                return (
+                  <div key={p.id} className="py-4 flex items-center gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="font-semibold text-sm text-foreground">{p.name}</span>
+                        <Badge label={p.category} color={CATEGORY_COLORS[p.category]} />
+                        {p.isPerishable && (
+                          <span className="text-[9px] font-mono text-red-600 bg-red-50 dark:bg-red-950/40 px-1.5 py-0.2 rounded border border-red-200 dark:border-red-800">
+                            Perishable
+                          </span>
+                        )}
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{ width: `${pctOfGodown}%`, background: CATEGORY_COLORS[p.category] || "#10b981" }}
+                        />
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0 font-mono">
+                      <div className="text-base font-bold text-foreground">{p.current} {p.unit}</div>
+                      <div className="text-[10px] text-muted-foreground">{pctOfGodown}% of Godown space</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* VIEW MODE 3: PRODUCTS X 18 GODOWNS CROSS-TABULATION MATRIX TABLE */}
+      {activeViewMode === "matrix" && (
+        <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm space-y-4 p-5">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center border-b border-border pb-3 gap-2">
+            <div>
+              <h3 className="font-bold text-base text-foreground font-serif flex items-center gap-2">
+                <Boxes size={18} className="text-primary" /> Master Stock Matrix Across All 18 Godowns (A to R)
+              </h3>
+              <p className="text-xs font-mono text-muted-foreground mt-0.5">
+                Full spreadsheet matrix showing exact inventory levels for every product in Godowns A through R
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveViewMode("grid")}
+              className="px-3 py-1.5 bg-secondary hover:bg-secondary/80 border border-border rounded-lg text-xs font-mono font-bold"
+            >
+              ← Back to Grid View
+            </button>
+          </div>
+
+          <div className="overflow-x-auto border border-border rounded-xl">
+            <table className="w-full text-left font-mono text-xs border-collapse">
+              <thead>
+                <tr className="bg-secondary/40 border-b border-border text-[10px] uppercase text-muted-foreground font-bold">
+                  <th className="p-3 min-w-[160px] sticky left-0 bg-secondary/80 backdrop-blur z-10 border-r border-border">Product Name</th>
+                  <th className="p-3">Category</th>
+                  <th className="p-3 text-right">Total Stock</th>
+                  {godownsList.map(g => (
+                    <th key={g} className="p-2.5 text-center min-w-[50px] border-l border-border/40">
+                      Gdn {g}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {products.length === 0 ? (
+                  <tr>
+                    <td colSpan={3 + godownsList.length} className="p-8 text-center text-muted-foreground italic">
+                      No products found in inventory catalog.
+                    </td>
+                  </tr>
+                ) : (
+                  products.filter(p => {
+                    if (!searchQuery.trim()) return true;
+                    const q = searchQuery.toLowerCase().trim();
+                    return p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
+                  }).map((p, idx) => {
+                    const totalQty = p.godownStocks ? Object.values(p.godownStocks).reduce((a, b) => a + b, 0) : 0;
+
+                    return (
+                      <tr key={p.id || idx} className="hover:bg-secondary/20 transition-colors">
+                        <td className="p-3 font-semibold text-foreground sticky left-0 bg-card border-r border-border z-10">
+                          {p.name}
+                        </td>
+                        <td className="p-3">
+                          <Badge label={p.category} color={CATEGORY_COLORS[p.category]} />
+                        </td>
+                        <td className="p-3 text-right font-extrabold text-emerald-600">
+                          {totalQty} {p.unit}
+                        </td>
+
+                        {godownsList.map(g => {
+                          const val = p.godownStocks?.[g as Godown] || 0;
+                          return (
+                            <td
+                              key={g}
+                              className={`p-2.5 text-center border-l border-border/30 font-bold ${
+                                val > 0 ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "text-muted-foreground/30"
+                              }`}
+                            >
+                              {val > 0 ? val : "-"}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* GODOWN CREATION MODAL */}
       {isCreateModalOpen && (
