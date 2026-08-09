@@ -18,6 +18,44 @@ app.use((req, res, next) => {
   next();
 });
 
+// Root route - API status page
+app.get("/", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Spice Route Trading Co. - API Server</title>
+        <style>
+          body { font-family: sans-serif; background: #0b1912; color: #f4f1de; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+          .card { background: #14281d; border: 1px solid rgba(82,183,136,0.3); border-radius: 16px; padding: 40px; max-width: 480px; text-align: center; }
+          h1 { color: #52b788; margin-top: 0; }
+          p { color: #b7e4c7; }
+          a { color: #52b788; }
+          .badge { display: inline-block; background: rgba(82,183,136,0.15); border: 1px solid rgba(82,183,136,0.4); border-radius: 8px; padding: 6px 14px; font-size: 13px; color: #52b788; margin: 4px; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h1>🌿 Spice Route Trading Co.</h1>
+          <p>Backend API Server is running successfully.</p>
+          <p><strong>Frontend app:</strong> <a href="http://localhost:5173" target="_blank">http://localhost:5173</a></p>
+          <br/>
+          <div>
+            <span class="badge">✅ Status: Online</span>
+            <span class="badge">⚙️ Port: ${PORT}</span>
+          </div>
+        </div>
+      </body>
+    </html>
+  `);
+});
+
+// Health check
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+
 // PRODUCTS
 app.get("/api/products", (req, res) => {
   try {

@@ -13785,6 +13785,13 @@ export default function App() {
     return allowed.includes(key);
   };
 
+  // Helper: check if user has ANY of the provided feature keys
+  const hasAnyFeature = (...keys: string[]): boolean => {
+    if (!currentUser) return true;
+    if (currentUser.role === "Admin" || currentUser.role === "Owner" || currentUser.username === "admin") return true;
+    return keys.some(k => isFeaturePermitted(k));
+  };
+
   const [appState, setAppState] = useState<"intro" | "login" | "main">("intro");
   const [page, setPage] = useState("dashboard");
   const [masterOpen, setMasterOpen] = useState(false);
@@ -13808,6 +13815,15 @@ export default function App() {
       setCostingOpen(true);
     }
   }, [page]);
+
+  // Auto-redirect to dashboard when user account switches and current page is restricted
+  useEffect(() => {
+    if (appState === "main" && page && !isFeaturePermitted(page)) {
+      setPage("dashboard");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser]);
+
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -15929,6 +15945,47 @@ function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
 function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
   const [usernameInput, setUsernameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
+  const [previewUser, setPreviewUser] = useState<any>(null);
+
+  // Feature key → human-readable label map
+  const FEATURE_LABELS: Record<string, { label: string; icon: string; color: string }> = {
+    "dashboard": { label: "Dashboard", icon: "📊", color: "bg-emerald-100 text-emerald-800 border-emerald-300" },
+    "sales-billing": { label: "Sales Billing", icon: "🧾", color: "bg-blue-100 text-blue-800 border-blue-300" },
+    "sales-quotation": { label: "Quotations", icon: "📋", color: "bg-blue-100 text-blue-800 border-blue-300" },
+    "sales-proforma": { label: "Proforma Invoice", icon: "📄", color: "bg-blue-100 text-blue-800 border-blue-300" },
+    "sales-delivery": { label: "Delivery Note", icon: "🚚", color: "bg-blue-100 text-blue-800 border-blue-300" },
+    "sales-credit-note": { label: "Credit Note", icon: "🔄", color: "bg-blue-100 text-blue-800 border-blue-300" },
+    "sales-debit-note": { label: "Debit Note", icon: "📝", color: "bg-blue-100 text-blue-800 border-blue-300" },
+    "sales-pos": { label: "POS Terminal", icon: "🖥️", color: "bg-blue-100 text-blue-800 border-blue-300" },
+    "purchase-order": { label: "Purchase Orders", icon: "📦", color: "bg-amber-100 text-amber-800 border-amber-300" },
+    "purchase-bill": { label: "Purchase Billing", icon: "🧾", color: "bg-amber-100 text-amber-800 border-amber-300" },
+    "inventory-items": { label: "Stock Inventory", icon: "📦", color: "bg-teal-100 text-teal-800 border-teal-300" },
+    "inventory-godowns": { label: "Godown Hub", icon: "🏭", color: "bg-teal-100 text-teal-800 border-teal-300" },
+    "inventory-spoilage": { label: "Spoilage Entry", icon: "⚠️", color: "bg-red-100 text-red-800 border-red-300" },
+    "costing": { label: "Costing & Margins", icon: "💰", color: "bg-yellow-100 text-yellow-800 border-yellow-300" },
+    "currency-convert": { label: "Currency Converter", icon: "💱", color: "bg-purple-100 text-purple-800 border-purple-300" },
+    "expiry": { label: "Expiry Tracker", icon: "⏰", color: "bg-orange-100 text-orange-800 border-orange-300" },
+    "offers": { label: "Offers & Discounts", icon: "🏷️", color: "bg-pink-100 text-pink-800 border-pink-300" },
+    "vouchers-receipt": { label: "Receipt Voucher", icon: "🧾", color: "bg-green-100 text-green-800 border-green-300" },
+    "vouchers-payment": { label: "Payment Voucher", icon: "💳", color: "bg-green-100 text-green-800 border-green-300" },
+    "vouchers-journal": { label: "Journal Voucher", icon: "📒", color: "bg-green-100 text-green-800 border-green-300" },
+    "vouchers-contra": { label: "Contra Voucher", icon: "⇄", color: "bg-green-100 text-green-800 border-green-300" },
+    "credit-recovery": { label: "Credit Recovery", icon: "🛡️", color: "bg-rose-100 text-rose-800 border-rose-300" },
+    "reports-pnl": { label: "P&L Report", icon: "📈", color: "bg-indigo-100 text-indigo-800 border-indigo-300" },
+    "reports-bs": { label: "Balance Sheet", icon: "📊", color: "bg-indigo-100 text-indigo-800 border-indigo-300" },
+    "reports-trial": { label: "Trial Balance", icon: "⚖️", color: "bg-indigo-100 text-indigo-800 border-indigo-300" },
+    "reports-ledger": { label: "Ledger Reports", icon: "📚", color: "bg-indigo-100 text-indigo-800 border-indigo-300" },
+    "reports-daybook": { label: "Day Book", icon: "🗓️", color: "bg-indigo-100 text-indigo-800 border-indigo-300" },
+    "master-accounts-groups": { label: "Account Groups", icon: "🗂️", color: "bg-slate-100 text-slate-800 border-slate-300" },
+    "master-accounts-ledger": { label: "Account Ledger", icon: "📒", color: "bg-slate-100 text-slate-800 border-slate-300" },
+    "master-accounts-customer": { label: "Customers", icon: "👤", color: "bg-slate-100 text-slate-800 border-slate-300" },
+    "master-accounts-supplier": { label: "Suppliers", icon: "🏬", color: "bg-slate-100 text-slate-800 border-slate-300" },
+    "master-inventory-categories": { label: "Item Categories", icon: "🏷️", color: "bg-slate-100 text-slate-800 border-slate-300" },
+    "master-inventory-unit": { label: "Units", icon: "📐", color: "bg-slate-100 text-slate-800 border-slate-300" },
+    "master-inventory-packing": { label: "Packing Types", icon: "📦", color: "bg-slate-100 text-slate-800 border-slate-300" },
+    "master-godowns": { label: "Godown Master", icon: "🏭", color: "bg-slate-100 text-slate-800 border-slate-300" },
+    "master-users": { label: "User Management", icon: "👥", color: "bg-slate-100 text-slate-800 border-slate-300" },
+  };
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -15996,7 +16053,8 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
 
     if (match) {
       toast.success(`Welcome back, ${match.employeeName}! Logged in as ${match.role}.`);
-      onLogin(match);
+      setPreviewUser(match);
+      setTimeout(() => onLogin(match), 800);
     } else {
       toast.error("Invalid User ID or Password! Credentials not found in database.");
     }
@@ -16011,7 +16069,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
     password: "123",
     allowedFeatures: [
       "dashboard", "sales-billing", "sales-quotation", "sales-proforma", "sales-delivery", "sales-credit-note", "sales-debit-note", "sales-pos",
-      "purchase-order", "purchase-bill", "inventory-items", "inventory-godowns", "inventory-spoilage", "vouchers-receipt", "vouchers-payment",
+      "purchase-order", "purchase-bill", "inventory-items", "inventory-godowns", "inventory-spoilage", "costing", "currency-convert", "expiry", "offers", "vouchers-receipt", "vouchers-payment",
       "vouchers-journal", "vouchers-contra", "credit-recovery", "reports-pnl", "reports-bs", "reports-trial", "reports-ledger", "reports-daybook",
       "master-accounts-groups", "master-accounts-ledger", "master-accounts-customer", "master-accounts-supplier", "master-inventory-categories",
       "master-inventory-unit", "master-inventory-packing", "master-godowns", "master-users"
@@ -16028,6 +16086,15 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
     allowedFeatures: ["sales-billing", "sales-pos", "inventory-items", "vouchers-receipt"]
   };
 
+  const isAdminRole = (user: any) =>
+    user?.role === "Admin" || user?.role === "Owner" || user?.username === "admin";
+
+  const getFeatureChips = (user: any) => {
+    if (!user) return [];
+    if (isAdminRole(user)) return Object.keys(FEATURE_LABELS);
+    return (user.allowedFeatures || []).filter((k: string) => FEATURE_LABELS[k]);
+  };
+
   return (
     <div className="w-full min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-[#f4f6f0] via-[#e8ecd6] to-[#d8f3dc] text-[#14281d] relative overflow-hidden select-none font-sans">
       {/* Floating Animated Produce Stream Physics */}
@@ -16042,94 +16109,191 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
       <div className="absolute -top-28 -right-28 w-96 h-96 bg-[#2d6a4f]/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-28 -left-28 w-96 h-96 bg-[#e76f51]/15 rounded-full blur-3xl pointer-events-none" />
 
-      {/* STILL Login Portal Card (Zen Organic Matcha Design) */}
-      <div className="w-full max-w-md bg-white/95 border-2 border-[#52b788] rounded-3xl shadow-2xl p-8 space-y-6 backdrop-blur-2xl relative overflow-hidden text-foreground z-10">
-        <div className="text-center space-y-2 relative z-10">
-          <div className="w-16 h-16 bg-[#d8f3dc] border-2 border-[#52b788] text-[#2d6a4f] rounded-full flex items-center justify-center mx-auto shadow-md text-3xl">
-            🎋
+      <div className="w-full max-w-2xl flex flex-col lg:flex-row gap-5 items-stretch z-10">
+        {/* ── Left: Login Card ── */}
+        <div className="flex-shrink-0 w-full lg:w-[360px] bg-white/95 border-2 border-[#52b788] rounded-3xl shadow-2xl p-8 space-y-6 backdrop-blur-2xl relative overflow-hidden text-foreground">
+          <div className="text-center space-y-2 relative z-10">
+            <div className="w-16 h-16 bg-[#d8f3dc] border-2 border-[#52b788] text-[#2d6a4f] rounded-full flex items-center justify-center mx-auto shadow-md text-3xl">
+              🎋
+            </div>
+            <h2 className="text-2xl font-black text-[#14281d] font-serif">Spice Route Trading Co.</h2>
+            <p className="text-xs font-mono text-[#2d6a4f] font-bold">Japanese Zen Bamboo & Matcha Portal</p>
           </div>
-          <h2 className="text-2xl font-black text-[#14281d] font-serif">Spice Route Trading Co.</h2>
-          <p className="text-xs font-mono text-[#2d6a4f] font-bold">Japanese Zen Bamboo & Matcha Portal</p>
+
+          <form onSubmit={handleLoginSubmit} className="space-y-4 font-mono text-xs relative z-10">
+            <div className="space-y-1 text-left">
+              <label className="block text-[10px] text-[#2d6a4f] uppercase font-bold tracking-wider">User ID / Username *</label>
+              <input
+                type="text"
+                required
+                placeholder="Username (e.g. admin, cashier)"
+                value={usernameInput}
+                onChange={e => { setUsernameInput(e.target.value); setPreviewUser(null); }}
+                className="w-full px-4 py-3 border-2 border-[#b7e4c7] rounded-2xl bg-[#edf1e4] text-[#14281d] text-xs focus:outline-none focus:ring-2 focus:ring-[#52b788] font-bold transition-all shadow-inner"
+              />
+            </div>
+
+            <div className="space-y-1 text-left">
+              <label className="block text-[10px] text-[#2d6a4f] uppercase font-bold tracking-wider">Password *</label>
+              <input
+                type="password"
+                required
+                placeholder="Account password"
+                value={passwordInput}
+                onChange={e => setPasswordInput(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-[#b7e4c7] rounded-2xl bg-[#edf1e4] text-[#14281d] text-xs focus:outline-none focus:ring-2 focus:ring-[#52b788] font-bold transition-all shadow-inner"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3.5 bg-gradient-to-r from-[#2d6a4f] via-[#40916c] to-[#e76f51] hover:from-[#1b4332] hover:to-[#d90429] text-white font-mono font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all cursor-pointer relative overflow-hidden"
+            >
+              <span className="relative z-10">Authenticate & Open Zen Portal</span>
+            </button>
+          </form>
+
+          {/* Quick Demo Credentials Panel */}
+          <div className="pt-4 border-t border-[#b7e4c7] space-y-2 relative z-10">
+            <div className="text-[10px] font-mono text-[#2d6a4f] uppercase font-bold text-center">⚡ Quick Test Accounts:</div>
+            <div className="grid grid-cols-2 gap-2.5 font-mono text-[10px]">
+              <button
+                type="button"
+                onClick={() => {
+                  setUsernameInput("admin");
+                  setPasswordInput("123");
+                  setPreviewUser(adminUserPreset);
+                  toast.success("Welcome back, System Administrator / Owner! Logged in as Admin.");
+                  onLogin(adminUserPreset);
+                }}
+                onMouseEnter={() => setPreviewUser(adminUserPreset)}
+                onMouseLeave={() => !previewUser || previewUser.username !== "admin" ? setPreviewUser(null) : null}
+                className="p-3 rounded-2xl bg-[#d8f3dc] border-2 border-[#52b788] text-[#2d6a4f] text-left hover:bg-[#b7e4c7] transition-all cursor-pointer group"
+              >
+                <div className="font-bold flex items-center gap-1">
+                  <span>👑</span>
+                  <span>Admin / Owner</span>
+                </div>
+                <div className="text-[9px] text-[#2d6a4f] mt-0.5">User: admin | Pass: 123</div>
+                <div className="text-[8px] text-[#1b4332] font-bold mt-1 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+                  All {Object.keys(FEATURE_LABELS).length} Modules
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setUsernameInput("cashier");
+                  setPasswordInput("123");
+                  setPreviewUser(cashierUserPreset);
+                  toast.success("Welcome back, Ibrahim Cashier! Logged in as Cashier.");
+                  onLogin(cashierUserPreset);
+                }}
+                onMouseEnter={() => setPreviewUser(cashierUserPreset)}
+                onMouseLeave={() => !previewUser || previewUser.username !== "cashier" ? setPreviewUser(null) : null}
+                className="p-3 rounded-2xl bg-[#f4a261]/20 border-2 border-[#e76f51]/40 text-[#e76f51] text-left hover:bg-[#f4a261]/30 transition-all cursor-pointer"
+              >
+                <div className="font-bold flex items-center gap-1">
+                  <span>💵</span>
+                  <span>Cashier Profile</span>
+                </div>
+                <div className="text-[9px] text-[#e76f51] mt-0.5">User: cashier | Pass: 123</div>
+                <div className="text-[8px] text-[#14281d] font-bold mt-1 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400 inline-block"></span>
+                  {cashierUserPreset.allowedFeatures.length} Restricted Modules
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <p className="text-center text-[9px] font-mono text-[#40916c]/70 relative z-10">
+            🔒 Authorized manifest handlers only.<br />Access is role-restricted per employee profile.
+          </p>
         </div>
 
-        <form onSubmit={handleLoginSubmit} className="space-y-4 font-mono text-xs relative z-10">
-          <div className="space-y-1 text-left">
-            <label className="block text-[10px] text-[#2d6a4f] uppercase font-bold tracking-wider">User ID / Username *</label>
-            <input
-              type="text"
-              required
-              placeholder="Username (e.g. admin, cashier)"
-              value={usernameInput}
-              onChange={e => setUsernameInput(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-[#b7e4c7] rounded-2xl bg-[#edf1e4] text-[#14281d] text-xs focus:outline-none focus:ring-2 focus:ring-[#52b788] font-bold transition-all shadow-inner"
-            />
-          </div>
-
-          <div className="space-y-1 text-left">
-            <label className="block text-[10px] text-[#2d6a4f] uppercase font-bold tracking-wider">Password *</label>
-            <input
-              type="password"
-              required
-              placeholder="Account password"
-              value={passwordInput}
-              onChange={e => setPasswordInput(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-[#b7e4c7] rounded-2xl bg-[#edf1e4] text-[#14281d] text-xs focus:outline-none focus:ring-2 focus:ring-[#52b788] font-bold transition-all shadow-inner"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full py-3.5 bg-gradient-to-r from-[#2d6a4f] via-[#40916c] to-[#e76f51] hover:from-[#1b4332] hover:to-[#d90429] text-white font-mono font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all cursor-pointer relative overflow-hidden"
-          >
-            <span className="relative z-10">Authenticate & Open Zen Portal</span>
-          </button>
-        </form>
-
-        {/* Quick Demo Credentials Panel */}
-        <div className="pt-4 border-t border-[#b7e4c7] space-y-2 relative z-10">
-          <div className="text-[10px] font-mono text-[#2d6a4f] uppercase font-bold text-center">⚡ Quick Test Accounts:</div>
-          <div className="grid grid-cols-2 gap-2.5 font-mono text-[10px]">
-            <button
-              type="button"
-              onClick={() => {
-                setUsernameInput("admin");
-                setPasswordInput("123");
-                toast.success("Welcome back, System Administrator / Owner! Logged in as Admin.");
-                onLogin(adminUserPreset);
-              }}
-              className="p-3 rounded-2xl bg-[#d8f3dc] border-2 border-[#52b788] text-[#2d6a4f] text-left hover:bg-[#b7e4c7] transition-all cursor-pointer"
-            >
-              <div className="font-bold flex items-center gap-1">
-                <span>👑</span>
-                <span>Admin / Owner</span>
+        {/* ── Right: Feature Access Preview Panel ── */}
+        <div className={`flex-1 bg-white/90 border-2 rounded-3xl shadow-xl p-6 backdrop-blur-xl transition-all duration-500 ${
+          previewUser
+            ? "border-[#52b788] opacity-100 translate-y-0"
+            : "border-[#b7e4c7]/50 opacity-60"
+        }`}>
+          {previewUser ? (
+            <>
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-md border-2 ${
+                  isAdminRole(previewUser) ? "bg-emerald-100 border-emerald-400" : "bg-orange-100 border-orange-400"
+                }`}>
+                  {isAdminRole(previewUser) ? "👑" : "🔒"}
+                </div>
+                <div>
+                  <div className="font-black text-[#14281d] text-sm font-serif">{previewUser.employeeName}</div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded-full border ${
+                      isAdminRole(previewUser)
+                        ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                        : "bg-orange-100 text-orange-800 border-orange-300"
+                    }`}>{previewUser.role}</span>
+                    <span className="text-[9px] font-mono text-[#2d6a4f]">
+                      {isAdminRole(previewUser) ? "Full System Access" : `${getFeatureChips(previewUser).length} of ${Object.keys(FEATURE_LABELS).length} features enabled`}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="text-[9px] text-[#2d6a4f] mt-0.5">User: admin | Pass: 123</div>
-              <div className="text-[8px] text-[#14281d] font-bold mt-1">All Zen Modules</div>
-            </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setUsernameInput("cashier");
-                setPasswordInput("123");
-                toast.success("Welcome back, Ibrahim Cashier! Logged in as Cashier.");
-                onLogin(cashierUserPreset);
-              }}
-              className="p-3 rounded-2xl bg-[#f4a261]/20 border-2 border-[#e76f51]/40 text-[#e76f51] text-left hover:bg-[#f4a261]/30 transition-all cursor-pointer"
-            >
-              <div className="font-bold flex items-center gap-1">
-                <span>💵</span>
-                <span>Cashier Profile</span>
+              <div className="text-[10px] font-mono font-bold text-[#2d6a4f] uppercase tracking-wider mb-3">
+                ✅ Accessible Modules for this Account:
               </div>
-              <div className="text-[9px] text-[#e76f51] mt-0.5">User: cashier | Pass: 123</div>
-              <div className="text-[8px] text-[#14281d] font-bold mt-1">Restricted Scope</div>
-            </button>
-          </div>
+
+              <div className="flex flex-wrap gap-1.5 max-h-[380px] overflow-y-auto pr-1">
+                {getFeatureChips(previewUser).map((key: string) => {
+                  const feat = FEATURE_LABELS[key];
+                  if (!feat) return null;
+                  return (
+                    <span
+                      key={key}
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-mono font-bold ${feat.color}`}
+                    >
+                      <span>{feat.icon}</span>
+                      <span>{feat.label}</span>
+                    </span>
+                  );
+                })}
+              </div>
+
+              {!isAdminRole(previewUser) && (
+                <div className="mt-4 pt-3 border-t border-[#b7e4c7] text-[9px] font-mono text-[#40916c]/80 flex items-center gap-1.5">
+                  <span>🔐</span>
+                  <span>Other modules are hidden from the sidebar for this account. Contact an Admin to enable more features.</span>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-center gap-4 text-[#2d6a4f]/60 py-8">
+              <div className="text-5xl">🔍</div>
+              <div>
+                <div className="font-bold text-sm font-serif text-[#14281d]/70">Role Access Preview</div>
+                <div className="text-[11px] font-mono mt-1.5 max-w-[200px]">
+                  Hover over a quick account or log in to see which modules are accessible for that role.
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center mt-2">
+                {["📊 Dashboard", "🧾 Billing", "📦 Inventory", "📈 Reports", "🗂️ Master"].map(f => (
+                  <span key={f} className="px-2.5 py-1 bg-[#d8f3dc] border border-[#52b788]/40 rounded-lg text-[10px] font-mono text-[#2d6a4f] font-bold opacity-50">{f}</span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
+
+
+
+
 
   function renderPage() {
     if (loading) {
@@ -16317,6 +16481,24 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
           {NAV_ITEMS.map(item => {
             const Icon = item.icon;
             const active = page === item.id;
+
+            // ── Permission gate for top-level nav items ──
+            if (item.id === "dashboard" && !isFeaturePermitted("dashboard")) return null;
+            if (item.id === "inventory" && !isFeaturePermitted("inventory")) return null;
+            if (item.id === "godowns" && !isFeaturePermitted("godowns")) return null;
+            if (item.id === "costing" && !isFeaturePermitted("costing")) return null;
+            if (item.id === "currency-convert" && !isFeaturePermitted("currency-convert")) return null;
+            if (item.id === "expiry" && !isFeaturePermitted("expiry")) return null;
+            if (item.id === "offers" && !isFeaturePermitted("offers")) return null;
+            if (item.id === "credit-recovery" && !isFeaturePermitted("credit-recovery")) return null;
+            if (item.id === "perishables" && !isFeaturePermitted("inventory")) return null;
+            if (item.id === "ai" && !isFeaturePermitted("dashboard")) return null;
+            if (item.id === "sales" && !hasAnyFeature("sales-billing", "sales-quotation", "sales-delivery", "sales-credit-note", "sales-debit-note", "sales-pos", "sales-proforma")) return null;
+            if (item.id === "purchase" && !hasAnyFeature("purchase-bill", "purchase-order", "inventory-spoilage")) return null;
+            if (item.id === "vouchers" && !hasAnyFeature("vouchers-receipt", "vouchers-payment", "vouchers-journal", "vouchers-contra")) return null;
+            if (item.id === "reports" && !hasAnyFeature("reports-pnl", "reports-bs", "reports-trial", "reports-ledger", "reports-daybook")) return null;
+            if (item.id === "master-console" && !hasAnyFeature("master-accounts-groups", "master-accounts-ledger", "master-accounts-customer", "master-accounts-supplier", "master-inventory-categories", "master-inventory-unit", "master-inventory-packing", "master-godowns", "master-users")) return null;
+
             const itemElement = (
               <button
                 key={item.id}
@@ -16360,38 +16542,38 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                     
                     {salesOpen && (
                       <div className="pl-4 space-y-1.5 border-l border-sidebar-border/60 ml-4 py-1">
-                        <button
+                        {isFeaturePermitted("sales-quotation") && <button
                           onClick={() => { setPage("sales-quotation"); setSidebarOpen(false); }}
                           className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                             page === "sales-quotation" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                           }`}
                         >
                           <span>Sales Quotation</span>
-                        </button>
-                        <button
+                        </button>}
+                        {isFeaturePermitted("sales-billing") && <button
                           onClick={() => { setPage("sales-billing"); setSidebarOpen(false); }}
                           className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                             page === "sales-billing" || page === "sales" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                           }`}
                         >
                           <span>Billing</span>
-                        </button>
-                        <button
+                        </button>}
+                        {isFeaturePermitted("sales-delivery") && <button
                           onClick={() => { setPage("sales-delivery"); setSidebarOpen(false); }}
                           className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                             page === "sales-delivery" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                           }`}
                         >
                           <span>Delivery Note</span>
-                        </button>
-                        <button
+                        </button>}
+                        {isFeaturePermitted("sales-credit") && <button
                           onClick={() => { setPage("sales-credit"); setSidebarOpen(false); }}
                           className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                             page === "sales-credit" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                           }`}
                         >
                           <span>Credit Note</span>
-                        </button>
+                        </button>}
                       </div>
                     )}
                   </div>
@@ -16426,39 +16608,39 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                     
                     {purchaseSubOpen && (
                       <div className="pl-4 space-y-1.5 border-l border-sidebar-border/60 ml-4 py-1">
-                        <button
+                        {isFeaturePermitted("purchase-order") && <button
                           onClick={() => { setPage("purchase-order"); setSidebarOpen(false); }}
                           className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                             page === "purchase-order" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                           }`}
                         >
                           <span>Purchase Order</span>
-                        </button>
-                        <button
+                        </button>}
+                        {isFeaturePermitted("purchase-bill") && <button
                           onClick={() => { setPage("purchase-grn"); setSidebarOpen(false); }}
                           className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                             page === "purchase-grn" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                           }`}
                         >
                           <span>GRN (Goods Receive Note)</span>
-                        </button>
-                        <button
+                        </button>}
+                        {isFeaturePermitted("purchase-billing") && <button
                           onClick={() => { setPage("purchase-billing"); setSidebarOpen(false); }}
                           className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                             page === "purchase-billing" || page === "purchase" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                           }`}
                         >
                           <span>Billing</span>
-                        </button>
-                        <button
+                        </button>}
+                        {isFeaturePermitted("sales-debit-note") && <button
                           onClick={() => { setPage("purchase-debit"); setSidebarOpen(false); }}
                           className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                             page === "purchase-debit" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                           }`}
                         >
                           <span>Debit Note</span>
-                        </button>
-                        <button
+                        </button>}
+                        {isFeaturePermitted("purchase-spoilage") && <button
                           onClick={() => { setPage("purchase-spoilage"); setSidebarOpen(false); }}
                           className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                             page === "purchase-spoilage" ? "bg-red-500/20 text-red-600 dark:text-red-400 font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
@@ -16466,7 +16648,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                         >
                           <span>Spoilage Entry</span>
                           <span className="text-[9px] text-red-500 font-bold">SPL</span>
-                        </button>
+                        </button>}
                       </div>
                     )}
                   </div>
@@ -16652,7 +16834,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                     
                     {vouchersOpen && (
                       <div className="pl-4 space-y-1 border-l border-sidebar-border/60 ml-4 py-1">
-                        <button
+                        {isFeaturePermitted("vouchers-payment") && <button
                           onClick={() => { setPage("vouchers-payment"); setSidebarOpen(false); }}
                           className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                             page === "vouchers-payment" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
@@ -16660,8 +16842,8 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                         >
                           <span>Payment Voucher</span>
                           <span className="text-[9px] text-red-500 font-bold">PAY</span>
-                        </button>
-                        <button
+                        </button>}
+                        {isFeaturePermitted("vouchers-receipt") && <button
                           onClick={() => { setPage("vouchers-receipt"); setSidebarOpen(false); }}
                           className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                             page === "vouchers-receipt" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
@@ -16669,8 +16851,8 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                         >
                           <span>Receipt Voucher</span>
                           <span className="text-[9px] text-emerald-500 font-bold">REC</span>
-                        </button>
-                        <button
+                        </button>}
+                        {isFeaturePermitted("vouchers-contra") && <button
                           onClick={() => { setPage("vouchers-contra"); setSidebarOpen(false); }}
                           className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                             page === "vouchers-contra" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
@@ -16678,8 +16860,8 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                         >
                           <span>Contra Voucher</span>
                           <span className="text-[9px] text-blue-500 font-bold">CNT</span>
-                        </button>
-                        <button
+                        </button>}
+                        {isFeaturePermitted("vouchers-journal") && <button
                           onClick={() => { setPage("vouchers-journal"); setSidebarOpen(false); }}
                           className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                             page === "vouchers-journal" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
@@ -16687,15 +16869,15 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                         >
                           <span>Journal Voucher</span>
                           <span className="text-[9px] text-purple-500 font-bold">JRN</span>
-                        </button>
-                        <button
+                        </button>}
+                        {hasAnyFeature("vouchers-receipt", "vouchers-payment", "vouchers-journal", "vouchers-contra") && <button
                           onClick={() => { setPage("vouchers-all"); setSidebarOpen(false); }}
                           className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all ${
                             page === "vouchers-all" || page === "vouchers" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                           }`}
                         >
                           All Vouchers Register
-                        </button>
+                        </button>}
                       </div>
                     )}
                   </div>
