@@ -14,6 +14,8 @@ export interface Product {
   name: string;
   category: Category;
   unit: string;
+  packingType?: string;
+  packingTypes?: string[];
   buyPrice: number;
   sellPrice: number;
   isPerishable: boolean;
@@ -90,12 +92,29 @@ export interface Voucher {
   narration: string;
 }
 
+export interface SpoilageRecord {
+  id: string;
+  spoilageNo: string;
+  productId: string;
+  productName: string;
+  godown: Godown;
+  quantity: number;
+  unit: string;
+  unitCost: number;
+  totalLoss: number;
+  date: string;
+  reason: string;
+  loggedBy?: string;
+  notes?: string;
+}
+
 interface DatabaseSchema {
   products: Product[];
   entries: StockEntry[];
   customers: Customer[];
   suppliers: Supplier[];
   vouchers: Voucher[];
+  spoilages?: SpoilageRecord[];
 }
 
 const DB_FILE = path.join(__dirname, "data.json");
@@ -108,54 +127,11 @@ export function getGodownClimate(g: Godown): string {
   return "Refrigerated (4°C)";
 }
 
-const INITIAL_PRODUCTS: Product[] = [
-  { id: "p1", name: "Cardamom", category: "Spices", unit: "kg", buyPrice: 1200, sellPrice: 1550, isPerishable: false, expiryDays: 365 },
-  { id: "p2", name: "Turmeric", category: "Spices", unit: "kg", buyPrice: 80, sellPrice: 130, isPerishable: false, expiryDays: 365 },
-  { id: "p3", name: "Black Pepper", category: "Spices", unit: "kg", buyPrice: 450, sellPrice: 620, isPerishable: false, expiryDays: 365 },
-  { id: "p4", name: "Saffron", category: "Spices", unit: "g", buyPrice: 350, sellPrice: 480, isPerishable: false, expiryDays: 365 },
-  { id: "p5", name: "Almonds", category: "Dry Fruits", unit: "kg", buyPrice: 680, sellPrice: 890, isPerishable: false, expiryDays: 270 },
-  { id: "p6", name: "Pistachios", category: "Dry Fruits", unit: "kg", buyPrice: 920, sellPrice: 1200, isPerishable: false, expiryDays: 270 },
-  { id: "p7", name: "Cashews", category: "Dry Fruits", unit: "kg", buyPrice: 780, sellPrice: 1050, isPerishable: false, expiryDays: 270 },
-  { id: "p8", name: "Walnuts", category: "Dry Fruits", unit: "kg", buyPrice: 560, sellPrice: 750, isPerishable: false, expiryDays: 270 },
-  { id: "p9", name: "Mangoes", category: "Fruits", unit: "kg", buyPrice: 55, sellPrice: 90, isPerishable: true, expiryDays: 10 },
-  { id: "p10", name: "Pomegranates", category: "Fruits", unit: "kg", buyPrice: 70, sellPrice: 110, isPerishable: true, expiryDays: 20 },
-  { id: "p11", name: "Tomatoes", category: "Vegetables", unit: "kg", buyPrice: 18, sellPrice: 32, isPerishable: true, expiryDays: 7 },
-  { id: "p12", name: "Onions", category: "Vegetables", unit: "kg", buyPrice: 22, sellPrice: 38, isPerishable: true, expiryDays: 30 },
-];
-
-const INITIAL_CUSTOMERS: Customer[] = [
-  { id: "c1", name: "Gulf Spice General Trading", address: "Wholesale Hub, Sector 4, Dubai, UAE", phone: "+971-50-1234567", gstNo: "DXB99283A" },
-  { id: "c2", name: "EuroFoods GmbH", address: "Speicherstadt Building 12, Hamburg, Germany", phone: "+49-40-987654", gstNo: "EU882341A" },
-  { id: "c3", name: "FreshMart Supermarkets", address: "Linking Road, Bandra West, Mumbai, India", phone: "+91-22-22334455", gstNo: "27AAAAA1111A1Z1" },
-];
-
-const INITIAL_SUPPLIERS: Supplier[] = [
-  { id: "s1", name: "Kerala Spice Growers", address: "Spices Board Road, Cochin, Kerala, India", phone: "+91-484-2345678", gstNo: "32AAAAA2222B1Z2" },
-  { id: "s2", name: "Sangli Turmeric Coop", address: "APMC Market Yard, Sangli, Maharashtra, India", phone: "+91-233-3456789", gstNo: "27BBBBB3333C1Z3" },
-  { id: "s3", name: "Kabul Exporters Ltd", address: "Fruit Market Road, Kabul, Afghanistan", phone: "+93-20-456789", gstNo: "AFG8877A" },
-];
-
-const INITIAL_ENTRIES: StockEntry[] = [
-  { id: "e1", productId: "p1", godown: "A", type: "in", quantity: 200, pricePerUnit: 1200, date: "2026-06-01", partner: "Kerala Spice Growers", note: "Premium Malabar Cardamom batch", paymentType: "credit", partnerAddress: "Spices Board Road, Cochin, Kerala, India", partnerPhone: "+91-484-2345678", partnerGST: "32AAAAA2222B1Z2", gstPercent: 5, subTotal: 240000, grandTotal: 252000, invoiceNo: "PUR-260601-0001", items: [{ productId: "p1", godown: "A", quantity: 200, pricePerUnit: 1200, gstPercent: 5, subTotal: 240000, grandTotal: 252000 }] },
-  { id: "e2", productId: "p2", godown: "B", type: "in", quantity: 500, pricePerUnit: 80, date: "2026-06-02", partner: "Sangli Turmeric Coop", note: "High curcumin value batch", paymentType: "cash", partnerAddress: "APMC Market Yard, Sangli, Maharashtra, India", partnerPhone: "+91-233-3456789", partnerGST: "27BBBBB3333C1Z3", gstPercent: 5, subTotal: 40000, grandTotal: 42000, invoiceNo: "PUR-260602-0002", items: [{ productId: "p2", godown: "B", quantity: 500, pricePerUnit: 80, gstPercent: 5, subTotal: 40000, grandTotal: 42000 }] },
-  { id: "e3", productId: "p5", godown: "G", type: "in", quantity: 300, pricePerUnit: 680, date: "2026-06-03", partner: "Kabul Exporters Ltd", note: "Premium Mamra Almonds", paymentType: "credit", partnerAddress: "Fruit Market Road, Kabul, Afghanistan", partnerPhone: "+93-20-456789", partnerGST: "AFG8877A", gstPercent: 12, subTotal: 204000, grandTotal: 228480, invoiceNo: "PUR-260603-0003", items: [{ productId: "p5", godown: "G", quantity: 300, pricePerUnit: 680, gstPercent: 12, subTotal: 204000, grandTotal: 228480 }] },
-  { id: "e4", productId: "p6", godown: "H", type: "in", quantity: 150, pricePerUnit: 920, date: "2026-06-04", partner: "Kabul Exporters Ltd", note: "Jumbo Akbari Pistachios", paymentType: "cash", partnerAddress: "Fruit Market Road, Kabul, Afghanistan", partnerPhone: "+93-20-456789", partnerGST: "AFG8877A", gstPercent: 12, subTotal: 138000, grandTotal: 154560, invoiceNo: "PUR-260604-0004", items: [{ productId: "p6", godown: "H", quantity: 150, pricePerUnit: 920, gstPercent: 12, subTotal: 138000, grandTotal: 154560 }] },
-  { id: "e5", productId: "p7", godown: "I", type: "in", quantity: 250, pricePerUnit: 780, date: "2026-06-05", partner: "Kerala Spice Growers", note: "Vietnam cashews", paymentType: "credit", partnerAddress: "Spices Board Road, Cochin, Kerala, India", partnerPhone: "+91-484-2345678", partnerGST: "32AAAAA2222B1Z2", gstPercent: 12, subTotal: 195000, grandTotal: 218400, invoiceNo: "PUR-260605-0005", items: [{ productId: "p7", godown: "I", quantity: 250, pricePerUnit: 780, gstPercent: 12, subTotal: 195000, grandTotal: 218400 }] },
-  { id: "e6", productId: "p9", godown: "M", type: "in", quantity: 800, pricePerUnit: 55, date: "2026-06-06", expiryDate: "2026-06-16", partner: "Ratnagiri Farms", note: "Alphonso Mango harvest", paymentType: "cash", partnerAddress: "Ratnagiri, Maharashtra, India", partnerPhone: "+91-235-987654", partnerGST: "27RG99827A", gstPercent: 5, subTotal: 44000, grandTotal: 46200, invoiceNo: "PUR-260606-0006", items: [{ productId: "p9", godown: "M", quantity: 800, pricePerUnit: 55, gstPercent: 5, subTotal: 44000, grandTotal: 46200, expiryDate: "2026-06-16" }] },
-  { id: "e7", productId: "p1", godown: "A", type: "out", quantity: 80, pricePerUnit: 1550, date: "2026-06-08", partner: "Gulf Spice General Trading", note: "Export to Dubai", paymentType: "credit", partnerAddress: "Wholesale Hub, Sector 4, Dubai, UAE", partnerPhone: "+971-50-1234567", partnerGST: "DXB99283A", gstPercent: 5, subTotal: 124000, grandTotal: 130200, invoiceNo: "INV-260608-0001", items: [{ productId: "p1", godown: "A", quantity: 80, pricePerUnit: 1550, gstPercent: 5, subTotal: 124000, grandTotal: 130200 }] },
-  { id: "e8", productId: "p5", godown: "G", type: "out", quantity: 120, pricePerUnit: 890, date: "2026-06-09", partner: "EuroFoods GmbH", note: "Air cargo shipment to Hamburg", paymentType: "credit", partnerAddress: "Speicherstadt Building 12, Hamburg, Germany", partnerPhone: "+49-40-987654", partnerGST: "EU882341A", gstPercent: 12, subTotal: 106800, grandTotal: 119616, invoiceNo: "INV-260609-0002", items: [{ productId: "p5", godown: "G", quantity: 120, pricePerUnit: 890, gstPercent: 12, subTotal: 106800, grandTotal: 119616 }] },
-  { id: "e9", productId: "p9", godown: "M", type: "out", quantity: 400, pricePerUnit: 90, date: "2026-06-10", partner: "FreshMart Supermarkets", note: "Local supply chain", paymentType: "cash", partnerAddress: "Linking Road, Bandra West, Mumbai, India", partnerPhone: "+91-22-22334455", partnerGST: "27AAAAA1111A1Z1", gstPercent: 5, subTotal: 36000, grandTotal: 37800, invoiceNo: "INV-260610-0003", items: [{ productId: "p9", godown: "M", quantity: 400, pricePerUnit: 90, gstPercent: 5, subTotal: 36000, grandTotal: 37800 }] },
-  { id: "e10", productId: "p6", godown: "H", type: "out", quantity: 60, pricePerUnit: 1200, date: "2026-06-12", partner: "Gulf Spice General Trading", note: "Riyadh shipment", paymentType: "credit", partnerAddress: "Wholesale Hub, Sector 4, Dubai, UAE", partnerPhone: "+971-50-1234567", partnerGST: "DXB99283A", gstPercent: 12, subTotal: 72000, grandTotal: 80640, invoiceNo: "INV-260612-0004", items: [{ productId: "p6", godown: "H", quantity: 60, pricePerUnit: 1200, gstPercent: 12, subTotal: 72000, grandTotal: 80640 }] },
-  { id: "e11", productId: "p11", godown: "N", type: "in", quantity: 1000, pricePerUnit: 18, date: "2026-06-13", expiryDate: "2026-06-20", partner: "Sangli Turmeric Coop", note: "Fresh Hybrid Tomatoes", paymentType: "cash", partnerAddress: "APMC Market Yard, Sangli, Maharashtra, India", partnerPhone: "+91-233-3456789", partnerGST: "27BBBBB3333C1Z3", gstPercent: 5, subTotal: 18000, grandTotal: 18900, invoiceNo: "PUR-260613-0007", items: [{ productId: "p11", godown: "N", quantity: 1000, pricePerUnit: 18, gstPercent: 5, subTotal: 18000, grandTotal: 18900, expiryDate: "2026-06-20" }] },
-  { id: "e12", productId: "p11", godown: "N", type: "out", quantity: 600, pricePerUnit: 32, date: "2026-06-15", partner: "FreshMart Supermarkets", note: "Distribution to outlets", paymentType: "cash", partnerAddress: "Linking Road, Bandra West, Mumbai, India", partnerPhone: "+91-22-22334455", partnerGST: "27AAAAA1111A1Z1", gstPercent: 5, subTotal: 19200, grandTotal: 20160, invoiceNo: "INV-260615-0005", items: [{ productId: "p11", godown: "N", quantity: 600, pricePerUnit: 32, gstPercent: 5, subTotal: 19200, grandTotal: 20160 }] },
-];
-
-const INITIAL_VOUCHERS: Voucher[] = [
-  { id: "v1", voucherNo: "PAY-260605-0001", type: "payment", date: "2026-06-05", debitAccount: "Kerala Spice Growers", creditAccount: "HDFC Bank A/C 50200088991122", amount: 150000, mode: "bank", referenceNo: "NEFT-9928172", narration: "Part payment for Cardamom purchase PUR-260601-0001" },
-  { id: "v2", voucherNo: "REC-260610-0001", type: "receipt", date: "2026-06-10", debitAccount: "Petty Cash Account", creditAccount: "Gulf Spice General Trading", amount: 80000, mode: "cash", referenceNo: "CASH-REC-01", narration: "Cash advance received against invoice INV-260608-0001" },
-  { id: "v3", voucherNo: "CNT-260612-0001", type: "contra", date: "2026-06-12", debitAccount: "HDFC Bank A/C 50200088991122", creditAccount: "Petty Cash Account", amount: 25000, mode: "cash", referenceNo: "CHQ-100293", narration: "Cash withdrawal from bank for office expenses" },
-  { id: "v4", voucherNo: "JRN-260615-0001", type: "journal", date: "2026-06-15", debitAccount: "Warehouse Rent Expense", creditAccount: "Port Authority Lessor", amount: 45000, mode: "journal", referenceNo: "JV-RENT-06", narration: "Monthly warehouse lease accrual for Godowns A-R" }
-];
+const INITIAL_PRODUCTS: Product[] = [];
+const INITIAL_CUSTOMERS: Customer[] = [];
+const INITIAL_SUPPLIERS: Supplier[] = [];
+const INITIAL_ENTRIES: StockEntry[] = [];
+const INITIAL_VOUCHERS: Voucher[] = [];
 
 export class Database {
   private static read(): DatabaseSchema {
@@ -202,17 +178,27 @@ export class Database {
     return this.read().products;
   }
 
-  static addProduct(productData: Omit<Product, "id">): Product {
+  static addProduct(productData: Partial<Product> & { name: string; category: Category; unit: string }): Product {
     const db = this.read();
     
-    // Check if name already exists
-    const exists = db.products.some(p => p.name.toLowerCase() === productData.name.toLowerCase());
-    if (exists) {
-      throw new Error(`Product "${productData.name}" already exists in inventory catalog.`);
+    // Check if product with same ID exists
+    const existingIndex = productData.id ? db.products.findIndex(p => p.id === productData.id) : db.products.findIndex(p => p.name.toLowerCase() === productData.name.toLowerCase());
+    
+    if (existingIndex >= 0) {
+      db.products[existingIndex] = {
+        ...db.products[existingIndex],
+        ...productData,
+      };
+      this.write(db);
+      return db.products[existingIndex];
     }
 
     const newProduct: Product = {
       id: "p" + (db.products.length + 1) + "_" + Math.random().toString(36).substring(2, 5),
+      isPerishable: false,
+      expiryDays: 0,
+      buyPrice: 0,
+      sellPrice: 0,
       ...productData,
     };
 
@@ -221,9 +207,23 @@ export class Database {
     return newProduct;
   }
 
+  static deleteProduct(id: string): boolean {
+    const db = this.read();
+    db.products = db.products.filter(p => p.id !== id);
+    this.write(db);
+    return true;
+  }
+
   // CUSTOMERS
   static getCustomers(): Customer[] {
     return this.read().customers;
+  }
+
+  static deleteCustomer(id: string): boolean {
+    const db = this.read();
+    db.customers = db.customers.filter(c => c.id !== id);
+    this.write(db);
+    return true;
   }
 
   static addCustomer(customerData: Omit<Customer, "id">): Customer {
@@ -242,6 +242,30 @@ export class Database {
     db.customers.push(newCustomer);
     this.write(db);
     return newCustomer;
+  }
+
+  static updateCustomer(id: string, customerData: Partial<Customer>): Customer {
+    const db = this.read();
+    const index = db.customers.findIndex(c => c.id === id);
+    if (index >= 0) {
+      db.customers[index] = {
+        ...db.customers[index],
+        ...customerData,
+      };
+      this.write(db);
+      return db.customers[index];
+    } else {
+      const nameIndex = db.customers.findIndex(c => c.name.toLowerCase() === customerData.name?.toLowerCase());
+      if (nameIndex >= 0) {
+        db.customers[nameIndex] = {
+          ...db.customers[nameIndex],
+          ...customerData,
+        };
+        this.write(db);
+        return db.customers[nameIndex];
+      }
+      throw new Error(`Customer not found.`);
+    }
   }
 
   // SUPPLIERS
@@ -265,6 +289,37 @@ export class Database {
     db.suppliers.push(newSupplier);
     this.write(db);
     return newSupplier;
+  }
+
+  static deleteSupplier(id: string): boolean {
+    const db = this.read();
+    db.suppliers = db.suppliers.filter(s => s.id !== id);
+    this.write(db);
+    return true;
+  }
+
+  static updateSupplier(id: string, supplierData: Partial<Supplier>): Supplier {
+    const db = this.read();
+    const index = db.suppliers.findIndex(s => s.id === id);
+    if (index >= 0) {
+      db.suppliers[index] = {
+        ...db.suppliers[index],
+        ...supplierData,
+      };
+      this.write(db);
+      return db.suppliers[index];
+    } else {
+      const nameIndex = db.suppliers.findIndex(s => s.name.toLowerCase() === supplierData.name?.toLowerCase());
+      if (nameIndex >= 0) {
+        db.suppliers[nameIndex] = {
+          ...db.suppliers[nameIndex],
+          ...supplierData,
+        };
+        this.write(db);
+        return db.suppliers[nameIndex];
+      }
+      throw new Error(`Supplier not found.`);
+    }
   }
 
   // ENTRIES / LEDGER
@@ -506,5 +561,48 @@ export class Database {
     db.vouchers.push(newVoucher);
     this.write(db);
     return newVoucher;
+  }
+
+  // SPOILAGE RECORDS
+  static getSpoilages(): SpoilageRecord[] {
+    const db = this.read();
+    return db.spoilages || [];
+  }
+
+  static addSpoilage(spoilageData: Omit<SpoilageRecord, "id" | "spoilageNo"> & { spoilageNo?: string }): SpoilageRecord {
+    const db = this.read();
+    if (!db.spoilages) db.spoilages = [];
+
+    const count = db.spoilages.length + 1;
+    const dateStr = (spoilageData.date || new Date().toISOString().split("T")[0]).replace(/-/g, "").slice(2, 8);
+    const generatedNo = `SPL-${dateStr}-${String(count).padStart(4, "0")}`;
+
+    const newRecord: SpoilageRecord = {
+      id: "spl_" + Math.random().toString(36).substring(2, 9),
+      spoilageNo: spoilageData.spoilageNo || generatedNo,
+      ...spoilageData,
+    };
+
+    db.spoilages.push(newRecord);
+
+    // Also deduct stock from product godown stock
+    const prod = db.products.find(p => p.id === spoilageData.productId || p.name.toLowerCase().trim() === spoilageData.productName.toLowerCase().trim());
+    if (prod) {
+      if (!prod.godownStocks) prod.godownStocks = {} as any;
+      const currentGdnStock = prod.godownStocks[spoilageData.godown] || 0;
+      prod.godownStocks[spoilageData.godown] = Math.max(0, currentGdnStock - spoilageData.quantity);
+      prod.stock = Object.values(prod.godownStocks).reduce((s, v) => s + v, 0);
+    }
+
+    this.write(db);
+    return newRecord;
+  }
+
+  static clearHistory(): void {
+    const db = this.read();
+    db.entries = [];
+    db.vouchers = [];
+    db.spoilages = [];
+    this.write(db);
   }
 }

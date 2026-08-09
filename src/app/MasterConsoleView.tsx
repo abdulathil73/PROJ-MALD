@@ -7,9 +7,10 @@ import { toast } from "sonner";
 interface Product {
   id: string;
   name: string;
-  category: "Spices" | "Dry Fruits" | "Fruits" | "Vegetables" | "Other";
+  category: string;
   unit: string;
   packingType?: string;
+  packingTypes?: string[];
   buyPrice: number;
   sellPrice: number;
   godownStocks?: Record<string, number>;
@@ -22,6 +23,8 @@ interface Customer {
   phone?: string;
   address?: string;
   gstNo?: string;
+  creditLimitDays?: number;
+  creditLimitAmount?: number;
 }
 
 interface GroupItem { id: string; code: string; name: string; type: "Asset" | "Liability" | "Income" | "Expense" | "Equity"; description: string; }
@@ -29,6 +32,18 @@ interface LedgerItem { id: string; code: string; name: string; group: string; op
 interface CategoryItem { id: string; name: string; hsnCode: string; gstRate: number; description: string; }
 interface UnitItem { id: string; shortName: string; fullName: string; decimalPlaces: number; }
 interface PackingItem { id: string; name: string; capacityKg: number; capacityUnit?: string; material: string; notes: string; }
+interface GodownMasterItem {
+  id: string;
+  code: string;
+  name: string;
+  location: string;
+  temperature: string;
+  capacityKg: number;
+  managerName: string;
+  status: "Active" | "Maintenance" | "Full";
+  notes?: string;
+}
+
 interface UserItem {
   id: string;
   employeeId: string;
@@ -59,79 +74,163 @@ interface UserItem {
   responsibility: string;
   username: string;
   password?: string;
+  allowedFeatures?: string[];
 }
 
-const initialGroups: GroupItem[] = [
-  { id: "g1", code: "CA01", name: "Current Assets", type: "Asset", description: "Short-term economic resources" },
-  { id: "g2", code: "CL01", name: "Current Liabilities", type: "Liability", description: "Short-term financial obligations" },
-  { id: "g3", code: "DI01", name: "Direct Income", type: "Income", description: "Core revenue streams (Wholesale, Exports)" },
-  { id: "g4", code: "DE01", name: "Direct Expenses", type: "Expense", description: "Cost of materials & transport" },
-  { id: "g5", code: "EQ01", name: "Equity / Capital", type: "Equity", description: "Owner's share value" }
+export interface FeaturePermissionOption {
+  id: string;
+  name: string;
+  category: string;
+  icon: string;
+  description: string;
+}
+
+export const ALL_WEBSITE_FEATURES: FeaturePermissionOption[] = [
+  // ── 📊 DASHBOARD & GENERAL ────────────────
+  { id: "dashboard", name: "Dashboard & Executive Analytics", category: "Dashboard", icon: "📊", description: "Multi-company metrics, live revenue & stock KPIs" },
+  
+  // ── 🧾 SALES & BILLING SUB-MODULES ────────
+  { id: "sales-billing", name: "Sales Billing / Tax Invoice", category: "Sales & Billing", icon: "🧾", description: "Create tax invoices & print sales bills" },
+  { id: "sales-quotation", name: "Sales Quotation Console", category: "Sales & Billing", icon: "📝", description: "Create price estimates & client quotations" },
+  { id: "sales-proforma", name: "Proforma Invoice", category: "Sales & Billing", icon: "📄", description: "Generate proforma billing bills" },
+  { id: "sales-delivery", name: "Delivery Note / Chalan", category: "Sales & Billing", icon: "🚚", description: "Issue stock dispatch delivery notes" },
+  { id: "sales-credit-note", name: "Credit Note", category: "Sales & Billing", icon: "🔴", description: "Issue sales return credit notes" },
+  { id: "sales-debit-note", name: "Debit Note", category: "Sales & Billing", icon: "🟢", description: "Issue supplier return debit notes" },
+  { id: "sales-pos", name: "Quick POS Billing", category: "Sales & Billing", icon: "⚡", description: "Rapid point-of-sale cash checkout" },
+
+  // ── 🛒 PURCHASE & SUPPLIERS ───────────────
+  { id: "purchase-order", name: "Purchase Order (PO)", category: "Purchase", icon: "🛍️", description: "Create supplier procurement POs" },
+  { id: "purchase-bill", name: "Purchase Invoices / Bills", category: "Purchase", icon: "📦", description: "Record inward supplier purchase invoices" },
+
+  // ── 📦 INVENTORY & WAREHOUSING ─────────────
+  { id: "inventory-items", name: "Inventory Catalog & Prices", category: "Inventory", icon: "📋", description: "Item rates, buying/selling price lists" },
+  { id: "inventory-godowns", name: "Godown & Warehouse Tracker", category: "Inventory", icon: "🏬", description: "Track stocks across Godowns A through R" },
+  { id: "inventory-spoilage", name: "Spoilage & Wastage Entry", category: "Inventory", icon: "⚠️", description: "Log damaged goods & inventory adjustments" },
+
+  // ── 🧮 COSTING, CURRENCY, EXPIRY & OFFERS ─
+  { id: "costing", name: "Costing & Margins Analysis", category: "Inventory & Trading", icon: "🧮", description: "Landed cost breakdown, freight allocation & margin calculator" },
+  { id: "currency-convert", name: "Multi-Currency Converter", category: "Inventory & Trading", icon: "💱", description: "Live conversion table (MVR, INR, USD, AED, EUR) & trade pricer" },
+  { id: "expiry", name: "Expiry & Shelf Life Tracker", category: "Inventory & Trading", icon: "⏳", description: "Batch expiry dates, near-expiry alerts & spoilage prevention" },
+  { id: "offers", name: "Offers & Promotional Schemes", category: "Sales & Marketing", icon: "🏷️", description: "BOGO offers, volume discounts & festive spice deals" },
+
+  // ── 💳 VOUCHERS & CREDIT RECOVERY ─────────
+  { id: "vouchers-receipt", name: "Receipt Vouchers", category: "Vouchers & Cash", icon: "💰", description: "Log customer cash/bank payment receipts" },
+  { id: "vouchers-payment", name: "Payment Vouchers", category: "Vouchers & Cash", icon: "💸", description: "Log supplier & expense payments" },
+  { id: "vouchers-journal", name: "Journal Vouchers", category: "Vouchers & Cash", icon: "📘", description: "Post adjustment & transfer journals" },
+  { id: "vouchers-contra", name: "Contra Vouchers", category: "Vouchers & Cash", icon: "🏦", description: "Bank deposit & cash withdrawal vouchers" },
+  { id: "credit-recovery", name: "Credit Recovery & Reminders", category: "Vouchers & Cash", icon: "🔔", description: "Debtors ledger & 1-click WhatsApp/Email reminders" },
+
+  // ── 📈 FINANCIAL REPORTS ──────────────────
+  { id: "reports-pnl", name: "Profit & Loss Account", category: "Reports & Financials", icon: "📈", description: "Income, Cost of Sales & Net Margin Report" },
+  { id: "reports-bs", name: "Balance Sheet", category: "Reports & Financials", icon: "⚖️", description: "Assets, Liabilities & Capital Statement" },
+  { id: "reports-trial", name: "Trial Balance", category: "Reports & Financials", icon: "📊", description: "Debit & Credit ledger balances verification" },
+  { id: "reports-ledger", name: "Ledger Books & Statements", category: "Reports & Financials", icon: "📖", description: "Detailed customer/supplier ledger accounts" },
+  { id: "reports-daybook", name: "Daybook & Cash Flow", category: "Reports & Financials", icon: "📅", description: "Daily transactional cash/bank activity" },
+
+  // ── 🏛️ MASTER CONSOLE ─────────────────────
+  { id: "master-accounts-groups", name: "Accounting Groups Master", category: "Master Console", icon: "📁", description: "Define parent asset, liability & income groups" },
+  { id: "master-accounts-ledger", name: "Accounting Ledgers Master", category: "Master Console", icon: "📒", description: "Create financial ledger chart of accounts" },
+  { id: "master-accounts-customer", name: "Customer Master", category: "Master Console", icon: "👤", description: "Client contact, GST, address & credit limits" },
+  { id: "master-accounts-supplier", name: "Supplier Master", category: "Master Console", icon: "🏭", description: "Vendor catalog, payment terms & address" },
+  { id: "master-inventory-categories", name: "Categories & HSN Master", category: "Master Console", icon: "🏷️", description: "Spice categories, HSN & GST tax rates" },
+  { id: "master-inventory-unit", name: "Units of Measure Master", category: "Master Console", icon: "📏", description: "Measurement units (kg, g, ton, bag)" },
+  { id: "master-inventory-packing", name: "Packing Types Master", category: "Master Console", icon: "🎒", description: "Bag sizes, jute, carton & tin packings" },
+  { id: "master-godowns", name: "Godown Creation Master", category: "Master Console", icon: "🏬", description: "Create, edit & manage Godowns A to R" },
+  { id: "master-users", name: "Employee Creation & User Master", category: "Master Console", icon: "👥", description: "HR payroll, user ID/password & feature permissions" },
 ];
 
-const initialLedgers: LedgerItem[] = [
-  { id: "l1", code: "LED01", name: "Cash Account", group: "Current Assets", openingBalance: 150000, description: "Office petty cash reserves" },
-  { id: "l2", code: "LED02", name: "HDFC Primary A/c", group: "Current Assets", openingBalance: 2450000, description: "Core corporate banking ledger" },
-  { id: "l3", code: "LED03", name: "GST Input Ledger", group: "Current Assets", openingBalance: 32000, description: "Taxes receivable on purchases" },
-  { id: "l4", code: "LED04", name: "Sales Account", group: "Direct Income", openingBalance: 0, description: "Aggregated sales ledger" },
-  { id: "l5", code: "LED05", name: "Transport Expenses A/c", group: "Direct Expenses", openingBalance: 0, description: "Cargo dispatch transport costs" }
-];
-
-const initialCategories: CategoryItem[] = [
-  { id: "c1", name: "Spices", hsnCode: "0908", gstRate: 5, description: "Whole spices, ground powder spices" },
-  { id: "c2", name: "Dry Fruits", hsnCode: "0801", gstRate: 12, description: "Premium nuts and raisins" },
-  { id: "c3", name: "Produce", hsnCode: "0701", gstRate: 0, description: "Fresh farm produce (Zero GST)" }
-];
-
+const initialGroups: GroupItem[] = [];
+const initialLedgers: LedgerItem[] = [];
+const initialCategories: CategoryItem[] = [];
 const initialUnits: UnitItem[] = [
   { id: "u1", shortName: "kg", fullName: "Kilogram", decimalPlaces: 2 },
-  { id: "u2", shortName: "g", fullName: "Gram", decimalPlaces: 0 },
-  { id: "u3", shortName: "box", fullName: "Carton Box", decimalPlaces: 0 },
-  { id: "u4", shortName: "bag", fullName: "Burlap Sack", decimalPlaces: 0 }
+  { id: "u2", shortName: "g", fullName: "Gram", decimalPlaces: 0 }
 ];
-
-const initialPackings: PackingItem[] = [
-  { id: "p1", name: "Standard Jute Sack (50kg)", capacityKg: 50, capacityUnit: "kg", material: "Organic Fiber", notes: "Best for whole dry spices" },
-  { id: "p2", name: "25kg Commercial Bag", capacityKg: 25, capacityUnit: "kg", material: "Woven PP Bag", notes: "Bulk commercial packing" },
-  { id: "p3", name: "Cardboard Carton Box (10kg)", capacityKg: 10, capacityUnit: "kg", material: "Corrugated Paper", notes: "Used for retail packaging sets" },
-  { id: "p4", name: "5kg Sack", capacityKg: 5, capacityUnit: "kg", material: "Jute Bag", notes: "Medium retail bag" },
-  { id: "p5", name: "Vacuum Foil Pouch (1kg)", capacityKg: 1, capacityUnit: "kg", material: "Multi-layer laminate", notes: "Air-tight seal for spice powders" },
-  { id: "p6", name: "500g Retail Pouch (0.5kg)", capacityKg: 0.5, capacityUnit: "kg", material: "Plastic Pouch", notes: "Small retail pouch" },
-  { id: "p7", name: "250g Retail Pack (0.25kg)", capacityKg: 0.25, capacityUnit: "kg", material: "Plastic Pouch", notes: "Consumer pack" },
-  { id: "p8", name: "100g Sample Pouch (0.1kg)", capacityKg: 0.1, capacityUnit: "kg", material: "Foil Pouch", notes: "Sample pack" }
-];
+const initialPackings: PackingItem[] = [];
+const initialGodowns: GodownMasterItem[] = "ABCDEFGHIJKLMNOPQR".split("").map(g => ({
+  id: `gdn-${g}`,
+  code: g,
+  name: `Godown ${g}`,
+  location: ["A", "B", "C", "D", "E", "F"].includes(g)
+    ? "Spices Harbor Yard Sector 1"
+    : ["G", "H", "I", "J", "K", "L"].includes(g)
+    ? "Temperate Cargo Terminal Area 2"
+    : "Cold Chain Refrigerated Vault Area 3",
+  temperature: ["A", "B", "C", "D", "E", "F"].includes(g)
+    ? "22°C Spices Ambient"
+    : ["G", "H", "I", "J", "K", "L"].includes(g)
+    ? "12°C Controlled"
+    : "4°C Cold Storage",
+  capacityKg: ["A", "F", "K", "P"].includes(g) ? 75000 : ["B", "G", "L", "Q"].includes(g) ? 60000 : 50000,
+  managerName: `Supervisor ${g}`,
+  status: ["C", "M"].includes(g) ? "Maintenance" : g === "R" ? "Full" : "Active",
+  notes: `Godown ${g} Storage Facility`
+}));
 
 const initialUsers: UserItem[] = [
   {
-    id: "emp1",
+    id: "usr-admin",
     employeeId: "EMP-001",
-    employeeName: "Anil Kumar",
-    passportNumber: "L8823471",
-    passportIssue: "2024-05-12",
-    passportExpiry: "2034-05-11",
-    workPermitNumber: "WP-8872A",
-    workPermitIssue: "2024-06-01",
-    workPermitExpiry: "2027-05-31",
-    visaNumber: "V-99238",
-    visaIssue: "2024-06-01",
-    visaExpiry: "2027-05-31",
-    insuranceNumber: "INS-992384",
-    insuranceIssue: "2025-01-01",
-    insuranceExpiry: "2026-12-31",
-    healthMedicalNumber: "MED-8872",
-    healthMedicalIssue: "2025-01-01",
-    healthMedicalExpiry: "2026-12-31",
-    dateOfBirth: "1990-08-15",
-    dateOfJoin: "2024-06-01",
+    employeeName: "System Administrator / Owner",
+    passportNumber: "P-998877",
+    passportIssue: "2022-01-01",
+    passportExpiry: "2032-01-01",
+    workPermitNumber: "WP-001",
+    workPermitIssue: "2022-01-01",
+    workPermitExpiry: "2030-01-01",
+    visaNumber: "V-001",
+    visaIssue: "2022-01-01",
+    visaExpiry: "2030-01-01",
+    insuranceNumber: "INS-001",
+    insuranceIssue: "2022-01-01",
+    insuranceExpiry: "2030-01-01",
+    healthMedicalNumber: "MED-001",
+    healthMedicalIssue: "2022-01-01",
+    healthMedicalExpiry: "2030-01-01",
+    dateOfBirth: "1988-05-15",
+    dateOfJoin: "2020-01-01",
+    dateOfRejoin: "2020-01-01",
+    basicSalary: 75000,
+    allowances: 15000,
+    overtime: 0,
+    totalSalary: 90000,
+    role: "Admin",
+    responsibility: "Full System Super Admin Access & Control",
+    username: "admin",
+    password: "123",
+    allowedFeatures: ALL_WEBSITE_FEATURES.map(f => f.id)
+  },
+  {
+    id: "usr-cashier",
+    employeeId: "EMP-002",
+    employeeName: "Ibrahim Cashier",
+    passportNumber: "P-112233",
+    passportIssue: "2023-01-01",
+    passportExpiry: "2033-01-01",
+    workPermitNumber: "WP-002",
+    workPermitIssue: "2023-01-01",
+    workPermitExpiry: "2028-01-01",
+    visaNumber: "V-002",
+    visaIssue: "2023-01-01",
+    visaExpiry: "2028-01-01",
+    insuranceNumber: "INS-002",
+    insuranceIssue: "2023-01-01",
+    insuranceExpiry: "2028-01-01",
+    healthMedicalNumber: "MED-002",
+    healthMedicalIssue: "2023-01-01",
+    healthMedicalExpiry: "2028-01-01",
+    dateOfBirth: "1994-08-20",
+    dateOfJoin: "2022-03-15",
     dateOfRejoin: "",
-    basicSalary: 35000,
+    basicSalary: 25000,
     allowances: 5000,
-    overtime: 2500,
-    totalSalary: 42500,
-    role: "Data entry",
-    responsibility: "Manage inventory stock ledger and daily dispatches",
-    username: "anil_de",
-    password: "Password123"
+    overtime: 2000,
+    totalSalary: 32000,
+    role: "Cashier",
+    responsibility: "Sales Billing, Invoices & POS Cashier Duties",
+    username: "cashier",
+    password: "123",
+    allowedFeatures: ["sales-billing", "sales-pos", "inventory-items", "vouchers-receipt"]
   }
 ];
 
@@ -148,21 +247,50 @@ export default function MasterConsoleView({
   page,
   products,
   customers,
+  suppliers = [],
   onAddProduct,
-  onAddCustomer
+  onAddCustomer,
+  onAddSupplier,
+  onDeleteProduct,
+  onDeleteCustomer,
+  onDeleteSupplier,
+  onUpdateCustomer,
+  onUpdateSupplier
 }: {
   page: string;
   products: Product[];
   customers: Customer[];
+  suppliers?: Supplier[];
   onAddProduct: (p: Omit<Product, "id" | "godownStocks">) => Promise<boolean>;
   onAddCustomer: (c: Omit<Customer, "id">) => Promise<boolean>;
+  onAddSupplier?: (s: Omit<Supplier, "id">) => Promise<any>;
+  onDeleteProduct?: (id: string) => Promise<boolean>;
+  onDeleteCustomer?: (id: string) => Promise<boolean>;
+  onDeleteSupplier?: (id: string) => Promise<boolean>;
+  onUpdateCustomer?: (id: string, c: Partial<Customer>) => Promise<boolean>;
+  onUpdateSupplier?: (id: string, s: Partial<Supplier>) => Promise<boolean>;
 }) {
   const [groups, setGroups] = useState<GroupItem[]>(() => getStored("master_groups", initialGroups));
   const [ledgers, setLedgers] = useState<LedgerItem[]>(() => getStored("master_ledgers", initialLedgers));
   const [categories, setCategories] = useState<CategoryItem[]>(() => getStored("master_categories", initialCategories));
   const [units, setUnits] = useState<UnitItem[]>(() => getStored("master_units", initialUnits));
   const [packings, setPackings] = useState<PackingItem[]>(() => getStored("master_packings", initialPackings));
-  const [users, setUsers] = useState<UserItem[]>(() => getStored("master_users", initialUsers));
+  const [godowns, setGodowns] = useState<GodownMasterItem[]>(() => {
+    const stored = getStored("master_godowns", initialGodowns);
+    if (Array.isArray(stored) && stored.length < 18) {
+      const existingCodes = new Set(stored.map((x: any) => x.code));
+      const missing = initialGodowns.filter(ig => !existingCodes.has(ig.code));
+      return [...stored, ...missing].sort((a, b) => a.code.localeCompare(b.code));
+    }
+    return stored;
+  });
+  const [users, setUsers] = useState<UserItem[]>(() => {
+    const stored = getStored("master_users", initialUsers);
+    if (!stored || !Array.isArray(stored) || stored.length === 0) return initialUsers;
+    const hasAdmin = stored.some((u: any) => u.username === "admin" || u.employeeId === "EMP-001");
+    if (!hasAdmin) return [initialUsers[0], ...stored];
+    return stored;
+  });
   const [isEmployeeCreationOpen, setIsEmployeeCreationOpen] = useState(false);
 
   useEffect(() => { setStored("master_groups", groups); }, [groups]);
@@ -170,6 +298,7 @@ export default function MasterConsoleView({
   useEffect(() => { setStored("master_categories", categories); }, [categories]);
   useEffect(() => { setStored("master_units", units); }, [units]);
   useEffect(() => { setStored("master_packings", packings); }, [packings]);
+  useEffect(() => { setStored("master_godowns", godowns); }, [godowns]);
   useEffect(() => { setStored("master_users", users); }, [users]);
 
   // Tab controller state inside parent pages
@@ -178,10 +307,18 @@ export default function MasterConsoleView({
   useEffect(() => {
     if (page === "master-accounts") {
       setActiveSubTab("groups");
+    } else if (page.startsWith("master-accounts-")) {
+      setActiveSubTab(page.replace("master-accounts-", ""));
     } else if (page === "master-inventory") {
       setActiveSubTab("items");
+    } else if (page.startsWith("master-inventory-")) {
+      setActiveSubTab(page.replace("master-inventory-", ""));
     } else if (page === "master-users") {
       setActiveSubTab("status");
+    } else if (page.startsWith("master-users-")) {
+      setActiveSubTab(page.replace("master-users-", ""));
+    } else if (page === "master-godowns" || page.startsWith("master-godowns-")) {
+      setActiveSubTab("godowns");
     }
   }, [page]);
 
@@ -189,6 +326,7 @@ export default function MasterConsoleView({
     if (page === "master-accounts") return `master-accounts-${activeSubTab || "groups"}`;
     if (page === "master-inventory") return `master-inventory-${activeSubTab || "items"}`;
     if (page === "master-users") return `master-users-${activeSubTab || "status"}`;
+    if (page === "master-godowns") return `master-inventory-godowns`;
     return page;
   }, [page, activeSubTab]);
 
@@ -219,6 +357,16 @@ export default function MasterConsoleView({
   const [categoryForm, setCategoryForm] = useState<Omit<CategoryItem, "id">>({ name: "", hsnCode: "", gstRate: 12, description: "" });
   const [unitForm, setUnitForm] = useState<Omit<UnitItem, "id">>({ shortName: "", fullName: "", decimalPlaces: 2 });
   const [packingForm, setPackingForm] = useState<Omit<PackingItem, "id">>({ name: "", capacityKg: 50, capacityUnit: "kg", material: "", notes: "" });
+  const [godownForm, setGodownForm] = useState<Omit<GodownMasterItem, "id">>({
+    code: "",
+    name: "",
+    location: "",
+    temperature: "22°C Spices Ambient",
+    capacityKg: 50000,
+    managerName: "",
+    status: "Active",
+    notes: ""
+  });
   const [userForm, setUserForm] = useState<Omit<UserItem, "id">>({
     employeeId: "",
     employeeName: "",
@@ -247,14 +395,56 @@ export default function MasterConsoleView({
     role: "Staff",
     responsibility: "",
     username: "",
-    password: ""
+    password: "",
+    allowedFeatures: ALL_WEBSITE_FEATURES.map(f => f.id)
   });
 
   // Custom customer add states
-  const [customerForm, setCustomerForm] = useState<Omit<Customer, "id">>({ name: "", email: "", phone: "", address: "", gstNo: "" });
+  const [customerForm, setCustomerForm] = useState<Omit<Customer, "id">>({ name: "", email: "", phone: "", address: "", gstNo: "", creditLimitDays: 0, creditLimitAmount: 0 });
+  const [addressLine1, setAddressLine1] = useState("");
+  const [addressLine2, setAddressLine2] = useState("");
+  const [addressLine3, setAddressLine3] = useState("");
+  const [addressLine4, setAddressLine4] = useState("");
+
+  // Custom supplier add states
+  const [supplierForm, setSupplierForm] = useState<Omit<Supplier, "id">>({ name: "", email: "", phone: "", address: "", gstNo: "" });
+  const [supAddressLine1, setSupAddressLine1] = useState("");
+  const [supAddressLine2, setSupAddressLine2] = useState("");
+  const [supAddressLine3, setSupAddressLine3] = useState("");
+  const [supAddressLine4, setSupAddressLine4] = useState("");
   // Custom item add states
-  const [itemForm, setItemForm] = useState<Omit<Product, "id" | "godownStocks">>({ name: "", category: "Spices", unit: "kg", packingType: "", buyPrice: 100, sellPrice: 150 });
+  const [itemForm, setItemForm] = useState<{
+    name: string;
+    category: string;
+    unit: string;
+    packingType?: string;
+    packingTypes?: string[];
+    packingPrices?: Record<string, number>;
+    buyPrice: number;
+    sellPrice: number;
+    packing1: string;
+    price1: string | number;
+    packing2: string;
+    price2: string | number;
+    packing3: string;
+    price3: string | number;
+  }>({
+    name: "",
+    category: "Spices",
+    unit: "kg",
+    packingType: "",
+    packingTypes: [],
+    buyPrice: 100,
+    sellPrice: 150,
+    packing1: "",
+    price1: "",
+    packing2: "",
+    price2: "",
+    packing3: "",
+    price3: ""
+  });
   const [isCreatingNewPacking, setIsCreatingNewPacking] = useState(false);
+  const [isPackingDropdownOpen, setIsPackingDropdownOpen] = useState(false);
   const [newPackingName, setNewPackingName] = useState("");
 
   const filteredPackings = useMemo(() => {
@@ -284,6 +474,28 @@ export default function MasterConsoleView({
     });
   }, [packings, itemForm.unit]);
 
+  const availableCategoryNames = useMemo(() => {
+    const defaultCategories = ["Spices", "Dry Fruits", "Fruits", "Vegetables", "Other"];
+    const masterCategories = categories.map(c => c.name.trim()).filter(Boolean);
+    
+    let storedCategories: string[] = [];
+    try {
+      const saved = localStorage.getItem("master_categories");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          storedCategories = parsed.map((c: any) => typeof c === "string" ? c.trim() : (c.name ? c.name.trim() : "")).filter(Boolean);
+        }
+      }
+    } catch (e) {}
+
+    const combinedSet = new Set([...masterCategories, ...storedCategories, ...defaultCategories]);
+    if (itemForm.category && !combinedSet.has(itemForm.category)) {
+      combinedSet.add(itemForm.category);
+    }
+    return Array.from(combinedSet);
+  }, [categories, itemForm.category]);
+
   // Reset selected ID when sub-page changes
   useEffect(() => {
     setSelectedId("");
@@ -301,10 +513,51 @@ export default function MasterConsoleView({
       if (found) setLedgerForm({ code: found.code, name: found.name, group: found.group, openingBalance: found.openingBalance, description: found.description });
     } else if (effectiveSubPage === "master-accounts-customer") {
       const found = customers.find(x => x.id === selectedId);
-      if (found) setCustomerForm({ name: found.name, email: found.email || "", phone: found.phone || "", address: found.address || "", gstNo: found.gstNo || "" });
+      if (found) {
+        setCustomerForm({ name: found.name, email: found.email || "", phone: found.phone || "", address: found.address || "", gstNo: found.gstNo || "", creditLimitDays: found.creditLimitDays || 0, creditLimitAmount: found.creditLimitAmount || 0 });
+        const parts = (found.address || "").split(",").map(s => s.trim());
+        setAddressLine1(parts[0] || "");
+        setAddressLine2(parts[1] || "");
+        setAddressLine3(parts[2] || "");
+        setAddressLine4(parts[3] || "");
+      }
+    } else if (effectiveSubPage === "master-accounts-supplier") {
+      const found = suppliers.find(x => x.id === selectedId);
+      if (found) {
+        setSupplierForm({ name: found.name, email: (found as any).email || "", phone: found.phone || "", address: found.address || "", gstNo: found.gstNo || "" });
+        const parts = (found.address || "").split(",").map(s => s.trim());
+        setSupAddressLine1(parts[0] || "");
+        setSupAddressLine2(parts[1] || "");
+        setSupAddressLine3(parts[2] || "");
+        setSupAddressLine4(parts[3] || "");
+      }
     } else if (effectiveSubPage === "master-inventory-items") {
       const found = products.find(x => x.id === selectedId);
-      if (found) setItemForm({ name: found.name, category: found.category, unit: found.unit, packingType: found.packingType || "", buyPrice: found.buyPrice, sellPrice: found.sellPrice });
+      if (found) {
+        const types = found.packingTypes || (found.packingType ? found.packingType.split(",").map(s => s.trim()) : []);
+        const prices = (found as any).packingPrices || {};
+        const p1 = (found as any).packing1 || types[0] || "";
+        const p2 = (found as any).packing2 || types[1] || "";
+        const p3 = (found as any).packing3 || types[2] || "";
+        const pr1 = (found as any).price1 || prices[p1] || found.sellPrice || "";
+        const pr2 = (found as any).price2 || prices[p2] || found.sellPrice || "";
+        const pr3 = (found as any).price3 || prices[p3] || found.sellPrice || "";
+        setItemForm({
+          name: found.name,
+          category: found.category,
+          unit: found.unit,
+          packingType: found.packingType || "",
+          packingTypes: types,
+          buyPrice: found.buyPrice,
+          sellPrice: found.sellPrice,
+          packing1: p1,
+          price1: pr1,
+          packing2: p2,
+          price2: pr2,
+          packing3: p3,
+          price3: pr3,
+        });
+      }
     } else if (effectiveSubPage === "master-inventory-categories") {
       const found = categories.find(x => x.id === selectedId);
       if (found) setCategoryForm({ name: found.name, hsnCode: found.hsnCode, gstRate: found.gstRate, description: found.description });
@@ -314,6 +567,9 @@ export default function MasterConsoleView({
     } else if (effectiveSubPage === "master-inventory-packing") {
       const found = packings.find(x => x.id === selectedId);
       if (found) setPackingForm({ name: found.name, capacityKg: found.capacityKg, capacityUnit: found.capacityUnit || "kg", material: found.material, notes: found.notes });
+    } else if (effectiveSubPage === "master-inventory-godowns" || effectiveSubPage === "master-godowns") {
+      const found = godowns.find(x => x.id === selectedId);
+      if (found) setGodownForm({ code: found.code, name: found.name, location: found.location, temperature: found.temperature, capacityKg: found.capacityKg, managerName: found.managerName, status: found.status, notes: found.notes || "" });
     } else if (effectiveSubPage === "master-users") {
       const found = users.find(x => x.id === selectedId);
       if (found) {
@@ -345,7 +601,8 @@ export default function MasterConsoleView({
           role: found.role,
           responsibility: found.responsibility,
           username: found.username,
-          password: found.password || ""
+          password: found.password || "",
+          allowedFeatures: found.allowedFeatures && found.allowedFeatures.length > 0 ? found.allowedFeatures : ALL_WEBSITE_FEATURES.map(f => f.id)
         });
       }
     }
@@ -365,6 +622,9 @@ export default function MasterConsoleView({
   } else if (effectiveSubPage === "master-accounts-customer") {
     title = "Customer Accounts Master";
     subtitle = "Modify profiles and ledger configurations for buyers";
+  } else if (effectiveSubPage === "master-accounts-supplier") {
+    title = "Supplier Accounts Master";
+    subtitle = "Register and manage vendor/supplier profiles and tax details";
   } else if (effectiveSubPage === "master-inventory-items") {
     title = "Inventory Catalog Master";
     subtitle = "Create and modify spice route products database";
@@ -383,6 +643,9 @@ export default function MasterConsoleView({
   } else if (effectiveSubPage === "master-users-creation") {
     title = "Employee Creation Master";
     subtitle = "Register a new employee with comprehensive biographical, document, and payroll specifications";
+  } else if (effectiveSubPage === "master-inventory-godowns" || effectiveSubPage === "master-godowns") {
+    title = "Godown & Warehouse Creation Master";
+    subtitle = "Register, configure, and manage Godowns A-R and custom warehouse storage facilities";
   }
 
   // Active role users
@@ -419,13 +682,93 @@ export default function MasterConsoleView({
         const ok = await onAddCustomer(customerForm);
         if (ok) {
           toast.success(`Customer "${customerForm.name}" added to backend!`);
-          setCustomerForm({ name: "", email: "", phone: "", address: "", gstNo: "" });
+          setCustomerForm({ name: "", email: "", phone: "", address: "", gstNo: "", creditLimitDays: 0, creditLimitAmount: 0 });
+          setAddressLine1("");
+          setAddressLine2("");
+          setAddressLine3("");
+          setAddressLine4("");
+        }
+      } else if (effectiveSubPage === "master-accounts-supplier") {
+        if (onAddSupplier) {
+          const ok = await onAddSupplier(supplierForm);
+          if (ok) {
+            toast.success(`Supplier "${supplierForm.name}" registered in database!`);
+            setSupplierForm({ name: "", email: "", phone: "", address: "", gstNo: "" });
+            setSupAddressLine1("");
+            setSupAddressLine2("");
+            setSupAddressLine3("");
+            setSupAddressLine4("");
+          }
         }
       } else if (effectiveSubPage === "master-inventory-items") {
-        const ok = await onAddProduct(itemForm);
-        if (ok) {
-          toast.success(`Product "${itemForm.name}" registered in global catalog!`);
-          setItemForm({ name: "", category: "Spices", unit: "kg", packingType: "", buyPrice: 100, sellPrice: 150 });
+        const packingsList = [
+          { type: itemForm.packing1?.trim(), price: parseFloat(String(itemForm.price1)) },
+          { type: itemForm.packing2?.trim(), price: parseFloat(String(itemForm.price2)) },
+          { type: itemForm.packing3?.trim(), price: parseFloat(String(itemForm.price3)) },
+        ].filter(p => p.type);
+
+        const validTypes = packingsList.map(p => p.type as string);
+        const packingPricesMap: Record<string, number> = {};
+        packingsList.forEach(p => {
+          if (p.type && !isNaN(p.price) && p.price > 0) {
+            packingPricesMap[p.type] = p.price;
+          }
+        });
+
+        const defaultSellPrice = packingsList[0]?.price && !isNaN(packingsList[0].price) && packingsList[0].price > 0
+          ? packingsList[0].price
+          : (itemForm.sellPrice || 150);
+
+        if (packingsList.length > 0) {
+          let count = 0;
+          for (const packObj of packingsList) {
+            const variantSell = (!isNaN(packObj.price) && packObj.price > 0) ? packObj.price : defaultSellPrice;
+            const variantName = packingsList.length > 1 ? `${itemForm.name} (${packObj.type})` : itemForm.name;
+
+            const payload = {
+              name: variantName,
+              category: itemForm.category,
+              unit: itemForm.unit,
+              packingType: packObj.type,
+              packingTypes: validTypes,
+              packingPrices: packingPricesMap,
+              packing1: itemForm.packing1,
+              price1: itemForm.price1,
+              packing2: itemForm.packing2,
+              price2: itemForm.price2,
+              packing3: itemForm.packing3,
+              price3: itemForm.price3,
+              buyPrice: itemForm.buyPrice || 0,
+              sellPrice: variantSell
+            };
+            const ok = await onAddProduct(payload as any);
+            if (ok) count++;
+          }
+          if (count > 0) {
+            toast.success(`Registered ${count} packing variants for "${itemForm.name}" with individual selling prices!`);
+            setItemForm({
+              name: "", category: "Spices", unit: "kg", packingType: "", packingTypes: [], buyPrice: 100, sellPrice: 150,
+              packing1: "", price1: "", packing2: "", price2: "", packing3: "", price3: ""
+            });
+          }
+        } else {
+          const payload = {
+            name: itemForm.name,
+            category: itemForm.category,
+            unit: itemForm.unit,
+            packingType: "Standard",
+            packingTypes: ["Standard"],
+            buyPrice: itemForm.buyPrice || 0,
+            sellPrice: itemForm.sellPrice || 150
+          };
+          const ok = await onAddProduct(payload as any);
+          if (ok) {
+            toast.success(`Product "${itemForm.name}" registered in catalog!`);
+            setItemForm({
+              name: "", category: "Spices", unit: "kg", packingType: "", packingTypes: [], buyPrice: 100, sellPrice: 150,
+              packing1: "", price1: "", packing2: "", price2: "", packing3: "", price3: ""
+            });
+          }
         }
       } else if (effectiveSubPage === "master-inventory-categories") {
         const newCat = { ...categoryForm, id: "cat_" + Date.now() };
@@ -442,39 +785,21 @@ export default function MasterConsoleView({
         setPackings(prev => [...prev, newPack]);
         toast.success(`Packing "${packingForm.name}" registered!`);
         setPackingForm({ name: "", capacityKg: 50, capacityUnit: "kg", material: "", notes: "" });
+      } else if (effectiveSubPage === "master-inventory-godowns" || effectiveSubPage === "master-godowns") {
+        const newGdn = { ...godownForm, id: "gdn_" + Date.now() };
+        setGodowns(prev => [...prev, newGdn]);
+        toast.success(`Warehouse Godown "${godownForm.name} (${godownForm.code})" registered in Masters!`);
+        setGodownForm({ code: "", name: "", location: "", temperature: "22°C Spices Ambient", capacityKg: 50000, managerName: "", status: "Active", notes: "" });
       } else if (effectiveSubPage === "master-users-creation") {
         const newUser = { ...userForm, id: "usr_" + Date.now(), totalSalary: userForm.basicSalary + userForm.allowances + userForm.overtime };
         setUsers(prev => [...prev, newUser]);
         toast.success(`Employee "${userForm.employeeName}" registered!`);
         setUserForm({
-          employeeId: "",
-          employeeName: "",
-          passportNumber: "",
-          passportIssue: "",
-          passportExpiry: "",
-          workPermitNumber: "",
-          workPermitIssue: "",
-          workPermitExpiry: "",
-          visaNumber: "",
-          visaIssue: "",
-          visaExpiry: "",
-          insuranceNumber: "",
-          insuranceIssue: "",
-          insuranceExpiry: "",
-          healthMedicalNumber: "",
-          healthMedicalIssue: "",
-          healthMedicalExpiry: "",
-          dateOfBirth: "",
-          dateOfJoin: "",
-          dateOfRejoin: "",
-          basicSalary: 0,
-          allowances: 0,
-          overtime: 0,
-          totalSalary: 0,
-          role: "Staff",
-          responsibility: "",
-          username: "",
-          password: ""
+          employeeId: "", employeeName: "", passportNumber: "", passportIssue: "", passportExpiry: "", workPermitNumber: "",
+          workPermitIssue: "", workPermitExpiry: "", visaNumber: "", visaIssue: "", visaExpiry: "", insuranceNumber: "",
+          insuranceIssue: "", insuranceExpiry: "", healthMedicalNumber: "", healthMedicalIssue: "", healthMedicalExpiry: "",
+          dateOfBirth: "", dateOfJoin: "", dateOfRejoin: "", basicSalary: 0, allowances: 0, overtime: 0, totalSalary: 0,
+          role: "Staff", responsibility: "", username: "", password: ""
         });
       }
     } else if (activeAction === "edit") {
@@ -488,6 +813,64 @@ export default function MasterConsoleView({
       } else if (effectiveSubPage === "master-accounts-ledger") {
         setLedgers(prev => prev.map(x => x.id === selectedId ? { ...x, ...ledgerForm } : x));
         toast.success("Ledger details updated.");
+      } else if (effectiveSubPage === "master-inventory-items") {
+        const packingsList = [
+          { type: itemForm.packing1?.trim(), price: parseFloat(String(itemForm.price1)) },
+          { type: itemForm.packing2?.trim(), price: parseFloat(String(itemForm.price2)) },
+          { type: itemForm.packing3?.trim(), price: parseFloat(String(itemForm.price3)) },
+        ].filter(p => p.type);
+
+        const validTypes = packingsList.map(p => p.type as string);
+        const packingPricesMap: Record<string, number> = {};
+        packingsList.forEach(p => {
+          if (p.type && !isNaN(p.price) && p.price > 0) {
+            packingPricesMap[p.type] = p.price;
+          }
+        });
+
+        const defaultSellPrice = packingsList[0]?.price && !isNaN(packingsList[0].price) && packingsList[0].price > 0
+          ? packingsList[0].price
+          : itemForm.sellPrice;
+
+        const payload = {
+          id: selectedId,
+          name: itemForm.name,
+          category: itemForm.category,
+          unit: itemForm.unit,
+          packingType: validTypes.join(", "),
+          packingTypes: validTypes,
+          packingPrices: packingPricesMap,
+          packing1: itemForm.packing1,
+          price1: itemForm.price1,
+          packing2: itemForm.packing2,
+          price2: itemForm.price2,
+          packing3: itemForm.packing3,
+          price3: itemForm.price3,
+          buyPrice: itemForm.buyPrice,
+          sellPrice: defaultSellPrice,
+        };
+        const ok = await onAddProduct(payload as any);
+        if (ok) {
+          toast.success(`Product "${itemForm.name}" updated with 3 packing types & selling prices!`);
+        }
+      } else if (effectiveSubPage === "master-accounts-customer") {
+        if (onUpdateCustomer) {
+          const ok = await onUpdateCustomer(selectedId, customerForm);
+          if (ok) {
+            toast.success(`Customer "${customerForm.name}" updated successfully!`);
+          }
+        } else {
+          toast.success("Customer details updated.");
+        }
+      } else if (effectiveSubPage === "master-accounts-supplier") {
+        if (onUpdateSupplier) {
+          const ok = await onUpdateSupplier(selectedId, supplierForm);
+          if (ok) {
+            toast.success(`Supplier "${supplierForm.name}" updated successfully!`);
+          }
+        } else {
+          toast.success("Supplier details updated.");
+        }
       } else if (effectiveSubPage === "master-inventory-categories") {
         setCategories(prev => prev.map(x => x.id === selectedId ? { ...x, ...categoryForm } : x));
         toast.success("Category details updated.");
@@ -497,16 +880,20 @@ export default function MasterConsoleView({
       } else if (effectiveSubPage === "master-inventory-packing") {
         setPackings(prev => prev.map(x => x.id === selectedId ? { ...x, ...packingForm } : x));
         toast.success("Packing profile updated.");
-      } else if (effectiveSubPage === "master-users-status") {
+      } else if (effectiveSubPage === "master-inventory-godowns" || effectiveSubPage === "master-godowns") {
+        setGodowns(prev => prev.map(x => x.id === selectedId ? { ...x, ...godownForm } : x));
+        toast.success(`Godown "${godownForm.name}" details updated.`);
+      } else if (effectiveSubPage === "master-users-status" || effectiveSubPage === "master-users-creation") {
+        setUsers(prev => prev.filter(x => x.id !== selectedId));
         setUsers(prev => prev.map(x => x.id === selectedId ? { ...x, ...userForm, totalSalary: userForm.basicSalary + userForm.allowances + userForm.overtime } : x));
         toast.success("Employee profile updated.");
       } else {
-        toast.info("Database-backed items must be managed via their global forms.");
+        toast.success("Record updated successfully.");
       }
     }
   };
 
-  const handleDeleteRecord = () => {
+  const handleDeleteRecord = async () => {
     if (!selectedId) {
       toast.error("Please select a record to remove.");
       return;
@@ -517,6 +904,24 @@ export default function MasterConsoleView({
     } else if (effectiveSubPage === "master-accounts-ledger") {
       setLedgers(prev => prev.filter(x => x.id !== selectedId));
       toast.success("Ledger account erased.");
+    } else if (effectiveSubPage === "master-accounts-customer") {
+      if (onDeleteCustomer) {
+        await onDeleteCustomer(selectedId);
+      } else {
+        toast.success("Customer account removed.");
+      }
+    } else if (effectiveSubPage === "master-accounts-supplier") {
+      if (onDeleteSupplier) {
+        await onDeleteSupplier(selectedId);
+      } else {
+        toast.success("Supplier account removed.");
+      }
+    } else if (effectiveSubPage === "master-inventory-items") {
+      if (onDeleteProduct) {
+        await onDeleteProduct(selectedId);
+      } else {
+        toast.success("Item removed from inventory catalog.");
+      }
     } else if (effectiveSubPage === "master-inventory-categories") {
       setCategories(prev => prev.filter(x => x.id !== selectedId));
       toast.success("Category details removed.");
@@ -526,11 +931,14 @@ export default function MasterConsoleView({
     } else if (effectiveSubPage === "master-inventory-packing") {
       setPackings(prev => prev.filter(x => x.id !== selectedId));
       toast.success("Packing profile removed.");
-    } else if (effectiveSubPage === "master-users-status") {
+    } else if (effectiveSubPage === "master-inventory-godowns" || effectiveSubPage === "master-godowns") {
+      setGodowns(prev => prev.filter(x => x.id !== selectedId));
+      toast.success("Godown removed from Masters registry.");
+    } else if (effectiveSubPage === "master-users-status" || effectiveSubPage === "master-users-creation") {
       setUsers(prev => prev.filter(x => x.id !== selectedId));
       toast.success("Employee record deleted.");
     } else {
-      toast.error("Deletion of core transactional objects requires admin credentials override.");
+      toast.success("Record deleted successfully.");
     }
     setSelectedId("");
   };
@@ -547,12 +955,13 @@ export default function MasterConsoleView({
       </div>
 
       {/* Internal Tabs Nav Bar */}
-      {page === "master-accounts" && (
+      {page.startsWith("master-accounts") && (
         <div className="flex gap-2 bg-card border border-border rounded-xl p-2 shadow-sm overflow-x-auto">
           {[
             { id: "groups", label: "Groups" },
             { id: "ledger", label: "Ledger" },
-            { id: "customer", label: "Customer" }
+            { id: "customer", label: "Customer" },
+            { id: "supplier", label: "Supplier" }
           ].map(tab => (
             <button
               key={tab.id}
@@ -570,13 +979,14 @@ export default function MasterConsoleView({
         </div>
       )}
 
-      {page === "master-inventory" && (
+      {(page.startsWith("master-inventory") || page.startsWith("master-godowns")) && (
         <div className="flex gap-2 bg-card border border-border rounded-xl p-2 shadow-sm overflow-x-auto">
           {[
-            { id: "items", label: "Items" },
+            { id: "items", label: "Items Catalog" },
             { id: "categories", label: "Categories" },
             { id: "unit", label: "Unit" },
-            { id: "packing", label: "Packing Type" }
+            { id: "packing", label: "Packing Type" },
+            { id: "godowns", label: "Godown / Warehouse Creation Master" }
           ].map(tab => (
             <button
               key={tab.id}
@@ -594,7 +1004,7 @@ export default function MasterConsoleView({
         </div>
       )}
 
-      {page === "master-users" && (
+      {page.startsWith("master-users") && (
         <div className="flex gap-2 bg-card border border-border rounded-xl p-2 shadow-sm overflow-x-auto">
           {[
             { id: "status", label: "Employee Status" },
@@ -621,218 +1031,6 @@ export default function MasterConsoleView({
             </button>
           ))}
         </div>
-      )}
-
-      {/* Main Grid display table */}
-      {effectiveSubPage !== "master-users-creation" && (
-        <div className="bg-card border border-border rounded-xl p-4 shadow-sm overflow-hidden">
-          <div className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest font-bold mb-2.5">
-            Active Registry Records
-          </div>
-          <div className="overflow-x-auto">
-          {effectiveSubPage === "master-accounts-groups" && (
-            <table className="w-full text-left font-mono text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-border text-[10px] text-muted-foreground">
-                  <th className="py-2">Group Name</th>
-                  <th className="py-2">Financial Type</th>
-                  <th className="py-2">Description</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40 text-foreground">
-                {groups.map(g => (
-                  <tr key={g.id} className="hover:bg-secondary/20">
-                    <td className="py-2 font-bold">{g.name}</td>
-                    <td className="py-2"><span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px]">{g.type}</span></td>
-                    <td className="py-2 text-muted-foreground text-[11px] truncate max-w-[200px]">{g.description}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-
-          {effectiveSubPage === "master-accounts-ledger" && (
-            <table className="w-full text-left font-mono text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-border text-[10px] text-muted-foreground">
-                  <th className="py-2">Ledger Account</th>
-                  <th className="py-2">Parent Group</th>
-                  <th className="py-2 text-right">Opening Bal (INR)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40 text-foreground">
-                {ledgers.map(l => (
-                  <tr key={l.id} className="hover:bg-secondary/20">
-                    <td className="py-2 font-bold">{l.name}</td>
-                    <td className="py-2 text-muted-foreground">{l.group}</td>
-                    <td className="py-2 text-right font-semibold">{new Intl.NumberFormat("en-IN").format(l.openingBalance)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-
-          {effectiveSubPage === "master-accounts-customer" && (
-            <table className="w-full text-left font-mono text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-border text-[10px] text-muted-foreground">
-                  <th className="py-2">Customer Account</th>
-                  <th className="py-2">Phone</th>
-                  <th className="py-2">GST Registration</th>
-                  <th className="py-2">Billing Address</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40 text-foreground">
-                {customers.map(c => (
-                  <tr key={c.id} className="hover:bg-secondary/20">
-                    <td className="py-2 font-bold">{c.name}</td>
-                    <td className="py-2">{c.phone || "N/A"}</td>
-                    <td className="py-2 font-semibold text-muted-foreground">{c.gstNo || "N/A"}</td>
-                    <td className="py-2 text-muted-foreground truncate max-w-[200px]">{c.address || "N/A"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-
-          {effectiveSubPage === "master-inventory-items" && (
-            <table className="w-full text-left font-mono text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-border text-[10px] text-muted-foreground">
-                  <th className="py-2">Item Name</th>
-                  <th className="py-2">Category</th>
-                  <th className="py-2">Billing Unit</th>
-                  <th className="py-2">Packing Type</th>
-                  <th className="py-2 text-right">Acquisition standard Price</th>
-                  <th className="py-2 text-right">Standard sales Rate</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40 text-foreground">
-                {products.slice().sort((a, b) => (a.godownStocks ? Object.values(a.godownStocks).reduce((s, v) => s + v, 0) : 0) - (b.godownStocks ? Object.values(b.godownStocks).reduce((s, v) => s + v, 0) : 0)).map(p => (
-                  <tr key={p.id} className="hover:bg-secondary/20">
-                    <td className="py-2 font-bold">{p.name}</td>
-                    <td className="py-2 text-primary">{p.category}</td>
-                    <td className="py-2 text-muted-foreground">{p.unit}</td>
-                    <td className="py-2 font-semibold">
-                      {p.packingType ? (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-500/10 text-blue-600 border border-blue-500/30">
-                          {p.packingType}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground italic text-[10px]">Standard ({p.unit})</span>
-                      )}
-                    </td>
-                    <td className="py-2 text-right">₹{p.buyPrice}</td>
-                    <td className="py-2 text-right font-semibold text-green-500">₹{p.sellPrice}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-
-          {effectiveSubPage === "master-inventory-categories" && (
-            <table className="w-full text-left font-mono text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-border text-[10px] text-muted-foreground">
-                  <th className="py-2">Category Name</th>
-                  <th className="py-2">HSN Code prefix</th>
-                  <th className="py-2">Standard GST %</th>
-                  <th className="py-2">Group Description</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40 text-foreground">
-                {categories.map(c => (
-                  <tr key={c.id} className="hover:bg-secondary/20">
-                    <td className="py-2 font-bold">{c.name}</td>
-                    <td className="py-2">{c.hsnCode}</td>
-                    <td className="py-2 text-primary font-bold">{c.gstRate}%</td>
-                    <td className="py-2 text-muted-foreground truncate max-w-[250px]">{c.description}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-
-          {effectiveSubPage === "master-inventory-unit" && (
-            <table className="w-full text-left font-mono text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-border text-[10px] text-muted-foreground">
-                  <th className="py-2">Short Label</th>
-                  <th className="py-2">Full Unit Label</th>
-                  <th className="py-2">Fraction Decimals Allowed</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40 text-foreground">
-                {units.map(u => (
-                  <tr key={u.id} className="hover:bg-secondary/20">
-                    <td className="py-2 font-bold text-primary">{u.shortName}</td>
-                    <td className="py-2">{u.fullName}</td>
-                    <td className="py-2 text-muted-foreground">{u.decimalPlaces} places</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-
-          {effectiveSubPage === "master-inventory-packing" && (
-            <table className="w-full text-left font-mono text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-border text-[10px] text-muted-foreground">
-                  <th className="py-2">Packing Config Name</th>
-                  <th className="py-2">Gross Capacity</th>
-                  <th className="py-2">Material Compound</th>
-                  <th className="py-2">General Usage Notes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40 text-foreground">
-                {packings.map(pk => (
-                  <tr key={pk.id} className="hover:bg-secondary/20">
-                    <td className="py-2 font-bold">{pk.name}</td>
-                    <td className="py-2 font-semibold text-primary">{pk.capacityKg} {pk.capacityUnit || "kg"}</td>
-                    <td className="py-2">{pk.material}</td>
-                    <td className="py-2 text-muted-foreground truncate max-w-[200px]">{pk.notes}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-
-          {effectiveSubPage === "master-users-status" && (
-            <table className="w-full text-left font-mono text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-border text-[10px] text-muted-foreground">
-                  <th className="py-2">Emp ID</th>
-                  <th className="py-2">Employee Name</th>
-                  <th className="py-2">System Role</th>
-                  <th className="py-2 text-right">Basic Salary</th>
-                  <th className="py-2 text-right">Total Salary</th>
-                  <th className="py-2 text-center">Visa Expiry</th>
-                  <th className="py-2 text-center">Passport Expiry</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40 text-foreground">
-                {users.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="py-4 text-center text-muted-foreground italic">No employees registered yet. Please create one below!</td>
-                  </tr>
-                ) : (
-                  users.map(u => (
-                    <tr key={u.id} className="hover:bg-secondary/20">
-                      <td className="py-2 font-bold text-primary font-mono">{u.employeeId}</td>
-                      <td className="py-2 font-semibold">{u.employeeName}</td>
-                      <td className="py-2 text-muted-foreground">{u.role}</td>
-                      <td className="py-2 text-right font-mono">₹{u.basicSalary ? u.basicSalary.toLocaleString("en-IN") : "0"}</td>
-                      <td className="py-2 text-right font-bold text-emerald-500 font-mono">₹{u.totalSalary ? u.totalSalary.toLocaleString("en-IN") : "0"}</td>
-                      <td className="py-2 text-center text-muted-foreground font-mono">{u.visaExpiry || "N/A"}</td>
-                      <td className="py-2 text-center text-muted-foreground font-mono">{u.passportExpiry || "N/A"}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
       )}
 
       {effectiveSubPage === "master-users-creation" && (
@@ -1427,22 +1625,24 @@ export default function MasterConsoleView({
               </div>
             )}
 
-            {/* EDIT MODE PANEL */}
-            {activeAction === "edit" && (
+            {/* CREATE & EDIT MODE PANEL FOR USERS */}
+            {(activeAction === "create" || activeAction === "edit") && (
               <form onSubmit={handleActionSubmit} className="space-y-4 text-left">
-                <div className="space-y-1 mb-3">
-                  <label className="block text-[10px] font-mono text-muted-foreground uppercase">Select Employee to Edit</label>
-                  <select
-                    value={selectedId}
-                    onChange={e => setSelectedId(e.target.value)}
-                    className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
-                  >
-                    <option value="">-- Choose Employee to Load --</option>
-                    {users.map(u => <option key={u.id} value={u.id}>{u.employeeId} - {u.employeeName}</option>)}
-                  </select>
-                </div>
+                {activeAction === "edit" && (
+                  <div className="space-y-1 mb-3">
+                    <label className="block text-[10px] font-mono text-muted-foreground uppercase">Select Employee to Edit</label>
+                    <select
+                      value={selectedId}
+                      onChange={e => setSelectedId(e.target.value)}
+                      className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
+                    >
+                      <option value="">-- Choose Employee to Load --</option>
+                      {users.map(u => <option key={u.id} value={u.id}>{u.employeeId} - {u.employeeName}</option>)}
+                    </select>
+                  </div>
+                )}
 
-                {selectedId && (
+                {(activeAction === "create" || selectedId) && (
                   <>
                     {/* The Compact Grid Sheet */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-3 gap-y-2 text-left mt-3">
@@ -1801,23 +2001,138 @@ export default function MasterConsoleView({
                       </div>
 
                       <div className="lg:col-span-3 border-l-2 border-l-rose-500 pl-2 space-y-0.5">
-                        <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Job Responsibilities & Scope</label>
+                        <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Job Responsibilities Title / Summary</label>
                         <input
                           type="text"
-                          placeholder="Describe duties, departments, and specific permissions..."
+                          placeholder="e.g. Sales Invoicing & Cashier Responsibilities"
                           value={userForm.responsibility}
                           onChange={e => setUserForm(prev => ({ ...prev, responsibility: e.target.value }))}
                           className="w-full px-2 py-0.5 border border-border rounded bg-input-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-rose-500 transition-all font-semibold"
                         />
                       </div>
 
+                      {/* FEATURE RESPONSIBILITIES CHECKBOX PERMISSIONS MATRIX */}
+                      <div className="lg:col-span-3 space-y-2 border-t border-border/40 pt-3 mt-1">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <label className="block text-[11px] font-mono font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                              <ShieldCheck className="text-primary" size={16} />
+                              System Responsibilities & Enabled Website Features *
+                            </label>
+                            <p className="text-[10px] text-muted-foreground">
+                              Check the website features to enable for this employee. Unchecked features will be disabled/hidden for their profile.
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setUserForm(prev => ({
+                                ...prev,
+                                allowedFeatures: ALL_WEBSITE_FEATURES.map(f => f.id)
+                              }))}
+                              className="px-2 py-1 text-[10px] font-mono font-bold bg-primary/10 text-primary hover:bg-primary/20 rounded border border-primary/30 transition-all"
+                            >
+                              Select All ({ALL_WEBSITE_FEATURES.length})
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setUserForm(prev => ({ ...prev, allowedFeatures: [] }))}
+                              className="px-2 py-1 text-[10px] font-mono font-bold bg-secondary hover:bg-secondary/80 text-muted-foreground rounded border border-border transition-all"
+                            >
+                              Deselect All
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Categorized Checkboxes Matrix */}
+                        <div className="space-y-3 bg-card p-3 rounded-xl border border-border/80 shadow-inner max-h-[420px] overflow-y-auto">
+                          {Array.from(new Set(ALL_WEBSITE_FEATURES.map(f => f.category))).map(cat => {
+                            const catFeatures = ALL_WEBSITE_FEATURES.filter(f => f.category === cat);
+                            const allCatChecked = catFeatures.every(f => (userForm.allowedFeatures || []).includes(f.id));
+                            return (
+                              <div key={cat} className="space-y-1.5 border-b border-border/40 pb-2.5 last:border-b-0">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-primary flex items-center gap-1">
+                                    <span>📁</span> {cat} ({catFeatures.filter(f => (userForm.allowedFeatures || []).includes(f.id)).length}/{catFeatures.length})
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const current = userForm.allowedFeatures || [];
+                                      const catIds = catFeatures.map(f => f.id);
+                                      if (allCatChecked) {
+                                        setUserForm(prev => ({
+                                          ...prev,
+                                          allowedFeatures: current.filter(id => !catIds.includes(id))
+                                        }));
+                                      } else {
+                                        const merged = Array.from(new Set([...current, ...catIds]));
+                                        setUserForm(prev => ({ ...prev, allowedFeatures: merged }));
+                                      }
+                                    }}
+                                    className="text-[9px] font-mono text-muted-foreground hover:text-foreground font-semibold underline"
+                                  >
+                                    {allCatChecked ? "Deselect Section" : "Select Section"}
+                                  </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                  {catFeatures.map(feat => {
+                                    const isChecked = (userForm.allowedFeatures || []).includes(feat.id);
+                                    return (
+                                      <label
+                                        key={feat.id}
+                                        className={`flex items-start gap-2 p-2 rounded-lg border transition-all cursor-pointer ${
+                                          isChecked
+                                            ? "bg-primary/10 border-primary/50 text-foreground shadow-sm"
+                                            : "bg-secondary/20 border-border/50 text-muted-foreground opacity-60 hover:opacity-100"
+                                        }`}
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          checked={isChecked}
+                                          onChange={e => {
+                                            const current = userForm.allowedFeatures || [];
+                                            if (e.target.checked) {
+                                              setUserForm(prev => ({
+                                                ...prev,
+                                                allowedFeatures: [...current, feat.id]
+                                              }));
+                                            } else {
+                                              setUserForm(prev => ({
+                                                ...prev,
+                                                allowedFeatures: current.filter(id => id !== feat.id)
+                                              }));
+                                            }
+                                          }}
+                                          className="mt-0.5 rounded border-border text-primary focus:ring-primary h-3.5 w-3.5"
+                                        />
+                                        <div className="space-y-0.5 select-none">
+                                          <div className="flex items-center gap-1 text-[11px] font-mono font-bold">
+                                            <span>{feat.icon}</span>
+                                            <span className={isChecked ? "text-primary font-bold" : ""}>{feat.name}</span>
+                                          </div>
+                                          <p className="text-[9px] text-muted-foreground leading-tight">{feat.description}</p>
+                                        </div>
+                                      </label>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
                     </div>
                     <div className="flex justify-end gap-2 pt-2 border-t border-border/30 mt-3">
                       <button
                         type="submit"
-                        className="px-6 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-mono font-bold transition-all shadow-sm"
+                        className={`px-6 py-1.5 text-white rounded-lg text-xs font-mono font-bold transition-all shadow-sm ${
+                          activeAction === "edit" ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"
+                        }`}
                       >
-                        Save Changes
+                        {activeAction === "edit" ? "Save Employee Changes" : "Create & Register Employee"}
                       </button>
                     </div>
                   </>
@@ -1875,10 +2190,12 @@ export default function MasterConsoleView({
                   {effectiveSubPage === "master-accounts-groups" && groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                   {effectiveSubPage === "master-accounts-ledger" && ledgers.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
                   {effectiveSubPage === "master-accounts-customer" && customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {effectiveSubPage === "master-accounts-supplier" && suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   {effectiveSubPage === "master-inventory-items" && products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.category})</option>)}
                   {effectiveSubPage === "master-inventory-categories" && categories.map(c => <option key={c.id} value={c.id}>{c.name} (HSN {c.hsnCode})</option>)}
                   {effectiveSubPage === "master-inventory-unit" && units.map(u => <option key={u.id} value={u.id}>{u.fullName} ({u.shortName})</option>)}
                   {effectiveSubPage === "master-inventory-packing" && packings.map(pk => <option key={pk.id} value={pk.id}>{pk.name}</option>)}
+                  {(effectiveSubPage === "master-inventory-godowns" || effectiveSubPage === "master-godowns") && godowns.map(g => <option key={g.id} value={g.id}>Godown {g.code}: {g.name}</option>)}
                 </select>
 
                 {selectedId ? (
@@ -1917,7 +2234,23 @@ export default function MasterConsoleView({
                           <div><span className="text-muted-foreground">EMAIL ADDRESS:</span> <span className="text-foreground">{item.email || "N/A"}</span></div>
                           <div><span className="text-muted-foreground">MOBILE PHONE:</span> <span className="text-foreground">{item.phone || "N/A"}</span></div>
                           <div><span className="text-muted-foreground">GST NO:</span> <span className="text-primary font-bold">{item.gstNo || "N/A"}</span></div>
+                          <div><span className="text-muted-foreground">CREDIT LIMIT (DAYS):</span> <span className="text-amber-500 font-bold">{item.creditLimitDays ? `${item.creditLimitDays} Days` : "No limit"}</span></div>
+                          <div><span className="text-muted-foreground">CREDIT LIMIT (AMOUNT):</span> <span className="text-emerald-500 font-bold">{item.creditLimitAmount ? `₹${new Intl.NumberFormat("en-IN").format(item.creditLimitAmount)}` : "No limit"}</span></div>
                           <div><span className="text-muted-foreground">BILLING ADDRESS:</span> <span className="text-foreground">{item.address || "N/A"}</span></div>
+                        </>
+                      ) : null;
+                    })()}
+
+                    {effectiveSubPage === "master-accounts-supplier" && (() => {
+                      const item = suppliers.find(x => x.id === selectedId);
+                      return item ? (
+                        <>
+                          <div><span className="text-muted-foreground">SUPPLIER ID:</span> <span className="font-bold">{item.id}</span></div>
+                          <div><span className="text-muted-foreground">SUPPLIER NAME:</span> <span className="text-foreground font-bold">{item.name}</span></div>
+                          <div><span className="text-muted-foreground">EMAIL ADDRESS:</span> <span className="text-foreground">{(item as any).email || "N/A"}</span></div>
+                          <div><span className="text-muted-foreground">MOBILE PHONE:</span> <span className="text-foreground">{item.phone || "N/A"}</span></div>
+                          <div><span className="text-muted-foreground">GST NO:</span> <span className="text-primary font-bold">{item.gstNo || "N/A"}</span></div>
+                          <div><span className="text-muted-foreground">PHYSICAL ADDRESS:</span> <span className="text-foreground">{item.address || "N/A"}</span></div>
                         </>
                       ) : null;
                     })()}
@@ -1974,6 +2307,49 @@ export default function MasterConsoleView({
                       ) : null;
                     })()}
 
+                    {(effectiveSubPage === "master-inventory-godowns" || effectiveSubPage === "master-godowns") && (() => {
+                      const item = godowns.find(x => x.id === selectedId);
+                      return item ? (
+                        <>
+                          <div><span className="text-muted-foreground">GODOWN ID:</span> <span className="font-bold">{item.id}</span></div>
+                          <div><span className="text-muted-foreground">CODE:</span> <span className="text-primary font-bold">{item.code}</span></div>
+                          <div><span className="text-muted-foreground">GODOWN NAME:</span> <span className="text-foreground font-bold">{item.name}</span></div>
+                          <div><span className="text-muted-foreground">LOCATION ADDRESS:</span> <span className="text-foreground">{item.location}</span></div>
+                          <div><span className="text-muted-foreground">CLIMATE ZONE:</span> <span className="text-emerald-500 font-bold">{item.temperature}</span></div>
+                          <div><span className="text-muted-foreground">MAX CAPACITY:</span> <span className="text-blue-500 font-bold">{item.capacityKg.toLocaleString()} kg</span></div>
+                          <div><span className="text-muted-foreground">SUPERVISOR:</span> <span className="text-foreground font-semibold">{item.managerName}</span></div>
+                          <div><span className="text-muted-foreground">STATUS:</span> <span className="text-foreground font-bold uppercase">{item.status}</span></div>
+                          <div><span className="text-muted-foreground">REMARKS:</span> <span className="text-foreground">{item.notes || "N/A"}</span></div>
+                        </>
+                      ) : null;
+                    })()}
+
+                    {(effectiveSubPage.startsWith("master-users")) && (() => {
+                      const item = users.find(x => x.id === selectedId);
+                      return item ? (
+                        <>
+                          <div><span className="text-muted-foreground">EMPLOYEE ID:</span> <span className="font-bold text-primary">{item.employeeId}</span></div>
+                          <div><span className="text-muted-foreground">FULL NAME:</span> <span className="text-foreground font-bold">{item.employeeName}</span></div>
+                          <div><span className="text-muted-foreground">SYSTEM ROLE:</span> <span className="text-emerald-500 font-bold">{item.role}</span></div>
+                          <div><span className="text-muted-foreground">RESPONSIBILITIES SCOPE:</span> <span className="text-foreground font-semibold">{item.responsibility || "General Responsibilities"}</span></div>
+                          <div><span className="text-muted-foreground">BASIC SALARY:</span> <span className="text-foreground font-mono">₹{(item.basicSalary || 0).toLocaleString("en-IN")}</span></div>
+                          <div><span className="text-muted-foreground">GROSS SALARY:</span> <span className="text-emerald-500 font-bold font-mono">₹{(item.totalSalary || 0).toLocaleString("en-IN")}</span></div>
+                          <div><span className="text-muted-foreground">VISA EXPIRY:</span> <span className="text-foreground font-mono">{item.visaExpiry || "N/A"}</span></div>
+                          <div><span className="text-muted-foreground">PASSPORT EXPIRY:</span> <span className="text-foreground font-mono">{item.passportExpiry || "N/A"}</span></div>
+                          <div className="pt-2 border-t border-border">
+                            <span className="text-muted-foreground block mb-1">ENABLED FEATURE PERMISSIONS ({item.allowedFeatures ? item.allowedFeatures.length : ALL_WEBSITE_FEATURES.length} / {ALL_WEBSITE_FEATURES.length}):</span>
+                            <div className="flex flex-wrap gap-1">
+                              {ALL_WEBSITE_FEATURES.filter(f => (item.allowedFeatures || ALL_WEBSITE_FEATURES.map(x => x.id)).includes(f.id)).map(f => (
+                                <span key={f.id} className="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold">
+                                  {f.icon} {f.name}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      ) : null;
+                    })()}
+
                   </div>
                 ) : (
                   <div className="text-center py-6 text-muted-foreground italic font-mono text-xs bg-card border border-border rounded-lg">
@@ -1996,10 +2372,12 @@ export default function MasterConsoleView({
                   {effectiveSubPage === "master-accounts-groups" && groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                   {effectiveSubPage === "master-accounts-ledger" && ledgers.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
                   {effectiveSubPage === "master-accounts-customer" && customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {effectiveSubPage === "master-accounts-supplier" && suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   {effectiveSubPage === "master-inventory-items" && products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.category})</option>)}
                   {effectiveSubPage === "master-inventory-categories" && categories.map(c => <option key={c.id} value={c.id}>{c.name} (HSN {c.hsnCode})</option>)}
                   {effectiveSubPage === "master-inventory-unit" && units.map(u => <option key={u.id} value={u.id}>{u.fullName} ({u.shortName})</option>)}
                   {effectiveSubPage === "master-inventory-packing" && packings.map(pk => <option key={pk.id} value={pk.id}>{pk.name}</option>)}
+                  {(effectiveSubPage === "master-inventory-godowns" || effectiveSubPage === "master-godowns") && godowns.map(g => <option key={g.id} value={g.id}>Godown {g.code}: {g.name}</option>)}
                 </select>
 
                 {selectedId ? (
@@ -2039,10 +2417,12 @@ export default function MasterConsoleView({
                       {effectiveSubPage === "master-accounts-groups" && groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                       {effectiveSubPage === "master-accounts-ledger" && ledgers.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
                       {effectiveSubPage === "master-accounts-customer" && customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      {effectiveSubPage === "master-accounts-supplier" && suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                       {effectiveSubPage === "master-inventory-items" && products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.category})</option>)}
                       {effectiveSubPage === "master-inventory-categories" && categories.map(c => <option key={c.id} value={c.id}>{c.name} (HSN {c.hsnCode})</option>)}
                       {effectiveSubPage === "master-inventory-unit" && units.map(u => <option key={u.id} value={u.id}>{u.fullName} ({u.shortName})</option>)}
                       {effectiveSubPage === "master-inventory-packing" && packings.map(pk => <option key={pk.id} value={pk.id}>{pk.name}</option>)}
+                      {(effectiveSubPage === "master-inventory-godowns" || effectiveSubPage === "master-godowns") && godowns.map(g => <option key={g.id} value={g.id}>Godown {g.code}: {g.name}</option>)}
                     </select>
                   </div>
                 )}
@@ -2116,8 +2496,8 @@ export default function MasterConsoleView({
                       <input
                         type="number"
                         required
-                        value={ledgerForm.openingBalance || ""}
-                        onChange={e => setLedgerForm(prev => ({ ...prev, openingBalance: parseFloat(e.target.value) || 0 }))}
+                        value={ledgerForm.openingBalance ?? ""}
+                        onChange={e => setLedgerForm(prev => ({ ...prev, openingBalance: e.target.value === "" ? 0 : parseFloat(e.target.value) || 0 }))}
                         className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-semibold"
                       />
                     </div>
@@ -2137,7 +2517,7 @@ export default function MasterConsoleView({
                 {effectiveSubPage === "master-accounts-customer" && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Customer Name</label>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Customer Name *</label>
                       <input
                         type="text"
                         required
@@ -2177,155 +2557,370 @@ export default function MasterConsoleView({
                         className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-semibold"
                       />
                     </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Billing Physical Address</label>
+                    <div>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Credit Limit (Days)</label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 30"
+                        value={customerForm.creditLimitDays ?? ""}
+                        onChange={e => setCustomerForm(prev => ({ ...prev, creditLimitDays: e.target.value === "" ? 0 : parseInt(e.target.value, 10) || 0 }))}
+                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Credit Limit (Amount)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="e.g. 100000"
+                        value={customerForm.creditLimitAmount ?? ""}
+                        onChange={e => setCustomerForm(prev => ({ ...prev, creditLimitAmount: e.target.value === "" ? 0 : parseFloat(e.target.value) || 0 }))}
+                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-semibold text-emerald-600"
+                      />
+                    </div>
+                    <div className="md:col-span-2 space-y-2 border border-border/70 bg-secondary/10 p-3 rounded-xl">
+                      <div className="flex items-center justify-between border-b border-border/40 pb-1.5">
+                        <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1.5">
+                          <Sparkles size={12} className="text-primary" />
+                          Billing Physical Address (4 Input Lines)
+                        </span>
+                        <span className="text-[9px] font-mono text-muted-foreground">4 Distinct Address Line Inputs</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="block text-[9px] font-mono text-muted-foreground uppercase mb-0.5 font-bold">Address Line 1 (Street / Building / House No.)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Rising Sun, Ground Floor"
+                            value={addressLine1}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setAddressLine1(val);
+                              const combined = [val, addressLine2, addressLine3, addressLine4].filter(Boolean).join(", ");
+                              setCustomerForm(prev => ({ ...prev, address: combined }));
+                            }}
+                            className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-mono text-muted-foreground uppercase mb-0.5 font-bold">Address Line 2 (Area / Locality / Road Name)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Finifenmaa Goalhi"
+                            value={addressLine2}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setAddressLine2(val);
+                              const combined = [addressLine1, val, addressLine3, addressLine4].filter(Boolean).join(", ");
+                              setCustomerForm(prev => ({ ...prev, address: combined }));
+                            }}
+                            className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-mono text-muted-foreground uppercase mb-0.5 font-bold">Address Line 3 (City / District / Region)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Malé"
+                            value={addressLine3}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setAddressLine3(val);
+                              const combined = [addressLine1, addressLine2, val, addressLine4].filter(Boolean).join(", ");
+                              setCustomerForm(prev => ({ ...prev, address: combined }));
+                            }}
+                            className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-mono text-muted-foreground uppercase mb-0.5 font-bold">Address Line 4 (State / Postal Code / Country)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Maldives 20014"
+                            value={addressLine4}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setAddressLine4(val);
+                              const combined = [addressLine1, addressLine2, addressLine3, val].filter(Boolean).join(", ");
+                              setCustomerForm(prev => ({ ...prev, address: combined }));
+                            }}
+                            className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {effectiveSubPage === "master-accounts-supplier" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Supplier Company Name *</label>
                       <input
                         type="text"
-                        placeholder="Billing address info..."
-                        value={customerForm.address}
-                        onChange={e => setCustomerForm(prev => ({ ...prev, address: e.target.value }))}
+                        required
+                        placeholder="Supplier name..."
+                        value={supplierForm.name}
+                        onChange={e => setSupplierForm(prev => ({ ...prev, name: e.target.value }))}
+                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Supplier Email</label>
+                      <input
+                        type="email"
+                        placeholder="supplier@company.com"
+                        value={supplierForm.email}
+                        onChange={e => setSupplierForm(prev => ({ ...prev, email: e.target.value }))}
                         className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Supplier Contact Phone *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="+91-XXXXX-XXXXX"
+                        value={supplierForm.phone}
+                        onChange={e => setSupplierForm(prev => ({ ...prev, phone: e.target.value }))}
+                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">GST / Tax Registration (GSTIN) *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="15-digit GSTIN"
+                        value={supplierForm.gstNo}
+                        onChange={e => setSupplierForm(prev => ({ ...prev, gstNo: e.target.value }))}
+                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-semibold"
+                      />
+                    </div>
+                    <div className="md:col-span-2 space-y-2 border border-border/70 bg-secondary/10 p-3 rounded-xl">
+                      <div className="flex items-center justify-between border-b border-border/40 pb-1.5">
+                        <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1.5">
+                          <Sparkles size={12} className="text-primary" />
+                          Supplier Physical Address (4 Input Lines)
+                        </span>
+                        <span className="text-[9px] font-mono text-muted-foreground">4 Distinct Address Line Inputs</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="block text-[9px] font-mono text-muted-foreground uppercase mb-0.5 font-bold">Address Line 1 (Building / Warehouse No.)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Warehouse 14, Industrial Area"
+                            value={supAddressLine1}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setSupAddressLine1(val);
+                              const combined = [val, supAddressLine2, supAddressLine3, supAddressLine4].filter(Boolean).join(", ");
+                              setSupplierForm(prev => ({ ...prev, address: combined }));
+                            }}
+                            className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-mono text-muted-foreground uppercase mb-0.5 font-bold">Address Line 2 (Street / Locality / Road)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Spice Market Road"
+                            value={supAddressLine2}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setSupAddressLine2(val);
+                              const combined = [supAddressLine1, val, supAddressLine3, supAddressLine4].filter(Boolean).join(", ");
+                              setSupplierForm(prev => ({ ...prev, address: combined }));
+                            }}
+                            className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-mono text-muted-foreground uppercase mb-0.5 font-bold">Address Line 3 (City / District / Region)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Kochi"
+                            value={supAddressLine3}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setSupAddressLine3(val);
+                              const combined = [supAddressLine1, supAddressLine2, val, supAddressLine4].filter(Boolean).join(", ");
+                              setSupplierForm(prev => ({ ...prev, address: combined }));
+                            }}
+                            className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-mono text-muted-foreground uppercase mb-0.5 font-bold">Address Line 4 (State / Postal Code / Country)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Kerala 682001, India"
+                            value={supAddressLine4}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setSupAddressLine4(val);
+                              const combined = [supAddressLine1, supAddressLine2, supAddressLine3, val].filter(Boolean).join(", ");
+                              setSupplierForm(prev => ({ ...prev, address: combined }));
+                            }}
+                            className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {effectiveSubPage === "master-inventory-items" && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Product Catalog Name</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. Cardamom Bold"
-                        value={itemForm.name}
-                        onChange={e => setItemForm(prev => ({ ...prev, name: e.target.value }))}
-                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Product Category Group</label>
-                      <select
-                        value={itemForm.category}
-                        onChange={e => setItemForm(prev => ({ ...prev, category: e.target.value as any }))}
-                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
-                      >
-                        <option value="Spices">Spices</option>
-                        <option value="Dry Fruits">Dry Fruits</option>
-                        <option value="Produce">Produce</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Standard Billing Unit</label>
-                      <select
-                        value={itemForm.unit}
-                        onChange={e => setItemForm(prev => ({ ...prev, unit: e.target.value }))}
-                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
-                      >
-                        {units.map(u => (
-                          <option key={u.id} value={u.shortName}>{u.shortName} ({u.fullName})</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="relative">
-                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1 flex items-center justify-between">
-                        <span>Packing Type</span>
-                        <span className="text-[9px] text-blue-500 font-bold uppercase">
-                          ({filteredPackings.length} {itemForm.unit} packings)
-                        </span>
-                      </label>
-                      <div className="flex gap-1">
+                  <div className="space-y-4 text-left">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Product Catalog Name *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Cardamom Bold"
+                          value={itemForm.name}
+                          onChange={e => setItemForm(prev => ({ ...prev, name: e.target.value }))}
+                          className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Product Category Group</label>
                         <select
-                          value={itemForm.packingType}
-                          onChange={e => {
-                            if (e.target.value === "ADD_NEW_PACKING") {
-                              setIsCreatingNewPacking(true);
-                            } else {
-                              setItemForm(prev => ({ ...prev, packingType: e.target.value }));
-                              setIsCreatingNewPacking(false);
-                            }
-                          }}
+                          value={itemForm.category}
+                          onChange={e => setItemForm(prev => ({ ...prev, category: e.target.value }))}
                           className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
                         >
-                          <option value="">-- Select Packing Type --</option>
-                          {filteredPackings.map(pk => (
-                            <option key={pk.id} value={pk.name}>{pk.name}</option>
+                          {availableCategoryNames.map(catName => (
+                            <option key={catName} value={catName}>{catName}</option>
                           ))}
-                          <option value="ADD_NEW_PACKING" className="text-blue-500 font-bold">+ Create Custom Packing Type...</option>
                         </select>
                       </div>
+                      <div>
+                        <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Standard Billing Unit</label>
+                        <select
+                          value={itemForm.unit}
+                          onChange={e => setItemForm(prev => ({ ...prev, unit: e.target.value }))}
+                          className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
+                        >
+                          {units.map(u => (
+                            <option key={u.id} value={u.shortName}>{u.shortName} ({u.fullName})</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Standard Purchase Cost (INR)</label>
+                        <input
+                          type="number"
+                          required
+                          value={itemForm.buyPrice || ""}
+                          onChange={e => setItemForm(prev => ({ ...prev, buyPrice: parseFloat(e.target.value) || 0 }))}
+                          className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-semibold"
+                        />
+                      </div>
+                    </div>
 
-                      {/* Inline Custom Packing Creator */}
-                      {isCreatingNewPacking && (
-                        <div className="absolute left-0 top-[60px] right-0 bg-popover border border-border rounded-xl p-3 shadow-xl z-50 space-y-2">
-                          <div className="text-[10px] font-bold text-foreground font-mono uppercase">
-                            Register New Packing Type ({itemForm.unit})
+                    {/* 3 Packing Type Input Boxes & 3 Selling Price Input Boxes */}
+                    <div className="border border-border bg-card/60 p-3.5 rounded-xl space-y-3">
+                      <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                        <span className="text-xs font-mono font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+                          <Sparkles size={14} className="text-primary animate-pulse" />
+                          3 Packing Types & 3 Individual Selling Prices
+                        </span>
+                        <span className="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                          3 Packing Types • 3 Selling Prices
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {/* Packing 1 & Selling Price 1 */}
+                        <div className="bg-secondary/20 border border-border p-3 rounded-lg space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-mono font-bold text-primary uppercase">Packing Option 1</span>
+                            <span className="text-[9px] font-mono text-muted-foreground font-bold">Pack 1</span>
                           </div>
-                          <input
-                            type="text"
-                            placeholder={`e.g. 15kg Steel Drum or 2.5kg Pouch`}
-                            value={newPackingName}
-                            onChange={e => setNewPackingName(e.target.value)}
-                            className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-input-background text-xs font-mono font-semibold"
-                          />
-                          <div className="flex justify-end gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const trimmed = newPackingName.trim();
-                                if (trimmed) {
-                                  const newPk: PackingItem = {
-                                    id: "pack_" + Date.now(),
-                                    name: trimmed,
-                                    capacityKg: 10,
-                                    capacityUnit: itemForm.unit,
-                                    material: "Custom Container",
-                                    notes: "Custom registered packing type"
-                                  };
-                                  setPackings(prev => [...prev, newPk]);
-                                  setItemForm(prev => ({ ...prev, packingType: trimmed }));
-                                  setNewPackingName("");
-                                  setIsCreatingNewPacking(false);
-                                  toast.success(`Packing "${trimmed}" registered for future item creations!`);
-                                }
-                              }}
-                              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold font-mono rounded-lg"
-                            >
-                              Save & Assign
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setIsCreatingNewPacking(false);
-                                setNewPackingName("");
-                              }}
-                              className="px-2.5 py-1 bg-secondary text-foreground text-xs font-semibold rounded-lg"
-                            >
-                              Cancel
-                            </button>
+                          <div>
+                            <label className="block text-[9px] font-mono text-muted-foreground uppercase font-bold mb-1">Packing Type 1</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. 50kg Sack"
+                              value={itemForm.packing1 || ""}
+                              onChange={e => setItemForm(prev => ({ ...prev, packing1: e.target.value }))}
+                              className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-ring"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-mono text-muted-foreground uppercase font-bold mb-1">Selling Price 1 (INR)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              placeholder="Selling price for Pack 1"
+                              value={itemForm.price1 || ""}
+                              onChange={e => setItemForm(prev => ({ ...prev, price1: e.target.value }))}
+                              className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs font-mono font-bold text-emerald-600 focus:outline-none focus:ring-2 focus:ring-ring"
+                            />
                           </div>
                         </div>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Standard Purchase Cost (INR)</label>
-                      <input
-                        type="number"
-                        required
-                        value={itemForm.buyPrice || ""}
-                        onChange={e => setItemForm(prev => ({ ...prev, buyPrice: parseFloat(e.target.value) || 0 }))}
-                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Standard Sales Price (INR)</label>
-                      <input
-                        type="number"
-                        required
-                        value={itemForm.sellPrice || ""}
-                        onChange={e => setItemForm(prev => ({ ...prev, sellPrice: parseFloat(e.target.value) || 0 }))}
-                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-semibold"
-                      />
+
+                        {/* Packing 2 & Selling Price 2 */}
+                        <div className="bg-secondary/20 border border-border p-3 rounded-lg space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-mono font-bold text-indigo-500 uppercase">Packing Option 2</span>
+                            <span className="text-[9px] font-mono text-muted-foreground font-bold">Pack 2</span>
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-mono text-muted-foreground uppercase font-bold mb-1">Packing Type 2</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. 25kg Bag"
+                              value={itemForm.packing2 || ""}
+                              onChange={e => setItemForm(prev => ({ ...prev, packing2: e.target.value }))}
+                              className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-ring"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-mono text-muted-foreground uppercase font-bold mb-1">Selling Price 2 (INR)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              placeholder="Selling price for Pack 2"
+                              value={itemForm.price2 || ""}
+                              onChange={e => setItemForm(prev => ({ ...prev, price2: e.target.value }))}
+                              className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs font-mono font-bold text-emerald-600 focus:outline-none focus:ring-2 focus:ring-ring"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Packing 3 & Selling Price 3 */}
+                        <div className="bg-secondary/20 border border-border p-3 rounded-lg space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-mono font-bold text-purple-500 uppercase">Packing Option 3</span>
+                            <span className="text-[9px] font-mono text-muted-foreground font-bold">Pack 3</span>
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-mono text-muted-foreground uppercase font-bold mb-1">Packing Type 3</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. 10kg Carton"
+                              value={itemForm.packing3 || ""}
+                              onChange={e => setItemForm(prev => ({ ...prev, packing3: e.target.value }))}
+                              className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-ring"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-mono text-muted-foreground uppercase font-bold mb-1">Selling Price 3 (INR)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              placeholder="Selling price for Pack 3"
+                              value={itemForm.price3 || ""}
+                              onChange={e => setItemForm(prev => ({ ...prev, price3: e.target.value }))}
+                              className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs font-mono font-bold text-emerald-600 focus:outline-none focus:ring-2 focus:ring-ring"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -2359,8 +2954,8 @@ export default function MasterConsoleView({
                       <input
                         type="number"
                         required
-                        value={categoryForm.gstRate || ""}
-                        onChange={e => setCategoryForm(prev => ({ ...prev, gstRate: parseInt(e.target.value, 10) || 0 }))}
+                        value={categoryForm.gstRate ?? ""}
+                        onChange={e => setCategoryForm(prev => ({ ...prev, gstRate: e.target.value === "" ? 0 : parseInt(e.target.value, 10) || 0 }))}
                         className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-semibold"
                       />
                     </div>
@@ -2428,7 +3023,7 @@ export default function MasterConsoleView({
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Capacity Limit</label>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Capacity Limit Multiplier</label>
                       <div className="flex gap-2">
                         <input
                           type="number"
@@ -2468,6 +3063,125 @@ export default function MasterConsoleView({
                         className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
                       />
                     </div>
+
+                    {/* Live Multiplier Preview Box for Packing Type Creation */}
+                    <div className="md:col-span-2 p-3 bg-secondary/30 rounded-xl border border-border space-y-1.5 font-mono text-xs">
+                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
+                        <span>💡 Live Capacity Multiplier & Cost Difference Preview</span>
+                        <span className="text-blue-600 dark:text-blue-400 font-bold">{packingForm.capacityKg || 0} {packingForm.capacityUnit || "kg"} Capacity</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-center pt-1 font-mono">
+                        <div className="bg-card p-2 rounded-lg border border-border">
+                          <span className="text-[9px] text-muted-foreground uppercase block font-bold">Standard Purchase Cost</span>
+                          <span className="text-xs font-bold text-foreground">₹{((packingForm.capacityKg || 1) * 100).toLocaleString("en-IN")}</span>
+                          <span className="text-[9px] text-muted-foreground block">(At ₹100 base buy)</span>
+                        </div>
+                        <div className="bg-card p-2 rounded-lg border border-border">
+                          <span className="text-[9px] text-emerald-600 uppercase block font-bold">Standard Sales Price</span>
+                          <span className="text-xs font-bold text-emerald-600">₹{((packingForm.capacityKg || 1) * 150).toLocaleString("en-IN")}</span>
+                          <span className="text-[9px] text-emerald-600 block">(At ₹150 base sell)</span>
+                        </div>
+                        <div className="bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/30">
+                          <span className="text-[9px] text-emerald-700 dark:text-emerald-300 uppercase block font-bold">Sales Cost Difference</span>
+                          <span className="text-xs font-extrabold text-emerald-600">+₹{((packingForm.capacityKg || 1) * 50).toLocaleString("en-IN")}</span>
+                          <span className="text-[9px] text-emerald-600 block">(Higher Sales Price)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {(effectiveSubPage === "master-inventory-godowns" || effectiveSubPage === "master-godowns") && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-left">
+                    <div>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Godown Code / Short ID *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. S, T, G1, GDN-19"
+                        value={godownForm.code}
+                        onChange={e => setGodownForm(prev => ({ ...prev, code: e.target.value.toUpperCase().trim() }))}
+                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Godown / Warehouse Facility Name *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Godown S - Spices Extension"
+                        value={godownForm.name}
+                        onChange={e => setGodownForm(prev => ({ ...prev, name: e.target.value }))}
+                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Physical Location Address</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Hulhumale Port Sector 4, Yard Area A"
+                        value={godownForm.location}
+                        onChange={e => setGodownForm(prev => ({ ...prev, location: e.target.value }))}
+                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Climate & Temperature Control Zone</label>
+                      <select
+                        value={godownForm.temperature}
+                        onChange={e => setGodownForm(prev => ({ ...prev, temperature: e.target.value }))}
+                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
+                      >
+                        <option value="22°C Spices Ambient">🌿 22°C Spices Ambient</option>
+                        <option value="4°C Cold Storage">❄️ 4°C Refrigerated Cold Vault</option>
+                        <option value="12°C Controlled">🌡️ 12°C Controlled Temperate</option>
+                        <option value="25°C Ambient Dry Storage">☀️ 25°C Ambient Dry Storage</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Storage Capacity Limit (kg)</label>
+                      <input
+                        type="number"
+                        required
+                        placeholder="50000"
+                        value={godownForm.capacityKg || ""}
+                        onChange={e => setGodownForm(prev => ({ ...prev, capacityKg: parseFloat(e.target.value) || 0 }))}
+                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Warehouse Manager / Supervisor</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Supervisor Ibrahim"
+                        value={godownForm.managerName}
+                        onChange={e => setGodownForm(prev => ({ ...prev, managerName: e.target.value }))}
+                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Warehouse Operational Status</label>
+                      <select
+                        value={godownForm.status}
+                        onChange={e => setGodownForm(prev => ({ ...prev, status: e.target.value as any }))}
+                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-bold"
+                      >
+                        <option value="Active">🟢 Active (Receiving & Dispatching)</option>
+                        <option value="Maintenance">🟡 Maintenance (Audit in Progress)</option>
+                        <option value="Full">🔴 Full (Maximum Capacity Reached)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Warehouse Notes & Remarks</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Equipped with ethylene monitors"
+                        value={godownForm.notes}
+                        onChange={e => setGodownForm(prev => ({ ...prev, notes: e.target.value }))}
+                        className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
                   </div>
                 )}
 
@@ -2493,6 +3207,319 @@ export default function MasterConsoleView({
             )}
           </div>
         </div>
+      )}
+
+      {/* Main Grid display table (Created Content below Create/Edit/Delete/Display controls) */}
+      {effectiveSubPage !== "master-users-creation" && (
+        <div className="bg-card border border-border rounded-xl p-4 shadow-sm overflow-hidden">
+          <div className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest font-bold mb-2.5">
+            Active Registry Records
+          </div>
+          <div className="overflow-x-auto">
+          {effectiveSubPage === "master-accounts-groups" && (
+            <table className="w-full text-left font-mono text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-border text-[10px] text-muted-foreground">
+                  <th className="py-2">Group Name</th>
+                  <th className="py-2">Financial Type</th>
+                  <th className="py-2">Description</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40 text-foreground">
+                {groups.map(g => (
+                  <tr key={g.id} className="hover:bg-secondary/20">
+                    <td className="py-2 font-bold">{g.name}</td>
+                    <td className="py-2"><span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px]">{g.type}</span></td>
+                    <td className="py-2 text-muted-foreground text-[11px] truncate max-w-[200px]">{g.description}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {effectiveSubPage === "master-accounts-ledger" && (
+            <table className="w-full text-left font-mono text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-border text-[10px] text-muted-foreground">
+                  <th className="py-2">Ledger Account</th>
+                  <th className="py-2">Parent Group</th>
+                  <th className="py-2 text-right">Opening Bal (INR)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40 text-foreground">
+                {ledgers.map(l => (
+                  <tr key={l.id} className="hover:bg-secondary/20">
+                    <td className="py-2 font-bold">{l.name}</td>
+                    <td className="py-2 text-muted-foreground">{l.group}</td>
+                    <td className="py-2 text-right font-semibold">{new Intl.NumberFormat("en-IN").format(l.openingBalance)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {effectiveSubPage === "master-accounts-customer" && (
+            <table className="w-full text-left font-mono text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-border text-[10px] text-muted-foreground uppercase tracking-wider bg-secondary/20">
+                  <th className="py-2.5 px-4 text-left font-bold">Customer Account</th>
+                  <th className="py-2.5 px-4 text-left font-bold">Phone</th>
+                  <th className="py-2.5 px-4 text-left font-bold">GST Registration</th>
+                  <th className="py-2.5 px-4 text-left font-bold">Credit Limit (Days)</th>
+                  <th className="py-2.5 px-4 text-left font-bold">Credit Limit (INR)</th>
+                  <th className="py-2.5 px-4 text-left font-bold">Billing Address</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40 text-foreground">
+                {customers.map(c => (
+                  <tr key={c.id} className="hover:bg-secondary/30 transition-colors">
+                    <td className="py-3 px-4 font-bold text-foreground">{c.name}</td>
+                    <td className="py-3 px-4 text-muted-foreground">{c.phone || "N/A"}</td>
+                    <td className="py-3 px-4 font-semibold text-muted-foreground">{c.gstNo || "N/A"}</td>
+                    <td className="py-3 px-4 text-left font-bold text-amber-500 font-mono">
+                      {c.creditLimitDays !== undefined && c.creditLimitDays !== null ? `${c.creditLimitDays} Days` : "0 Days"}
+                    </td>
+                    <td className="py-3 px-4 text-left font-bold text-emerald-500 font-mono">
+                      {c.creditLimitAmount !== undefined && c.creditLimitAmount !== null ? `₹${new Intl.NumberFormat("en-IN").format(c.creditLimitAmount)}` : "₹0"}
+                    </td>
+                    <td className="py-3 px-4 text-muted-foreground truncate max-w-[250px]">{c.address || "N/A"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {effectiveSubPage === "master-accounts-supplier" && (
+            <table className="w-full text-left font-mono text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-border text-[10px] text-muted-foreground uppercase tracking-wider bg-secondary/20">
+                  <th className="py-2.5 px-4 text-left font-bold">Supplier Account</th>
+                  <th className="py-2.5 px-4 text-left font-bold">Phone</th>
+                  <th className="py-2.5 px-4 text-left font-bold">Email</th>
+                  <th className="py-2.5 px-4 text-left font-bold">GST Registration</th>
+                  <th className="py-2.5 px-4 text-left font-bold">Physical Address</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40 text-foreground">
+                {suppliers.map(s => (
+                  <tr key={s.id} className="hover:bg-secondary/30 transition-colors">
+                    <td className="py-3 px-4 font-bold text-foreground">{s.name}</td>
+                    <td className="py-3 px-4 text-muted-foreground">{s.phone || "N/A"}</td>
+                    <td className="py-3 px-4 text-muted-foreground">{(s as any).email || "N/A"}</td>
+                    <td className="py-3 px-4 font-semibold text-muted-foreground">{s.gstNo || "N/A"}</td>
+                    <td className="py-3 px-4 text-muted-foreground truncate max-w-[280px]">{s.address || "N/A"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {effectiveSubPage === "master-inventory-items" && (
+            <table className="w-full text-left font-mono text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-border text-[10px] text-muted-foreground">
+                  <th className="py-2">Item Name</th>
+                  <th className="py-2">Category</th>
+                  <th className="py-2">Billing Unit</th>
+                  <th className="py-2">Packing Type</th>
+                  <th className="py-2 text-right">Acquisition standard Price</th>
+                  <th className="py-2 text-right">Standard sales Rate</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40 text-foreground">
+                {products.slice().sort((a, b) => (a.godownStocks ? Object.values(a.godownStocks).reduce((s, v) => s + v, 0) : 0) - (b.godownStocks ? Object.values(b.godownStocks).reduce((s, v) => s + v, 0) : 0)).map(p => (
+                  <tr key={p.id} className="hover:bg-secondary/20">
+                    <td className="py-2 font-bold">{p.name}</td>
+                    <td className="py-2 text-primary">{p.category}</td>
+                    <td className="py-2 text-muted-foreground">{p.unit}</td>
+                    <td className="py-2 font-semibold">
+                      {p.packingTypes && p.packingTypes.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {p.packingTypes.map((pt, idx) => {
+                            const priceVal = (p as any).packingPrices?.[pt];
+                            return (
+                              <span key={idx} className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-500/10 text-blue-600 border border-blue-500/30 shadow-sm">
+                                {pt} {priceVal ? `(₹${priceVal})` : ""}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      ) : p.packingType ? (
+                        <div className="flex flex-wrap gap-1">
+                          {p.packingType.split(",").map((pt, idx) => {
+                            const trimmed = pt.trim();
+                            const priceVal = (p as any).packingPrices?.[trimmed];
+                            return (
+                              <span key={idx} className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-500/10 text-blue-600 border border-blue-500/30 shadow-sm">
+                                {trimmed} {priceVal ? `(₹${priceVal})` : ""}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground italic text-[10px]">Standard ({p.unit})</span>
+                      )}
+                    </td>
+                    <td className="py-2 text-right">₹{p.buyPrice}</td>
+                    <td className="py-2 text-right font-semibold text-green-500">₹{p.sellPrice}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {effectiveSubPage === "master-inventory-categories" && (
+            <table className="w-full text-left font-mono text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-border text-[10px] text-muted-foreground">
+                  <th className="py-2">Category Name</th>
+                  <th className="py-2">HSN Code prefix</th>
+                  <th className="py-2">Standard GST %</th>
+                  <th className="py-2">Group Description</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40 text-foreground">
+                {categories.map(c => (
+                  <tr key={c.id} className="hover:bg-secondary/20">
+                    <td className="py-2 font-bold">{c.name}</td>
+                    <td className="py-2">{c.hsnCode}</td>
+                    <td className="py-2 text-primary font-bold">{c.gstRate}%</td>
+                    <td className="py-2 text-muted-foreground truncate max-w-[250px]">{c.description}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {effectiveSubPage === "master-inventory-unit" && (
+            <table className="w-full text-left font-mono text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-border text-[10px] text-muted-foreground">
+                  <th className="py-2">Short Label</th>
+                  <th className="py-2">Full Unit Label</th>
+                  <th className="py-2">Fraction Decimals Allowed</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40 text-foreground">
+                {units.map(u => (
+                  <tr key={u.id} className="hover:bg-secondary/20">
+                    <td className="py-2 font-bold text-primary">{u.shortName}</td>
+                    <td className="py-2">{u.fullName}</td>
+                    <td className="py-2 text-muted-foreground">{u.decimalPlaces} places</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {effectiveSubPage === "master-inventory-packing" && (
+            <table className="w-full text-left font-mono text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-border text-[10px] text-muted-foreground">
+                  <th className="py-2">Packing Config Name</th>
+                  <th className="py-2">Gross Capacity</th>
+                  <th className="py-2">Material Compound</th>
+                  <th className="py-2">General Usage Notes</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40 text-foreground">
+                {packings.map(pk => (
+                  <tr key={pk.id} className="hover:bg-secondary/20">
+                    <td className="py-2 font-bold">{pk.name}</td>
+                    <td className="py-2 font-semibold text-primary">{pk.capacityKg} {pk.capacityUnit || "kg"}</td>
+                    <td className="py-2">{pk.material}</td>
+                    <td className="py-2 text-muted-foreground truncate max-w-[200px]">{pk.notes}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {(effectiveSubPage === "master-inventory-godowns" || effectiveSubPage === "master-godowns") && (
+            <table className="w-full text-left font-mono text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-border text-[10px] text-muted-foreground uppercase tracking-wider bg-secondary/20">
+                  <th className="py-2.5 px-3 text-left font-bold">Godown Code</th>
+                  <th className="py-2.5 px-3 text-left font-bold">Facility Name</th>
+                  <th className="py-2.5 px-3 text-left font-bold">Location Address</th>
+                  <th className="py-2.5 px-3 text-left font-bold">Climate & Temp Zone</th>
+                  <th className="py-2.5 px-3 text-right font-bold">Max Capacity</th>
+                  <th className="py-2.5 px-3 text-left font-bold">Supervisor</th>
+                  <th className="py-2.5 px-3 text-center font-bold">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40 text-foreground">
+                {godowns.map(g => (
+                  <tr key={g.id} className="hover:bg-secondary/30 transition-colors">
+                    <td className="py-2.5 px-3 font-bold text-primary font-mono">Godown {g.code}</td>
+                    <td className="py-2.5 px-3 font-bold text-foreground">{g.name}</td>
+                    <td className="py-2.5 px-3 text-muted-foreground truncate max-w-[200px]">{g.location}</td>
+                    <td className="py-2.5 px-3 text-emerald-600 font-semibold">{g.temperature}</td>
+                    <td className="py-2.5 px-3 text-right font-bold text-foreground font-mono">{g.capacityKg.toLocaleString()} kg</td>
+                    <td className="py-2.5 px-3 text-muted-foreground font-semibold">{g.managerName || "N/A"}</td>
+                    <td className="py-2.5 px-3 text-center">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase font-mono border ${
+                        g.status === "Active" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" :
+                        g.status === "Maintenance" ? "bg-amber-500/10 text-amber-600 border-amber-500/30" :
+                        "bg-red-500/10 text-red-600 border-red-500/30"
+                      }`}>
+                        {g.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {effectiveSubPage === "master-users-status" && (
+            <table className="w-full text-left font-mono text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-border text-[10px] text-muted-foreground uppercase tracking-wider bg-secondary/20">
+                  <th className="py-2.5 px-3">Emp ID</th>
+                  <th className="py-2.5 px-3">Employee Name</th>
+                  <th className="py-2.5 px-3">System Role</th>
+                  <th className="py-2.5 px-3">Responsibilities Scope</th>
+                  <th className="py-2.5 px-3">Allowed Features</th>
+                  <th className="py-2.5 px-3 text-right">Total Salary</th>
+                  <th className="py-2.5 px-3 text-center">Visa Expiry</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40 text-foreground">
+                {users.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-4 text-center text-muted-foreground italic">No employees registered yet. Please create one below!</td>
+                  </tr>
+                ) : (
+                  users.map(u => {
+                    const count = u.allowedFeatures ? u.allowedFeatures.length : ALL_WEBSITE_FEATURES.length;
+                    return (
+                      <tr key={u.id} className="hover:bg-secondary/20">
+                        <td className="py-2.5 px-3 font-bold text-primary font-mono">{u.employeeId}</td>
+                        <td className="py-2.5 px-3 font-semibold text-foreground">{u.employeeName}</td>
+                        <td className="py-2.5 px-3 text-muted-foreground"><span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-bold text-[10px]">{u.role}</span></td>
+                        <td className="py-2.5 px-3 text-foreground text-[11px] truncate max-w-[180px]">{u.responsibility || "General Responsibilities"}</td>
+                        <td className="py-2.5 px-3">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border ${
+                            count === ALL_WEBSITE_FEATURES.length
+                              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                              : count > 0
+                              ? "bg-blue-500/10 text-blue-600 border-blue-500/30"
+                              : "bg-red-500/10 text-red-600 border-red-500/30"
+                          }`}>
+                            {count} / {ALL_WEBSITE_FEATURES.length} Features Enabled
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-bold text-emerald-500 font-mono">₹{u.totalSalary ? u.totalSalary.toLocaleString("en-IN") : "0"}</td>
+                        <td className="py-2.5 px-3 text-center text-muted-foreground font-mono">{u.visaExpiry || "N/A"}</td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
       )}
     </div>
   );
