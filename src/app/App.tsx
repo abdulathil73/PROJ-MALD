@@ -15797,185 +15797,179 @@ function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
         }
         return prev + 2;
       });
-    }, 32);
+    }, 30);
     return () => clearInterval(timer);
   }, [onFinish]);
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center justify-between p-6 md:p-8 text-center bg-gradient-to-br from-[#061510] via-[#091f16] to-[#040d09] animate-ambient-shift relative overflow-hidden select-none text-white font-sans">
-      {/* 1. Rich Ambient Holographic Glow Orbs & Light Field */}
-      <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-[#2d6a4f]/25 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-[#e76f51]/20 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#52b788]/10 rounded-full blur-[140px] pointer-events-none" />
+    <div className="w-full min-h-screen flex flex-col items-center justify-between p-6 md:p-8 text-center bg-gradient-to-br from-[#e8f5e9] via-[#f1f8e9] to-[#d8f3dc] relative overflow-hidden select-none text-[#1b4332] font-sans">
+      {/* 1. Soft Zen Light Glow Orbs */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#81c784]/20 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#ffab91]/20 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#a5d6a7]/15 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* 2. Meteor Shooting Laser Energy Beams */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-20 left-10 w-48 h-0.5 bg-gradient-to-r from-transparent via-[#52b788] to-transparent animate-meteor" style={{ animationDelay: "0s" }} />
-        <div className="absolute top-20 left-1/4 w-64 h-0.5 bg-gradient-to-r from-transparent via-[#e76f51] to-transparent animate-meteor" style={{ animationDelay: "2.5s" }} />
-        <div className="absolute top-1/3 right-10 w-52 h-0.5 bg-gradient-to-r from-transparent via-[#f4a261] to-transparent animate-meteor" style={{ animationDelay: "5s" }} />
-      </div>
+      {/* 2. Floating Fresh Produce & Commodity Badges (Matching Japanese Zen Theme Screenshot) */}
+      <div className="absolute top-8 left-8 text-3xl sm:text-4xl animate-bounce pointer-events-none opacity-80" style={{ animationDuration: '4s' }}>🥭</div>
+      <div className="absolute top-8 right-8 text-3xl sm:text-4xl animate-bounce pointer-events-none opacity-80" style={{ animationDuration: '5s' }}>🍉</div>
+      <div className="absolute bottom-8 left-8 text-3xl sm:text-4xl animate-bounce pointer-events-none opacity-80" style={{ animationDuration: '4.5s' }}>🥥</div>
+      <div className="absolute bottom-8 right-8 text-3xl sm:text-4xl animate-bounce pointer-events-none opacity-80" style={{ animationDuration: '3.8s' }}>🥦</div>
 
-      {/* 3. Top Neat Corporate Marquee Header */}
-      <div className="w-full max-w-6xl z-20 pt-2 flex items-center justify-between text-xs font-mono border-b border-[#52b788]/25 pb-3">
+      {/* 3. Top Japanese Zen Marquee Header */}
+      <div className="w-full max-w-5xl z-20 pt-2 flex items-center justify-between text-xs font-mono border-b border-[#2e7d32]/20 pb-3">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-black/60 border border-[#52b788]/60 text-[#52b788] font-bold shadow-md">
-            <span className="w-2 h-2 rounded-full bg-[#52b788] animate-ping" />
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-[#2e7d32]/30 text-[#1b4332] font-bold shadow-sm backdrop-blur-md">
+            <span className="w-2 h-2 rounded-full bg-[#2e7d32] animate-ping" />
             <span>SPICE ROUTE TRADING CO.</span>
           </div>
-          <span className="hidden sm:inline text-[#52b788]/50">|</span>
-          <span className="hidden sm:inline text-[#b7e4c7] font-medium tracking-wide">ENTERPRISE LOGISTICS & COMMODITIES ENGINE</span>
+          <span className="hidden sm:inline text-[#2e7d32]/40">|</span>
+          <span className="hidden sm:inline text-[#2d5a27] font-semibold tracking-wide">JAPANESE ZEN BAMBOO & MATCHA PORTAL</span>
         </div>
-        <div className="flex items-center gap-4 text-[#b7e4c7] font-mono text-[11px]">
-          <span className="hidden md:inline">18 GODOWNS (A-R) <span className="text-[#e9c46a] font-bold">100% ACTIVE</span></span>
-          <span className="hidden md:inline">USD/MVR <span className="text-[#52b788] font-bold">15.42 ▲</span></span>
-          <span className="text-[#52b788] font-bold bg-black/70 px-2.5 py-1 rounded-full border border-[#52b788]/40 shadow-sm">SYSTEM ONLINE</span>
+        <div className="flex items-center gap-4 text-[#2d5a27] font-mono text-[11px]">
+          <span className="hidden md:inline">18 GODOWNS (A-R) <span className="text-[#2e7d32] font-bold">100% ONLINE</span></span>
+          <span className="hidden md:inline">USD/MVR <span className="text-[#2e7d32] font-bold">15.42 ▲</span></span>
+          <span className="text-[#1b4332] font-bold bg-white/90 px-2.5 py-1 rounded-full border border-[#2e7d32]/30 shadow-sm">ZEN CORE READY</span>
         </div>
       </div>
 
-      {/* 4. Center Stage: SVG World Trade Network Engine with Previous Vibrant Color Palette */}
-      <div className="relative z-10 flex flex-col items-center justify-center my-auto py-2 w-full max-w-4xl">
-        <div className="relative w-full max-w-2xl h-64 sm:h-80 flex items-center justify-center">
+      {/* 4. Center Stage: Zen Bamboo Emblem & SVG World Trade Route Network */}
+      <div className="relative z-10 flex flex-col items-center justify-center my-auto py-2 w-full max-w-3xl">
+        <div className="relative w-full max-w-xl h-64 sm:h-72 flex items-center justify-center">
           
-          {/* World Trade SVG Vector Arcs in Emerald, Coral Spice, and Gold */}
-          <svg className="absolute inset-0 w-full h-full text-[#52b788]/30 pointer-events-none" viewBox="0 0 800 400" fill="none">
-            {/* Latitude/Longitude Circles */}
-            <circle cx="400" cy="200" r="180" stroke="#52b788" strokeWidth="1" strokeDasharray="4 4" className="opacity-30" />
-            <circle cx="400" cy="200" r="120" stroke="#e76f51" strokeWidth="1" strokeDasharray="3 3" className="opacity-40" />
-            <circle cx="400" cy="200" r="60" stroke="#e9c46a" strokeWidth="1" className="opacity-60" />
+          {/* World Trade SVG Vector Arcs in Zen Matcha Green and Coral */}
+          <svg className="absolute inset-0 w-full h-full text-[#2e7d32]/30 pointer-events-none" viewBox="0 0 800 400" fill="none">
+            <circle cx="400" cy="200" r="170" stroke="#2e7d32" strokeWidth="1.5" strokeDasharray="4 4" className="opacity-40" />
+            <circle cx="400" cy="200" r="110" stroke="#e64a19" strokeWidth="1.5" strokeDasharray="3 3" className="opacity-40" />
+            <circle cx="400" cy="200" r="55" stroke="#f57f17" strokeWidth="1.5" className="opacity-60" />
             
-            {/* Animated Trade Vector Arcs */}
-            <path d="M 150 220 Q 300 100 400 200" stroke="#52b788" strokeWidth="2.5" strokeDasharray="6 6" className="animate-pulse" />
-            <path d="M 400 200 Q 550 100 650 230" stroke="#e76f51" strokeWidth="2.5" strokeDasharray="6 6" className="animate-pulse" />
-            <path d="M 250 300 Q 400 240 550 310" stroke="#e9c46a" strokeWidth="2.5" strokeDasharray="6 6" className="animate-pulse" />
-            <path d="M 400 200 Q 450 320 600 280" stroke="#52b788" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse" />
+            <path d="M 150 220 Q 300 100 400 200" stroke="#2e7d32" strokeWidth="2.5" strokeDasharray="6 6" className="animate-pulse" />
+            <path d="M 400 200 Q 550 100 650 230" stroke="#e64a19" strokeWidth="2.5" strokeDasharray="6 6" className="animate-pulse" />
+            <path d="M 250 300 Q 400 240 550 310" stroke="#f57f17" strokeWidth="2.5" strokeDasharray="6 6" className="animate-pulse" />
 
-            {/* Trade Hub Vector Node Pulsers */}
-            <circle cx="400" cy="200" r="7" fill="#52b788" className="animate-ping" />
-            <circle cx="400" cy="200" r="4" fill="#e9c46a" />
+            <circle cx="400" cy="200" r="6" fill="#2e7d32" className="animate-ping" />
+            <circle cx="400" cy="200" r="4" fill="#ffffff" />
 
-            <circle cx="150" cy="220" r="5" fill="#52b788" />
-            <circle cx="650" cy="230" r="5" fill="#e76f51" />
-            <circle cx="250" cy="300" r="5" fill="#e9c46a" />
-            <circle cx="600" cy="280" r="5" fill="#f4a261" />
+            <circle cx="150" cy="220" r="5" fill="#2e7d32" />
+            <circle cx="650" cy="230" r="5" fill="#e64a19" />
+            <circle cx="250" cy="300" r="5" fill="#f57f17" />
           </svg>
 
-          {/* Central Glassmorphic Core Emblem */}
-          <div className="relative z-20 p-6 rounded-2xl bg-gradient-to-br from-[#1b4332]/90 via-[#0b1912]/95 to-[#14281d]/90 border-2 border-[#52b788] shadow-2xl backdrop-blur-2xl flex flex-col items-center gap-3 animate-corp-glow">
-            <div className="p-4 rounded-xl bg-black/60 border border-[#52b788] text-[#52b788] shadow-lg">
-              <Globe size={42} className="animate-pulse" />
+          {/* Japanese Zen Bamboo Central Emblem (Matching Zen Portal Screenshot) */}
+          <div className="relative z-20 p-6 rounded-3xl bg-white/95 border-2 border-[#2e7d32]/40 shadow-xl backdrop-blur-xl flex flex-col items-center gap-2 max-w-xs">
+            <div className="w-16 h-16 rounded-full bg-[#e8f5e9] border border-[#2e7d32]/40 flex items-center justify-center text-3xl shadow-inner">
+              🎋
             </div>
-            <div className="space-y-1">
-              <div className="text-xs font-mono font-bold text-[#e9c46a] tracking-widest uppercase">
-                SRT GLOBAL ENGINE
+            <div className="space-y-0.5 text-center">
+              <div className="text-xs font-mono font-bold text-[#1b4332] tracking-widest uppercase">
+                ZEN TRADING HUB
               </div>
-              <div className="text-[10px] font-mono text-[#b7e4c7]">
-                18 Godowns (A to R) Network
+              <div className="text-[10px] font-mono text-[#2d5a27]">
+                18 Godowns (A to R) Integrated Network
               </div>
             </div>
           </div>
 
-          {/* Floating Trade Hub Badges with Previous Signature Colors */}
-          <div className="absolute top-4 left-6 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/70 border border-[#52b788]/60 text-[#52b788] text-xs font-mono backdrop-blur-md shadow-lg">
-            <Ship size={15} className="text-[#52b788]" />
-            <span className="font-bold text-white">Ocean Freight</span>
+          {/* Floating Trade Hub Badges in Pure White Zen Glass */}
+          <div className="absolute top-2 left-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/90 border border-[#2e7d32]/30 text-[#1b4332] text-xs font-mono shadow-md backdrop-blur-md">
+            <Ship size={15} className="text-[#2e7d32]" />
+            <span className="font-bold">Ocean Cargo Freight</span>
           </div>
 
-          <div className="absolute top-4 right-6 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/70 border border-[#e76f51]/60 text-[#e76f51] text-xs font-mono backdrop-blur-md shadow-lg">
-            <Plane size={15} className="text-[#e76f51]" />
-            <span className="font-bold text-white">Air Cargo</span>
+          <div className="absolute top-2 right-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/90 border border-[#e64a19]/30 text-[#1b4332] text-xs font-mono shadow-md backdrop-blur-md">
+            <Plane size={15} className="text-[#e64a19]" />
+            <span className="font-bold">Air Express Cargo</span>
           </div>
 
-          <div className="absolute bottom-4 left-6 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/70 border border-[#e9c46a]/60 text-[#e9c46a] text-xs font-mono backdrop-blur-md shadow-lg">
-            <Warehouse size={15} className="text-[#e9c46a]" />
-            <span className="font-bold text-white">18 Godowns (A-R)</span>
+          <div className="absolute bottom-2 left-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/90 border border-[#f57f17]/30 text-[#1b4332] text-xs font-mono shadow-md backdrop-blur-md">
+            <Warehouse size={15} className="text-[#f57f17]" />
+            <span className="font-bold">18 Godowns (A-R)</span>
           </div>
 
-          <div className="absolute bottom-4 right-6 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/70 border border-[#f4a261]/60 text-[#f4a261] text-xs font-mono backdrop-blur-md shadow-lg">
-            <Coins size={15} className="text-[#f4a261]" />
-            <span className="font-bold text-white">Multi-Currency FX</span>
+          <div className="absolute bottom-2 right-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/90 border border-[#2e7d32]/30 text-[#1b4332] text-xs font-mono shadow-md backdrop-blur-md">
+            <Coins size={15} className="text-[#388e3c]" />
+            <span className="font-bold">Multi-Currency FX</span>
           </div>
         </div>
 
-        {/* Corporate Title with Shimmering Gold Foil Gradient */}
-        <div className="space-y-2.5 max-w-xl mt-4">
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white font-serif">
-            Spice Route <span className="animate-gold-foil">Trading Co.</span>
+        {/* Japanese Zen Corporate Header Typography */}
+        <div className="space-y-2 max-w-xl mt-3">
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-[#1b4332] font-serif">
+            Spice Route <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2e7d32] via-[#388e3c] to-[#e64a19]">Trading Co.</span>
           </h1>
-          <p className="text-xs sm:text-sm font-mono text-[#b7e4c7] leading-relaxed max-w-lg mx-auto font-semibold">
-            Next-Gen Enterprise ERP • 18 Godowns Matrix (A-R), Air/Sea Freight & Real-Time Multi-Currency Ledger
+          <p className="text-xs sm:text-sm font-mono text-[#2d5a27] leading-relaxed max-w-md mx-auto font-medium">
+            Japanese Zen Bamboo & Matcha Portal • 18 Godowns Matrix (A-R), Air/Sea Freight & Real-Time Financials
           </p>
         </div>
 
-        {/* 4 Feature Cards with Previous Signature Color Accent Borders */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-xl w-full text-left text-xs font-mono mt-6">
-          <div className="p-3.5 rounded-2xl bg-black/50 border border-[#52b788]/40 shadow-xl hover:border-[#52b788] transition-all flex items-center gap-3 text-[#52b788] backdrop-blur-xl">
-            <div className="p-2 rounded-xl bg-black/60 border border-[#52b788]/60 text-[#52b788]">
-              <Ship size={18} />
+        {/* 4 Zen Matcha Feature Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-xl w-full text-left text-xs font-mono mt-5">
+          <div className="p-3 rounded-2xl bg-white/90 border border-[#81c784]/50 shadow-md hover:shadow-lg transition-all flex items-center gap-2.5 backdrop-blur-md">
+            <div className="p-2 rounded-xl bg-[#e8f5e9] text-[#2e7d32]">
+              <Ship size={16} />
             </div>
             <div>
-              <div className="font-bold text-[11px] text-white">Ocean & Air Freight</div>
-              <div className="text-[9px] text-[#b7e4c7]">Global Cargo</div>
+              <div className="font-bold text-[11px] text-[#1b4332]">Ocean & Air</div>
+              <div className="text-[9px] text-[#2d5a27]">Global Cargo</div>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-black/50 border border-[#e76f51]/40 shadow-xl hover:border-[#e76f51] transition-all flex items-center gap-3 text-[#e76f51] backdrop-blur-xl">
-            <div className="p-2 rounded-xl bg-black/60 border border-[#e76f51]/60 text-[#e76f51]">
-              <Warehouse size={18} />
+          <div className="p-3 rounded-2xl bg-white/90 border border-[#ffab91]/50 shadow-md hover:shadow-lg transition-all flex items-center gap-2.5 backdrop-blur-md">
+            <div className="p-2 rounded-xl bg-[#fbe9e7] text-[#e64a19]">
+              <Warehouse size={16} />
             </div>
             <div>
-              <div className="font-bold text-[11px] text-white">18 Godowns (A-R)</div>
-              <div className="text-[9px] text-[#f4a261]">Smart Warehouse Grid</div>
+              <div className="font-bold text-[11px] text-[#1b4332]">18 Godowns</div>
+              <div className="text-[9px] text-[#2d5a27]">Warehouses A to R</div>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-black/50 border border-[#e9c46a]/40 shadow-xl hover:border-[#e9c46a] transition-all flex items-center gap-3 text-[#e9c46a] backdrop-blur-xl">
-            <div className="p-2 rounded-xl bg-black/60 border border-[#e9c46a]/60 text-[#e9c46a]">
-              <Coins size={18} />
+          <div className="p-3 rounded-2xl bg-white/90 border border-[#ffe082]/50 shadow-md hover:shadow-lg transition-all flex items-center gap-2.5 backdrop-blur-md">
+            <div className="p-2 rounded-xl bg-[#fff8e1] text-[#f57f17]">
+              <Coins size={16} />
             </div>
             <div>
-              <div className="font-bold text-[11px] text-white">Multi-Currency FX</div>
-              <div className="text-[9px] text-[#e9c46a]">MVR / USD / INR</div>
+              <div className="font-bold text-[11px] text-[#1b4332]">Multi-Currency</div>
+              <div className="text-[9px] text-[#2d5a27]">MVR / USD / INR</div>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-black/50 border border-[#52b788]/40 shadow-xl hover:border-[#52b788] transition-all flex items-center gap-3 text-[#52b788] backdrop-blur-xl">
-            <div className="p-2 rounded-xl bg-black/60 border border-[#52b788]/60 text-[#52b788]">
-              <TrendingUp size={18} />
+          <div className="p-3 rounded-2xl bg-white/90 border border-[#a5d6a7]/50 shadow-md hover:shadow-lg transition-all flex items-center gap-2.5 backdrop-blur-md">
+            <div className="p-2 rounded-xl bg-[#e8f5e9] text-[#2e7d32]">
+              <TrendingUp size={16} />
             </div>
             <div>
-              <div className="font-bold text-[11px] text-white">Produce & Spices</div>
-              <div className="text-[9px] text-[#b7e4c7]">Live P&L Ledger</div>
+              <div className="font-bold text-[11px] text-[#1b4332]">Live Financials</div>
+              <div className="text-[9px] text-[#2d5a27]">Perishable Audit</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 5. Cyber Progress Bar & Executive Portal Button in Previous Color Scheme */}
-      <div className="space-y-4 max-w-xs w-full z-10 pb-2">
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-[10px] font-mono text-[#52b788] font-bold">
+      {/* 5. Progress Bar & Primary Action Button Matching Screenshot */}
+      <div className="space-y-3 max-w-xs w-full z-10 pb-2">
+        <div className="space-y-1">
+          <div className="flex justify-between text-[10px] font-mono text-[#2e7d32] font-bold">
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#52b788] animate-ping" />
-              BOOTING ENTERPRISE TRADING SYSTEM
+              <span className="w-2 h-2 rounded-full bg-[#2e7d32] animate-ping" />
+              AUTHENTICATING ZEN PORTAL
             </span>
             <span>{progress}%</span>
           </div>
-          <div className="w-full h-3 bg-black/80 border border-[#52b788]/50 rounded-full overflow-hidden shadow-inner relative p-0.5">
+          <div className="w-full h-2.5 bg-white/90 border border-[#2e7d32]/30 rounded-full overflow-hidden shadow-inner p-0.5">
             <div
-              className="h-full bg-gradient-to-r from-[#2d6a4f] via-[#52b788] to-[#e76f51] transition-all duration-75 rounded-full relative"
+              className="h-full bg-gradient-to-r from-[#2e7d32] via-[#388e3c] to-[#e64a19] transition-all duration-75 rounded-full relative"
               style={{ width: `${progress}%` }}
             >
-              <div className="absolute right-0 top-0 bottom-0 w-2 bg-white rounded-full shadow-[0_0_12px_#fff]" />
+              <div className="absolute right-0 top-0 bottom-0 w-2 bg-white rounded-full shadow-sm" />
             </div>
           </div>
         </div>
 
         <button
           onClick={onFinish}
-          className="w-full py-4 px-6 bg-gradient-to-r from-[#2d6a4f] via-[#40916c] to-[#e76f51] hover:from-[#1b4332] hover:to-[#d90429] text-white font-mono font-black rounded-2xl text-xs uppercase tracking-widest shadow-2xl hover:shadow-[0_0_35px_rgba(82,183,136,0.6)] transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 group border border-white/30 relative overflow-hidden"
+          className="w-full py-3.5 px-6 bg-gradient-to-r from-[#2e7d32] via-[#388e3c] to-[#e64a19] hover:from-[#1b5e20] hover:to-[#d84315] text-white font-mono font-bold rounded-2xl text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 group border border-white/40 relative overflow-hidden"
         >
-          <span className="relative z-10">ENTER LOGISTICS PORTAL</span>
-          <ChevronRight size={16} className="group-hover:translate-x-2 transition-transform relative z-10" />
+          <span className="relative z-10">AUTHENTICATE & OPEN ZEN PORTAL</span>
+          <ChevronRight size={16} className="group-hover:translate-x-1.5 transition-transform relative z-10" />
         </button>
       </div>
     </div>
