@@ -685,6 +685,67 @@
   animation: ambientAuraShift 15s ease-in-out infinite;
 }
 
+/* ==========================================================================
+   EXECUTIVE CORPORATE ENTERPRISE HUD & TRADING ENGINE ANIMATIONS
+   ========================================================================== */
+
+@keyframes radarScannerSweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes hudTelemetryPulse {
+  0%, 100% {
+    opacity: 0.4;
+    filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.4));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 14px rgba(16, 185, 129, 0.9));
+  }
+}
+
+@keyframes tickerMarqueeSlide {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes corporatePulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.15), inset 0 0 10px rgba(16, 185, 129, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 45px rgba(16, 185, 129, 0.4), inset 0 0 20px rgba(16, 185, 129, 0.25);
+  }
+}
+
+.animate-radar-sweep {
+  animation: radarScannerSweep 14s linear infinite;
+}
+
+.animate-hud-pulse {
+  animation: hudTelemetryPulse 3s ease-in-out infinite;
+}
+
+.animate-ticker-slide {
+  display: flex;
+  width: 200%;
+  animation: tickerMarqueeSlide 25s linear infinite;
+}
+
+.animate-corp-glow {
+  animation: corporatePulseGlow 4s ease-in-out infinite;
+}
+
+
 
 
 
