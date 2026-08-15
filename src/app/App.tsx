@@ -15790,133 +15790,199 @@ function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
         }
         return prev + 2;
       });
-    }, 40);
+    }, 35);
     return () => clearInterval(timer);
   }, [onFinish]);
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center justify-center p-6 text-center space-y-8 bg-gradient-to-br from-[#f4f6f0] via-[#e8ecd6] to-[#d8f3dc] relative overflow-hidden select-none text-[#14281d] font-sans">
-      {/* Zen Matcha Ambient Glow Orbs */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#2d6a4f]/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#e76f51]/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/3 -right-20 w-80 h-80 bg-[#e9c46a]/20 rounded-full blur-3xl pointer-events-none" />
+    <div className="w-full min-h-screen flex flex-col items-center justify-center p-6 text-center space-y-8 bg-gradient-to-br from-[#061510] via-[#091f16] to-[#040d09] animate-ambient-shift relative overflow-hidden select-none text-white font-sans">
+      {/* 1. Ambient Holographic Glow Orbs & Light Field */}
+      <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-[#2d6a4f]/25 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-[#e76f51]/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#52b788]/10 rounded-full blur-[140px] pointer-events-none" />
 
-      {/* Produce Motion Objects (Moving Objects around Still Container) */}
+      {/* 2. Meteor Shooting Laser Energy Beams */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-12 left-12 text-3xl animate-produce-stream" style={{ animationDelay: "0s" }}>🍉</div>
-        <div className="absolute top-20 right-16 text-3xl animate-produce-stream" style={{ animationDelay: "2s" }}>🥭</div>
-        <div className="absolute bottom-24 left-1/5 text-3xl animate-produce-stream" style={{ animationDelay: "4s" }}>🥥</div>
-        <div className="absolute bottom-20 right-1/4 text-3xl animate-produce-stream" style={{ animationDelay: "1s" }}>🍇</div>
-        <div className="absolute top-1/3 left-1/6 text-2xl animate-produce-stream" style={{ animationDelay: "3s" }}>🥑</div>
-        <div className="absolute top-2/3 right-1/6 text-2xl animate-produce-stream" style={{ animationDelay: "5s" }}>🍍</div>
-        <div className="absolute top-1/2 left-10 text-2xl animate-produce-stream" style={{ animationDelay: "2.5s" }}>🥦</div>
-        <div className="absolute bottom-1/3 right-10 text-2xl animate-produce-stream" style={{ animationDelay: "4.5s" }}>🌶️</div>
+        <div className="absolute -top-20 left-10 w-48 h-0.5 bg-gradient-to-r from-transparent via-[#52b788] to-transparent animate-meteor" style={{ animationDelay: "0s" }} />
+        <div className="absolute top-20 left-1/4 w-64 h-0.5 bg-gradient-to-r from-transparent via-[#e76f51] to-transparent animate-meteor" style={{ animationDelay: "2.5s" }} />
+        <div className="absolute top-1/3 right-10 w-52 h-0.5 bg-gradient-to-r from-transparent via-[#f4a261] to-transparent animate-meteor" style={{ animationDelay: "5s" }} />
       </div>
 
-      {/* Central Emblem Container with Orbiting Produce Objects */}
-      <div className="relative z-10 flex items-center justify-center">
-        {/* Inner Orbital Ring for Fruits */}
-        <div className="absolute w-64 h-64 pointer-events-none z-20">
-          <div className="absolute inset-0 animate-produce-orbit flex items-center justify-center">
-            <span className="text-3xl">🥭</span>
+      {/* 3. Ascending Double-Helix Energy Micro-Particles */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute left-[10%] bottom-0 text-xs animate-helix" style={{ animationDelay: "0s" }}>✨</div>
+        <div className="absolute left-[30%] bottom-0 text-xs animate-helix" style={{ animationDelay: "2s" }}>💎</div>
+        <div className="absolute left-[50%] bottom-0 text-xs animate-helix" style={{ animationDelay: "4s" }}>⚡</div>
+        <div className="absolute left-[70%] bottom-0 text-xs animate-helix" style={{ animationDelay: "1.5s" }}>🌟</div>
+        <div className="absolute left-[88%] bottom-0 text-xs animate-helix" style={{ animationDelay: "3.5s" }}>✨</div>
+      </div>
+
+      {/* 4. Advanced 3D Gyroscopic Concentric Orbit Engine */}
+      <div className="relative z-10 flex items-center justify-center py-6">
+        {/* Outer Gyroscopic Orbit (Flat Precession 32s - Cargo Ship, Jet, 18-Godowns, FX Globe, Wheat, Red Spice) */}
+        <div className="absolute w-[440px] h-[440px] border border-[#52b788]/30 rounded-full animate-gyro-3 pointer-events-none flex items-center justify-center">
+          <div className="absolute -top-5 left-1/2 -translate-x-1/2 animate-upright-3">
+            <div className="p-2.5 bg-black/60 border border-[#52b788] rounded-xl shadow-lg backdrop-blur-md text-2xl flex items-center justify-center hover:scale-125 transition-transform" title="Ocean Cargo Freight 🚢">
+              🚢
+            </div>
           </div>
-          <div className="absolute inset-0 animate-produce-orbit flex items-center justify-center" style={{ animationDelay: "-8s" }}>
-            <span className="text-3xl">🍉</span>
+          <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 animate-upright-3">
+            <div className="p-2.5 bg-black/60 border border-[#e76f51] rounded-xl shadow-lg backdrop-blur-md text-2xl flex items-center justify-center hover:scale-125 transition-transform" title="International Air Cargo ✈️">
+              ✈️
+            </div>
+          </div>
+          <div className="absolute top-1/2 -left-5 -translate-y-1/2 animate-upright-3">
+            <div className="p-2.5 bg-black/60 border border-[#e9c46a] rounded-xl shadow-lg backdrop-blur-md text-2xl flex items-center justify-center hover:scale-125 transition-transform" title="18-Godowns Logistics Hub (A-R) 🏬">
+              🏬
+            </div>
+          </div>
+          <div className="absolute top-1/2 -right-5 -translate-y-1/2 animate-upright-3">
+            <div className="p-2.5 bg-black/60 border border-[#40916c] rounded-xl shadow-lg backdrop-blur-md text-2xl flex items-center justify-center hover:scale-125 transition-transform" title="Global FX Currency Exchange 🌐">
+              🌐
+            </div>
+          </div>
+          <div className="absolute top-12 left-12 animate-upright-3">
+            <div className="p-2 bg-black/60 border border-[#f4a261] rounded-xl shadow-lg backdrop-blur-md text-xl flex items-center justify-center" title="Golden Wheat Harvest 🌾">
+              🌾
+            </div>
+          </div>
+          <div className="absolute bottom-12 right-12 animate-upright-3">
+            <div className="p-2 bg-black/60 border border-[#d90429] rounded-xl shadow-lg backdrop-blur-md text-xl flex items-center justify-center" title="Malabar Red Spice 🌶️">
+              🌶️
+            </div>
           </div>
         </div>
 
-        {/* Outer Orbital Ring for Veggies & Spices */}
-        <div className="absolute w-80 h-80 pointer-events-none z-20">
-          <div className="absolute inset-0 animate-produce-orbit-reverse flex items-center justify-center">
-            <span className="text-3xl">🥦</span>
+        {/* Middle Gyroscopic Orbit (Counter-Tilted 26s - Express Truck, King Mango, Coffee, Spice Container) */}
+        <div className="absolute w-[310px] h-[310px] border border-[#e76f51]/40 rounded-full animate-gyro-2 pointer-events-none flex items-center justify-center">
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2 animate-upright-2">
+            <div className="p-2 bg-black/70 border border-[#f4a261] rounded-xl shadow-md backdrop-blur-md text-xl flex items-center justify-center" title="Express Logistics Truck 🚚">
+              🚚
+            </div>
           </div>
-          <div className="absolute inset-0 animate-produce-orbit-reverse flex items-center justify-center" style={{ animationDelay: "-11s" }}>
-            <span className="text-3xl">🌶️</span>
+          <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 animate-upright-2">
+            <div className="p-2 bg-black/70 border border-[#e9c46a] rounded-xl shadow-md backdrop-blur-md text-xl flex items-center justify-center" title="Organic King Mango 🥭">
+              🥭
+            </div>
           </div>
-          <div className="absolute inset-0 animate-produce-orbit-reverse flex items-center justify-center" style={{ animationDelay: "-5.5s" }}>
-            <span className="text-3xl">🥑</span>
+          <div className="absolute top-1/2 -left-4 -translate-y-1/2 animate-upright-2">
+            <div className="p-2 bg-black/70 border border-[#b7e4c7] rounded-xl shadow-md backdrop-blur-md text-xl flex items-center justify-center" title="Organic Coffee Beans ☕">
+              ☕
+            </div>
+          </div>
+          <div className="absolute top-1/2 -right-4 -translate-y-1/2 animate-upright-2">
+            <div className="p-2 bg-black/70 border border-[#52b788] rounded-xl shadow-md backdrop-blur-md text-xl flex items-center justify-center" title="Spice Vault Container 📦">
+              📦
+            </div>
           </div>
         </div>
 
-        {/* Japanese Zen Bamboo Emblem Card (Container stays STILL) */}
-        <div className="relative w-36 h-36 bg-white/95 border-3 border-[#52b788] text-[#2d6a4f] rounded-full flex items-center justify-center shadow-xl backdrop-blur-2xl">
-          <div className="text-6xl select-none">
-            🎋
+        {/* Inner Gyroscopic Orbit (Tilted 65deg 20s - Gold Coin, Cardamom, Emerald Core) */}
+        <div className="absolute w-[190px] h-[190px] border border-[#e9c46a]/50 rounded-full animate-gyro-1 pointer-events-none flex items-center justify-center">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 animate-upright-1">
+            <div className="p-1.5 bg-black/80 border border-[#e9c46a] rounded-lg shadow-sm backdrop-blur-md text-lg" title="Gold Bullion Coin 🪙">
+              🪙
+            </div>
+          </div>
+          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 animate-upright-1">
+            <div className="p-1.5 bg-black/80 border border-[#52b788] rounded-lg shadow-sm backdrop-blur-md text-lg" title="Ceylon Cardamom 🌿">
+              🌿
+            </div>
+          </div>
+        </div>
+
+        {/* Central 3D Holographic Core Reactor Emblem */}
+        <div className="relative w-36 h-36 flex items-center justify-center z-20">
+          {/* Rotating Geometric Starburst Rings */}
+          <div className="absolute inset-0 border-2 border-dashed border-[#52b788]/60 rounded-full animate-starburst pointer-events-none" />
+          <div className="absolute -inset-3 border border-dotted border-[#e76f51]/50 rounded-full animate-starburst-rev pointer-events-none" />
+          
+          {/* Glassmorphic Core Shield */}
+          <div className="w-28 h-28 bg-gradient-to-br from-[#1b4332]/90 via-[#0b1912]/95 to-[#14281d]/90 border-2 border-[#52b788] text-[#52b788] rounded-full flex flex-col items-center justify-center shadow-2xl backdrop-blur-2xl animate-reactor-core relative group">
+            <div className="text-4xl transform group-hover:scale-125 transition-transform duration-300">
+              💎
+            </div>
+            <div className="text-[8px] font-mono font-bold text-[#e9c46a] tracking-widest uppercase mt-1">
+              SRT CORE
+            </div>
           </div>
         </div>
       </div>
 
-      {/* STILL Typography Section (No Sway/Wobble/Bounce) */}
-      <div className="space-y-3 max-w-md z-10">
-        <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/90 border-2 border-[#52b788] text-[#2d6a4f] text-xs font-mono font-bold tracking-wider shadow-sm">
-          <span>🍵</span>
-          <span>JAPANESE ZEN BAMBOO & MATCHA GARDEN</span>
+      {/* 5. Typography & Brand Identity Section */}
+      <div className="space-y-3 max-w-lg z-10">
+        <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-black/60 border border-[#52b788]/60 text-[#52b788] text-xs font-mono font-bold tracking-wider shadow-lg backdrop-blur-md">
+          <span className="w-2 h-2 rounded-full bg-[#52b788] animate-ping" />
+          <span>GLOBAL LOGISTICS & COMMODITIES TRADING ENGINE</span>
         </div>
-        <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-[#14281d] font-serif">
-          Spice Route <span className="text-[#2d6a4f] bg-gradient-to-r from-[#2d6a4f] via-[#e76f51] to-[#52b788] bg-clip-text text-transparent">Trading Co.</span>
+        <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white font-serif">
+          Spice Route <span className="animate-gold-foil">Trading Co.</span>
         </h1>
-        <p className="text-xs font-mono text-[#2d6a4f] leading-relaxed font-bold">
-          Peaceful Organic ERP • Matcha Spices, Fresh Produce, Godowns (A-R) & Currency Exchange
+        <p className="text-xs font-mono text-[#b7e4c7] leading-relaxed font-semibold max-w-md mx-auto">
+          Next-Gen Enterprise ERP • 18 Godowns (A-R), Air/Sea Freight, Multi-Currency Exchange & Real-Time Financials
         </p>
       </div>
 
-      {/* STILL Zen Produce Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 max-w-lg w-full text-left text-xs font-mono z-10">
-        <div className="p-3.5 rounded-2xl bg-white/95 border-2 border-[#b7e4c7] shadow-md hover:border-[#2d6a4f] transition-all duration-300 flex items-center gap-2.5 text-[#2d6a4f] group backdrop-blur-md">
-          <span className="text-2xl animate-produce-stream">🥭</span>
+      {/* 6. Dynamic Interactive Sine-Wave Floating Feature Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-xl w-full text-left text-xs font-mono z-10">
+        <div className="p-3.5 rounded-2xl bg-black/50 border border-[#52b788]/40 shadow-xl hover:border-[#52b788] transition-all duration-300 flex items-center gap-2.5 text-[#52b788] backdrop-blur-xl animate-sine-float" style={{ animationDelay: "0s" }}>
+          <span className="text-2xl">🚢</span>
           <div>
-            <div className="font-black text-[11px] text-[#14281d]">Organic Fruits</div>
-            <div className="text-[9px] text-[#2d6a4f]">Mangoes & Papaya</div>
+            <div className="font-bold text-[11px] text-white">Ocean & Air Freight</div>
+            <div className="text-[9px] text-[#b7e4c7]">Global Shipments</div>
           </div>
         </div>
-        <div className="p-3.5 rounded-2xl bg-white/95 border-2 border-[#f4a261]/40 shadow-md hover:border-[#e76f51] transition-all duration-300 flex items-center gap-2.5 text-[#e76f51] group backdrop-blur-md">
-          <span className="text-2xl animate-produce-stream" style={{ animationDelay: "1s" }}>🍉</span>
+
+        <div className="p-3.5 rounded-2xl bg-black/50 border border-[#e76f51]/40 shadow-xl hover:border-[#e76f51] transition-all duration-300 flex items-center gap-2.5 text-[#e76f51] backdrop-blur-xl animate-sine-float" style={{ animationDelay: "1.5s" }}>
+          <span className="text-2xl">🏬</span>
           <div>
-            <div className="font-black text-[11px] text-[#14281d]">Fresh Melons</div>
-            <div className="text-[9px] text-[#e76f51]">Watermelons & Berries</div>
+            <div className="font-bold text-[11px] text-white">18 Godowns (A-R)</div>
+            <div className="text-[9px] text-[#f4a261]">Smart Warehouse Grid</div>
           </div>
         </div>
-        <div className="p-3.5 rounded-2xl bg-white/95 border-2 border-[#b7e4c7] shadow-md hover:border-[#2d6a4f] transition-all duration-300 flex items-center gap-2.5 text-[#2d6a4f] group backdrop-blur-md">
-          <span className="text-2xl animate-produce-stream" style={{ animationDelay: "2s" }}>🌶️</span>
+
+        <div className="p-3.5 rounded-2xl bg-black/50 border border-[#e9c46a]/40 shadow-xl hover:border-[#e9c46a] transition-all duration-300 flex items-center gap-2.5 text-[#e9c46a] backdrop-blur-xl animate-sine-float" style={{ animationDelay: "3s" }}>
+          <span className="text-2xl">🪙</span>
           <div>
-            <div className="font-black text-[11px] text-[#14281d]">Matcha Spices</div>
-            <div className="text-[9px] text-[#2d6a4f]">Live P&L Ledger</div>
+            <div className="font-bold text-[11px] text-white">Multi-Currency FX</div>
+            <div className="text-[9px] text-[#e9c46a]">USD / MVR / INR</div>
           </div>
         </div>
-        <div className="p-3.5 rounded-2xl bg-white/95 border-2 border-[#b7e4c7] shadow-md hover:border-[#2d6a4f] transition-all duration-300 flex items-center gap-2.5 text-[#2d6a4f] group backdrop-blur-md">
-          <span className="text-2xl animate-produce-stream" style={{ animationDelay: "3s" }}>🥦</span>
+
+        <div className="p-3.5 rounded-2xl bg-black/50 border border-[#52b788]/40 shadow-xl hover:border-[#52b788] transition-all duration-300 flex items-center gap-2.5 text-[#52b788] backdrop-blur-xl animate-sine-float" style={{ animationDelay: "4.5s" }}>
+          <span className="text-2xl">🌶️</span>
           <div>
-            <div className="font-black text-[11px] text-[#14281d]">Farm Veggies</div>
-            <div className="text-[9px] text-[#2d6a4f]">18 Godowns (A-R)</div>
+            <div className="font-bold text-[11px] text-white">Produce & Spices</div>
+            <div className="text-[9px] text-[#b7e4c7]">Live P&L Ledger</div>
           </div>
         </div>
       </div>
 
-      {/* Progress & STILL Matcha Action Controls */}
+      {/* 7. Cyber Laser Progress Bar & Portal Launch Engine */}
       <div className="space-y-4 max-w-xs w-full z-10">
         <div className="space-y-1.5">
-          <div className="flex justify-between text-[10px] font-mono text-[#2d6a4f] font-black">
+          <div className="flex justify-between text-[10px] font-mono text-[#52b788] font-bold">
             <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#52b788]" />
-              HARVESTING MATCHA GARDEN COCKPIT
+              <span className="w-2 h-2 rounded-full bg-[#52b788] animate-ping" />
+              BOOTING ENTERPRISE TRADING SYSTEM
             </span>
             <span>{progress}%</span>
           </div>
-          <div className="w-full h-3 bg-[#e8ecd6] border border-[#b7e4c7] rounded-full overflow-hidden shadow-inner relative p-0.5">
+          <div className="w-full h-3 bg-black/80 border border-[#52b788]/50 rounded-full overflow-hidden shadow-inner relative p-0.5">
             <div
               className="h-full bg-gradient-to-r from-[#2d6a4f] via-[#52b788] to-[#e76f51] transition-all duration-75 rounded-full relative"
               style={{ width: `${progress}%` }}
             >
-              <div className="absolute inset-0 bg-white/30" />
+              <div className="absolute right-0 top-0 bottom-0 w-2 bg-white rounded-full shadow-[0_0_12px_#fff]" />
             </div>
           </div>
         </div>
 
         <button
           onClick={onFinish}
-          className="w-full py-4 px-6 bg-gradient-to-r from-[#2d6a4f] via-[#40916c] to-[#e76f51] hover:from-[#1b4332] hover:to-[#d90429] text-white font-mono font-black rounded-2xl text-xs uppercase tracking-wider shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 group border border-white/50 relative overflow-hidden"
+          className="w-full py-4 px-6 bg-gradient-to-r from-[#2d6a4f] via-[#40916c] to-[#e76f51] hover:from-[#1b4332] hover:to-[#d90429] text-white font-mono font-black rounded-2xl text-xs uppercase tracking-widest shadow-2xl hover:shadow-[0_0_35px_rgba(82,183,136,0.6)] transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 group border border-white/30 relative overflow-hidden"
         >
-          <span className="relative z-10">Enter Zen Matcha Portal</span>
+          <span className="relative z-10">ENTER LOGISTICS PORTAL</span>
           <ChevronRight size={16} className="group-hover:translate-x-2 transition-transform relative z-10" />
         </button>
       </div>
