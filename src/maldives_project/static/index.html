@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice AI Invoice & Bill Agent | Deepgram + CrewAI Gemini</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-microphone-lines"></i>
+                </div>
+                <div class="brand-text">
+                    <h2>VoiceInvoice AI</h2>
+                    <span>CrewAI + Deepgram</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-tab="voice-studio">
+                    <i class="fa-solid fa-record-vinyl"></i> Voice Studio
+                </button>
+                <button class="nav-btn" data-tab="draft-review">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> Draft Review
+                    <span class="badge" id="pending-badge" style="display: none;">1</span>
+                </button>
+                <button class="nav-btn" data-tab="inventory-history">
+                    <i class="fa-solid fa-boxes-stacked"></i> Catalog & Invoices
+                </button>
+                <button class="nav-btn" data-tab="integration-guide">
+                    <i class="fa-solid fa-code"></i> Website Integration
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-card">
+                    <div class="status-indicator online"></div>
+                    <div>
+                        <div class="status-title">CrewAI Engine Ready</div>
+                        <div class="status-subtitle">Gemini 2.0 Flash + Deepgram</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <!-- Header Bar -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h1 id="page-title">Voice Studio</h1>
+                    <p id="page-subtitle">Speak or upload voice commands to generate automated invoices & purchase bills</p>
+                </div>
+                <div class="header-actions">
+                    <div class="env-chip">
+                        <i class="fa-solid fa-shield-halved"></i> Human Confirmation Active
+                    </div>
+                </div>
+            </header>
+
+            <!-- TAB 1: Voice Studio -->
+            <section class="tab-content active" id="tab-voice-studio">
+                <div class="grid-2col">
+                    <!-- Left: Speech Input & Audio Recorder -->
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-microphone"></i> Audio Command Center</h3>
+                            <span class="pill pill-primary">STT Nova-2</span>
+                        </div>
+
+                        <!-- Audio Recorder Area -->
+                        <div class="recorder-box">
+                            <div class="pulse-ring" id="pulse-ring"></div>
+                            <button class="mic-button" id="mic-btn" title="Click to Record">
+                                <i class="fa-solid fa-microphone" id="mic-icon"></i>
+                            </button>
+                            <div class="record-timer" id="record-timer">00:00</div>
+                            <p class="record-instruction" id="record-instruction">Click microphone to start recording voice invoice</p>
+                        </div>
+
+                        <div class="divider"><span>OR UPLOAD AUDIO</span></div>
+
+                        <!-- Upload & Preset Tools -->
+                        <div class="file-upload-box">
+                            <input type="file" id="audio-file-input" accept="audio/*" hidden>
+                            <label for="audio-file-input" class="upload-btn">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Choose Audio File (.wav, .mp3, .webm)
+                            </label>
+                        </div>
+
+                        <div class="presets-section">
+                            <h4><i class="fa-solid fa-bolt"></i> Sample Voice Scenarios (Instant Testing)</h4>
+                            <div class="presets-grid" id="presets-grid">
+                                <!-- Dynamic Preset Buttons -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Live Transcription & Agent Execution -->
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-quote-left"></i> Live Speech & CrewAI Agents</h3>
+                        </div>
+
+                        <!-- Transcript Box -->
+                        <div class="transcript-wrapper">
+                            <label>Deepgram Transcribed Text:</label>
+                            <textarea id="transcript-input" rows="4" placeholder="Your spoken audio command will transcribe here... You can also edit or paste text directly."></textarea>
+                            <div class="action-row">
+                                <button class="btn btn-secondary" id="clear-btn">
+                                    <i class="fa-solid fa-eraser"></i> Clear
+                                </button>
+                                <button class="btn btn-gradient" id="process-agent-btn">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Process with CrewAI Agents
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- CrewAI Execution Terminal -->
+                        <div class="agent-terminal">
+                            <div class="terminal-header">
+                                <span><i class="fa-solid fa-terminal"></i> CrewAI Execution Timeline</span>
+                                <span class="terminal-dot green"></span>
+                            </div>
+                            <div class="terminal-body" id="terminal-logs">
+                                <div class="log-line text-muted">Awaiting voice command input...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: Human Confirmation Draft Review -->
+            <section class="tab-content" id="tab-draft-review">
+                <div id="no-draft-notice" class="empty-state">
+                    <i class="fa-solid fa-file-circle-question"></i>
+                    <h3>No Draft Invoice Pending Review</h3>
+                    <p>Go to the Voice Studio and record a voice command to generate a draft invoice.</p>
+                    <button class="btn btn-primary" onclick="switchTab('voice-studio')">Go to Voice Studio</button>
+                </div>
+
+                <div id="draft-container" style="display: none;">
+                    <div class="card glass-card invoice-paper">
+                        <!-- Invoice Header -->
+                        <div class="invoice-top-bar">
+                            <div>
+                                <div class="doc-badge" id="inv-doc-type">SALES INVOICE</div>
+                                <h2 class="inv-number" id="inv-number">INV-2026-0001</h2>
+                                <span class="inv-status" id="inv-status">DRAFT - PENDING CONFIRMATION</span>
+                            </div>
+                            <div class="inv-meta">
+                                <div><strong>Date:</strong> <span id="inv-date">2026-08-09</span></div>
+                                <div><strong>Tax State:</strong> <span id="inv-state-badge" class="pill pill-info">INTRA-STATE</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Party Info Box -->
+                        <div class="party-info-grid">
+                            <div class="party-card">
+                                <h4>Billed To (Party):</h4>
+                                <div class="party-name" id="inv-party-name">Oceanic Breeze Resort</div>
+                                <div class="party-sub" id="inv-party-gstin">GSTIN: 33AAACO1234A1Z1</div>
+                            </div>
+                            <div class="party-card">
+                                <h4>Voice Source Context:</h4>
+                                <div class="transcription-quote" id="inv-transcript-quote">"Sell 5 units of MacBook Pro..."</div>
+                            </div>
+                        </div>
+
+                        <!-- Warnings Notice Banner -->
+                        <div class="warnings-banner" id="warnings-banner" style="display: none;">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <div id="warnings-list"></div>
+                        </div>
+
+                        <!-- Items Table -->
+                        <div class="table-responsive">
+                            <table class="invoice-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product / Description</th>
+                                        <th class="text-right">Qty</th>
+                                        <th class="text-right">Rate</th>
+                                        <th class="text-right">GST Rate</th>
+                                        <th class="text-right">Tax Amount</th>
+                                        <th class="text-right">Total Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inv-items-body">
+                                    <!-- Dynamic Items Rows -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Summary Totals -->
+                        <div class="totals-section">
+                            <div class="totals-table">
+                                <div class="total-row">
+                                    <span>Subtotal (Excl. Tax):</span>
+                                    <strong id="inv-subtotal">₹ 0.00</strong>
+                                </div>
+                                <div class="total-row tax-split" id="cgst-row">
+                                    <span>CGST:</span>
+                                    <span id="inv-cgst">₹ 0.00</span>
+                                </div>
+                                <div class="total-row tax-split" id="sgst-row">
+                                    <span>SGST:</span>
+                                    <span id="inv-sgst">₹ 0.00</span>
+                                </div>
+                                <div class="total-row tax-split" id="igst-row" style="display: none;">
+                                    <span>IGST:</span>
+                                    <span id="inv-igst">₹ 0.00</span>
+                                </div>
+                                <div class="total-row grand-total">
+                                    <span>Grand Total:</span>
+                                    <strong id="inv-total-amount">₹ 0.00</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Human Confirmation Action Footer -->
+                        <div class="human-confirm-bar">
+                            <div class="confirm-prompt">
+                                <i class="fa-solid fa-user-check"></i>
+                                <span><strong>Human Confirmation Architecture:</strong> Review figures above before committing to live database & updating inventory stock.</span>
+                            </div>
+                            <div class="confirm-actions">
+                                <button class="btn btn-danger" id="reject-btn">
+                                    <i class="fa-solid fa-xmark"></i> Reject & Cancel
+                                </button>
+                                <button class="btn btn-success" id="confirm-btn">
+                                    <i class="fa-solid fa-check-double"></i> Confirm & Deduct Inventory Stock
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: Catalog & Invoices History -->
+            <section class="tab-content" id="tab-inventory-history">
+                <div class="grid-2col">
+                    <!-- Products & Stock -->
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-boxes-stacked"></i> Live Inventory Stock</h3>
+                            <button class="btn btn-sm btn-secondary" onclick="loadCatalog()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Product Name</th>
+                                        <th>Price</th>
+                                        <th>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="products-table-body">
+                                    <!-- Dynamic Rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Invoice History -->
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-clock-rotate-left"></i> Invoice & Bill History</h3>
+                            <button class="btn btn-sm btn-secondary" onclick="loadInvoices()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Invoice #</th>
+                                        <th>Party</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoices-table-body">
+                                    <!-- Dynamic Rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: Website Integration Guide -->
+            <section class="tab-content" id="tab-integration-guide">
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-plug"></i> How to Connect Voice Invoice Agent to Your Existing Website</h3>
+                    </div>
+                    <div class="guide-content">
+                        <p class="guide-intro">Integrating this agent into your existing web app (React, Next.js, Vue, Node.js, Django, or custom HTML) requires 3 simple steps:</p>
+                        
+                        <div class="step-card">
+                            <div class="step-num">1</div>
+                            <div class="step-details">
+                                <h4>Deepgram Speech-to-Text API Endpoint</h4>
+                                <p>Send recorded browser audio directly to the <code>/api/transcribe</code> endpoint.</p>
+                                <pre><code>// Client-side JavaScript Audio Recording
+const mediaRecorder = new MediaRecorder(stream);
+let audioChunks = [];
+mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+mediaRecorder.onstop = async () => {
+    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'voice_command.webm');
+
+    const res = await fetch('http://localhost:8000/api/transcribe', {
+        method: 'POST',
+        body: formData
+    });
+    const data = await res.json();
+    console.log("Transcribed Text:", data.transcript);
+};</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="step-card">
+                            <div class="step-num">2</div>
+                            <div class="step-details">
+                                <h4>CrewAI Agent Processing API</h4>
+                                <p>Pass the transcribed text to <code>/api/process-invoice</code> to trigger agent entity matching and tax validation.</p>
+                                <pre><code>const response = await fetch('http://localhost:8000/api/process-invoice', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ transcript: data.transcript })
+});
+const agentOutput = await response.json();
+const draftInvoice = agentOutput.draft;
+// Display draftInvoice on your website's modal or confirmation view</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="step-card">
+                            <div class="step-num">3</div>
+                            <div class="step-details">
+                                <h4>Human Confirmation API</h4>
+                                <p>When the user reviews and clicks "Confirm Invoice" on your UI, call <code>/api/confirm-invoice</code> to finalize stock update.</p>
+                                <pre><code>const confirmRes = await fetch('http://localhost:8000/api/confirm-invoice', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        invoice_id: draftInvoice.id,
+        action: 'CONFIRM'
+    })
+});
+const finalRecord = await confirmRes.json();
+console.log("Invoice Confirmed & Stock Deducted!");</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

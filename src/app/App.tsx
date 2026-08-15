@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import MasterConsoleView from "./MasterConsoleView";
+import AIVoiceInvoiceModal from "./components/AIVoiceInvoiceModal";
 import * as pdfjsLib from "pdfjs-dist";
 import { createWorker } from "tesseract.js";
 
@@ -253,6 +254,34 @@ function getGodownClimateLabel(g: string): string {
   if (["G", "H", "I", "J", "K", "L"].includes(g)) return "Temperate (12°C)";
   if (["M", "N", "O", "P", "Q", "R"].includes(g)) return "Refrigerated (4°C)";
   return "Ambient Dry Storage";
+}
+
+function getBestGodownForProduct(product?: Product | null, preferredGodown?: Godown | string): Godown {
+  if (preferredGodown && ALL_GODOWNS.includes(preferredGodown as Godown)) {
+    return preferredGodown as Godown;
+  }
+  if (product) {
+    if (product.godownStocks) {
+      let maxQty = -1;
+      let maxGdn: Godown = "A";
+      ALL_GODOWNS.forEach(g => {
+        const qty = product.godownStocks?.[g] || 0;
+        if (qty > maxQty && qty > 0) {
+          maxQty = qty;
+          maxGdn = g;
+        }
+      });
+      if (maxQty > 0) return maxGdn;
+    }
+    const cat = (product.category || "").toLowerCase();
+    if (cat.includes("spice") || cat.includes("grain") || cat.includes("rice") || cat.includes("staple")) return "A";
+    if (cat.includes("dry fruit") || cat.includes("nut") || cat.includes("almond") || cat.includes("cashew")) return "G";
+    if (cat.includes("beverage") || cat.includes("tea") || cat.includes("coffee") || cat.includes("drink")) return "M";
+    if (cat.includes("tech") || cat.includes("electr") || cat.includes("computer") || cat.includes("hardware") || cat.includes("macbook") || cat.includes("dell") || cat.includes("monitor")) return "B";
+    if (cat.includes("perish") || cat.includes("fruit") || cat.includes("veg") || cat.includes("fresh") || cat.includes("dairy")) return "P";
+    if (cat.includes("paper") || cat.includes("stationery") || cat.includes("office")) return "D";
+  }
+  return "A";
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -2134,7 +2163,19 @@ function VoiceBillingAssistant({
   };
 
   const handleVoiceCommand = async (rawText: string) => {
-    const text = rawText.toLowerCase().trim();
+    // High-accuracy Spoken Number Word Normalizer (Deepgram Nova-3 + Speech Engine)
+    const normalizeSpokenNumbers = (str: string) => {
+      const numberWords: Record<string, string> = {
+        "zero": "0", "one": "1", "two": "2", "three": "3", "four": "4", "five": "5",
+        "six": "6", "seven": "7", "eight": "8", "nine": "9", "ten": "10",
+        "eleven": "11", "twelve": "12", "thirteen": "13", "fourteen": "14", "fifteen": "15",
+        "sixteen": "16", "seventeen": "17", "eighteen": "18", "nineteen": "19", "twenty": "20",
+        "thirty": "30", "forty": "40", "fifty": "50", "hundred": "100"
+      };
+      return str.replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|hundred)\b/gi, match => numberWords[match.toLowerCase()] || match);
+    };
+
+    const text = normalizeSpokenNumbers(rawText.toLowerCase().trim());
     setTranscript(rawText);
 
     // 0.1 Navigation controls (Run BEFORE cart verb checks)
@@ -2212,7 +2253,7 @@ function VoiceBillingAssistant({
             const subVal = qty * prod.sellPrice;
             generatedItems.push({
               productId: prod.id,
-              godown: prod.category === "Spices" ? "A" : prod.category === "Dry Fruits" ? "G" : "M",
+              godown: getBestGodownForProduct(prod),
               quantity: qty,
               pricePerUnit: prod.sellPrice,
               gstPercent: 12,
@@ -2446,7 +2487,7 @@ function VoiceBillingAssistant({
       if (prod && onAddEntry) {
         const subVal = qty * prod.sellPrice;
         const item: InvoiceItem = {
-          productId: prod.id, godown: prod.category === "Spices" ? "A" : "G", quantity: qty, pricePerUnit: prod.sellPrice, gstPercent: 12, subTotal: subVal, grandTotal: subVal * 1.12
+          productId: prod.id, godown: getBestGodownForProduct(prod), quantity: qty, pricePerUnit: prod.sellPrice, gstPercent: 12, subTotal: subVal, grandTotal: subVal * 1.12
         };
         const res = await onAddEntry({
           type: "out", date: new Date().toISOString().split("T")[0], partner: custName, note: "AI Sales Quotation", paymentType: "credit", items: [item], subType: "quotation"
@@ -2472,7 +2513,7 @@ function VoiceBillingAssistant({
       if (prod && onAddEntry) {
         const subVal = qty * prod.sellPrice;
         const item: InvoiceItem = {
-          productId: prod.id, godown: prod.category === "Spices" ? "A" : "G", quantity: qty, pricePerUnit: prod.sellPrice, gstPercent: 12, subTotal: subVal, grandTotal: subVal * 1.12
+          productId: prod.id, godown: getBestGodownForProduct(prod), quantity: qty, pricePerUnit: prod.sellPrice, gstPercent: 12, subTotal: subVal, grandTotal: subVal * 1.12
         };
         const res = await onAddEntry({
           type: "out", date: new Date().toISOString().split("T")[0], partner: custName, note: "AI Delivery Note", paymentType: "credit", items: [item], subType: "delivery_note"
@@ -2498,7 +2539,7 @@ function VoiceBillingAssistant({
       if (prod && onAddEntry) {
         const subVal = qty * prod.sellPrice;
         const item: InvoiceItem = {
-          productId: prod.id, godown: prod.category === "Spices" ? "A" : "G", quantity: qty, pricePerUnit: prod.sellPrice, gstPercent: 12, subTotal: subVal, grandTotal: subVal * 1.12
+          productId: prod.id, godown: getBestGodownForProduct(prod), quantity: qty, pricePerUnit: prod.sellPrice, gstPercent: 12, subTotal: subVal, grandTotal: subVal * 1.12
         };
         const res = await onAddEntry({
           type: "in", date: new Date().toISOString().split("T")[0], partner: custName, note: "AI Credit Note Return (Damaged Items)", paymentType: "credit", items: [item], subType: "credit_note"
@@ -2616,12 +2657,28 @@ function VoiceBillingAssistant({
       return;
     }
     
-    // Standard Cart item addition
-    const addMatch = text.match(/(?:add|sell|purchase|insert|get|put|buy)\s+(\d+)\s+([a-zA-Z\s0-9]+)/);
+    // Flexible Cart item addition parser (handles "Add 5 kg Pista", "Pista 5 kg", "5 kg Pista", "Pista 5", "10 Cardamom")
+    let flexQty = 0;
+    let flexProdQuery = "";
     
-    if (addMatch) {
-      const qty = parseInt(addMatch[1], 10);
-      let prodNameQuery = addMatch[2].trim();
+    const matchVQP = text.match(/(?:add|sell|purchase|insert|get|put|buy)\s+(\d+)\s*(?:bags?|tins?|kg|pcs|units?|boxes?|sacks?)?\s*(?:of)?\s*([a-zA-Z\s0-9]+)/i);
+    const matchPQ = text.match(/^([a-zA-Z\s]+?)\s+(\d+)\s*(?:bags?|tins?|kg|pcs|units?|boxes?|sacks?)?$/i);
+    const matchQP = text.match(/^(\d+)\s*(?:bags?|tins?|kg|pcs|units?|boxes?|sacks?)?\s*(?:of)?\s*([a-zA-Z\s0-9]+)$/i);
+
+    if (matchVQP) {
+      flexQty = parseInt(matchVQP[1], 10);
+      flexProdQuery = matchVQP[2].trim();
+    } else if (matchPQ) {
+      flexQty = parseInt(matchPQ[2], 10);
+      flexProdQuery = matchPQ[1].trim();
+    } else if (matchQP) {
+      flexQty = parseInt(matchQP[1], 10);
+      flexProdQuery = matchQP[2].trim();
+    }
+    
+    if (flexQty > 0 && flexProdQuery) {
+      const qty = flexQty;
+      let prodNameQuery = flexProdQuery;
       
       const GODOWN_MAPPING: Record<string, Godown> = {
         "a": "A", "eight": "A", "hey": "A", "ay": "A", "1": "A",
@@ -2702,14 +2759,7 @@ function VoiceBillingAssistant({
       if (gdnQuery) {
         finalGdn = gdnQuery;
       } else {
-        const availableGdn = ALL_GODOWNS.find(g => (product.godownStocks?.[g] || 0) > 0);
-        if (availableGdn) {
-          finalGdn = availableGdn;
-        } else {
-          if (product.category === "Spices") finalGdn = "A";
-          else if (product.category === "Dry Fruits") finalGdn = "G";
-          else finalGdn = "M";
-        }
+        finalGdn = getBestGodownForProduct(product);
       }
       
       const rateVal = type === "in" ? product.buyPrice : product.sellPrice;
@@ -4523,10 +4573,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
   useEffect(() => {
     if (activeProduct) {
       setRate(String(activeProduct.sellPrice));
-      const availableGdn = ALL_GODOWNS.find(g => (activeProduct.godownStocks?.[g] || 0) > 0);
-      if (availableGdn) {
-        setGodown(availableGdn);
-      }
+      setGodown(getBestGodownForProduct(activeProduct));
     }
   }, [productId]);
 
@@ -4633,10 +4680,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
     const defaultExp = new Date(Date.now() + (prod.expiryDays || 365) * 86400000).toISOString().split("T")[0];
     setItemExpiryDate(defaultExp);
 
-    const availableGdn = ALL_GODOWNS.find(g => (prod.godownStocks?.[g] || 0) > 0);
-    if (availableGdn) {
-      setGodown(availableGdn);
-    }
+    setGodown(getBestGodownForProduct(prod));
     
     // Auto-select first packing type if available
     const pts = (prod.packingTypes && prod.packingTypes.length > 0)
@@ -5127,7 +5171,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
         <button
           type="button"
           onClick={() => setIsPdfModalOpen(true)}
-          className="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg text-xs font-mono font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition-all"
+          className="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg text-xs font-mono font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
         >
           <Sparkles size={14} className="animate-pulse text-yellow-300" />
           <span>📄 AI PDF Invoice Reader & Auto-Cart Filler</span>
@@ -6184,10 +6228,7 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
   useEffect(() => {
     if (activeProduct) {
       setRate(String(activeProduct.buyPrice));
-      const availableGdn = ALL_GODOWNS.find(g => (activeProduct.godownStocks?.[g] || 0) > 0);
-      if (availableGdn) {
-        setGodown(availableGdn);
-      }
+      setGodown(getBestGodownForProduct(activeProduct));
     }
   }, [productId]);
 
@@ -6273,11 +6314,7 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
     const defaultExp = new Date(Date.now() + (prod.expiryDays || 365) * 86400000).toISOString().split("T")[0];
     setItemExpiryDate(defaultExp);
 
-    let appropriateGdn: Godown = "A";
-    if (prod.category === "Spices") appropriateGdn = "A";
-    else if (prod.category === "Dry Fruits") appropriateGdn = "G";
-    else appropriateGdn = "M";
-    setGodown(appropriateGdn);
+    setGodown(getBestGodownForProduct(prod));
 
     // Focus godown selector next
     godownInputRef.current?.focus();
@@ -13452,6 +13489,14 @@ export default function App() {
         return;
       }
 
+      // 1b. Voice AI Invoice Modal Toggle (Ctrl + Shift + V)
+      if (isCtrlOrCmd && e.shiftKey && (e.code === "KeyV" || (e.key || "").toLowerCase() === "v")) {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsVoiceInvoiceModalOpen(prev => !prev);
+        return;
+      }
+
       // Check if user is typing in an input/textarea to avoid hijacking standard text shortcuts
       const isTyping = document.activeElement && (
         document.activeElement.tagName === "INPUT" || 
@@ -13707,10 +13752,54 @@ export default function App() {
   // State to manage showing invoice modal
   const [activeInvoice, setActiveInvoice] = useState<StockEntry | null>(null);
   const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
+  const [isVoiceInvoiceModalOpen, setIsVoiceInvoiceModalOpen] = useState(false);
   const [activeEditRecord, setActiveEditRecord] = useState<any>(null);
 
   const [salesPaymentType, setSalesPaymentType] = useState<"cash" | "card" | "transfer" | "credit">("cash");
   const [purchasePaymentType, setPurchasePaymentType] = useState<"cash" | "credit">("cash");
+
+  // Transfer voice extracted invoice into Sales Billing or Purchase Billing
+  const handleEnterVoiceBilling = (data: {
+    docType: "SALES_INVOICE" | "PURCHASE_BILL";
+    partyName: string;
+    partyId?: string;
+    paymentType: "cash" | "credit";
+    items: any[];
+  }) => {
+    const isSale = data.docType === "SALES_INVOICE";
+    const targetPage = isSale ? "sales-billing" : "purchase-billing";
+
+    const formattedItems: InvoiceItem[] = (data.items || []).map(i => ({
+      productId: i.productId || "PRD-101",
+      godown: i.godown || "A",
+      quantity: i.quantity || 1,
+      pricePerUnit: i.unitPrice || (isSale ? 120 : 100),
+      gstPercent: i.gstRate || 12,
+      subTotal: i.lineAmount || (i.quantity * (i.unitPrice || 100)),
+      grandTotal: i.totalLineAmount || (i.quantity * (i.unitPrice || 100) * 1.12)
+    }));
+
+    if (globalVoiceHandlers.current) {
+      if (globalVoiceHandlers.current.setCartItems) {
+        globalVoiceHandlers.current.setCartItems(formattedItems);
+      }
+      if (data.partyName && globalVoiceHandlers.current.setPartnerSearch) {
+        globalVoiceHandlers.current.setPartnerSearch(data.partyName);
+        if (data.partyId && globalVoiceHandlers.current.setSelectedPartnerId) {
+          globalVoiceHandlers.current.setSelectedPartnerId(data.partyId);
+        }
+      }
+    }
+
+    if (isSale) {
+      setSalesPaymentType(data.paymentType === "credit" ? "credit" : "cash");
+    } else {
+      setPurchasePaymentType(data.paymentType === "credit" ? "credit" : "cash");
+    }
+
+    setPage(targetPage);
+    toast.success(`✅ Voice Invoice loaded into ${isSale ? "Sales Billing" : "Purchase Billing"} segment! (${formattedItems.length} line item(s) for ${data.partyName})`);
+  };
 
   // Fetch all state data from server
   async function loadData() {
@@ -16480,6 +16569,17 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* AI Voice Invoice Launcher Button */}
+            <button
+              type="button"
+              onClick={() => setIsVoiceInvoiceModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all text-xs font-mono font-bold shadow-md cursor-pointer"
+              title="Open Voice AI Invoice Dictation Modal (Ctrl + Shift + V)"
+            >
+              <Mic size={14} className="animate-pulse" />
+              <span>Voice AI Invoice</span>
+            </button>
+
             {/* Active User Account Profile Pill */}
             <button
               type="button"
@@ -16623,6 +16723,16 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
           setPage("purchase-billing");
           toast.success(`Navigated to Purchase Billing for PO #${po.invoiceNo || po.id.slice(0, 6)}`);
         }}
+      />
+
+      {/* Interactive AI Voice Invoice Dictation Modal */}
+      <AIVoiceInvoiceModal
+        isOpen={isVoiceInvoiceModalOpen}
+        onClose={() => setIsVoiceInvoiceModalOpen(false)}
+        products={products}
+        customers={customers}
+        suppliers={suppliers}
+        onEnterBilling={handleEnterVoiceBilling}
       />
     </div>
   );
