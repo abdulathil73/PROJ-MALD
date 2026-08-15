@@ -15786,6 +15786,7 @@ function VouchersPage({
 
 function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
   const [progress, setProgress] = useState(0);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -15797,192 +15798,327 @@ function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
         }
         return prev + 2;
       });
-    }, 30);
+    }, 40);
     return () => clearInterval(timer);
   }, [onFinish]);
 
-  return (
-    <div className="w-full min-h-screen flex flex-col items-center justify-between p-6 md:p-8 text-center bg-gradient-to-br from-[#0a0a16] via-[#120e29] to-[#05050d] relative overflow-hidden select-none text-white font-sans">
-      {/* 1. Deep Midnight Neon Laser Orbs & Cyber Grid Background Pattern */}
-      <div className="absolute top-0 left-1/4 w-[550px] h-[550px] bg-[#7209b7]/25 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[550px] h-[550px] bg-[#f72585]/20 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#00f5d4]/10 rounded-full blur-[160px] pointer-events-none" />
+  // Live ticking numbers simulation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick(t => (t + 1) % 100);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, []);
 
-      {/* Cyber Grid Lines Pattern Overlay */}
+  return (
+    <div className="w-full min-h-screen flex flex-col justify-between p-4 md:p-6 bg-[#1A1A1A] text-white font-mono select-none relative overflow-hidden">
+      {/* Faint Horizontal Scanline Overlay */}
       <div 
-        className="absolute inset-0 pointer-events-none opacity-15 z-0"
+        className="absolute inset-0 pointer-events-none z-10 opacity-20"
         style={{
-          backgroundImage: `radial-gradient(#00f5d4 1px, transparent 1px), radial-gradient(#f72585 1px, transparent 1px)`,
-          backgroundSize: `40px 40px`,
-          backgroundPosition: `0 0, 20px 20px`
+          backgroundImage: `linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.7) 50%)`,
+          backgroundSize: `100% 4px`
         }}
       />
 
-      {/* 2. Top Cyber Telemetry Marquee Header */}
-      <div className="w-full max-w-6xl z-20 pt-2 flex items-center justify-between text-xs font-mono border-b border-[#00f5d4]/30 pb-3">
+      {/* Moving Commodity Price Trend Lines Background (Emerald Green SVG) */}
+      <svg className="absolute inset-0 w-full h-full text-[#00C853]/15 pointer-events-none z-0" viewBox="0 0 1200 600" preserveAspectRatio="none" fill="none">
+        <path 
+          d="M 0 450 Q 150 420 300 480 T 600 380 T 900 440 T 1200 320 L 1200 600 L 0 600 Z" 
+          fill="url(#emeraldGradient)" 
+          className="opacity-40"
+        />
+        <path 
+          d="M 0 450 Q 150 420 300 480 T 600 380 T 900 440 T 1200 320" 
+          stroke="#00C853" 
+          strokeWidth="2" 
+          fill="none" 
+          className="opacity-60"
+        />
+        <path 
+          d="M 0 350 Q 200 280 400 320 T 800 220 T 1200 260" 
+          stroke="#00C853" 
+          strokeWidth="1.5" 
+          strokeDasharray="4 4" 
+          fill="none" 
+          className="opacity-40"
+        />
+        <defs>
+          <linearGradient id="emeraldGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#00C853" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#00C853" stopOpacity="0.0" />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      {/* 1. Header Row */}
+      <header className="w-full max-w-7xl mx-auto z-20 flex items-center justify-between border-b border-[#333333] pb-3 text-xs md:text-sm">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-black/80 border border-[#00f5d4] text-[#00f5d4] font-bold shadow-[0_0_15px_rgba(0,245,212,0.4)]">
-            <span className="w-2 h-2 rounded-full bg-[#00f5d4] animate-ping" />
-            <span>CYBER LOGISTICS v4.2</span>
+          {/* Company Logo */}
+          <div className="w-8 h-8 rounded bg-black border border-[#FFD700] flex items-center justify-center text-[#FFD700] font-bold shadow">
+            🚢
           </div>
-          <span className="hidden sm:inline text-[#7209b7]">|</span>
-          <span className="hidden sm:inline text-[#c77dff] font-semibold tracking-wider">OBSIDIAN RADAR TELEMETRY ENGINE</span>
+          <div className="text-left">
+            <h1 className="font-bold tracking-wider text-[#FFD700] text-sm md:text-base">
+              SPICE ROUTE TRADING CO.
+            </h1>
+            <p className="text-[10px] text-[#888888]">BLOOMBERG TERMINAL LOGISTICS ENGINE</p>
+          </div>
         </div>
-        <div className="flex items-center gap-4 text-[#4cc9f0] font-mono text-[11px]">
-          <span className="hidden md:inline">RADAR SCAN: <span className="text-[#00f5d4] font-bold">18 GODOWNS ACTIVE</span></span>
-          <span className="hidden md:inline">USD/MVR <span className="text-[#fee440] font-bold">15.42 ▲</span></span>
-          <span className="text-[#00f5d4] font-bold bg-black/90 px-3 py-1 rounded-full border border-[#00f5d4]/50 shadow-md">RADAR ONLINE</span>
-        </div>
-      </div>
 
-      {/* 3. Center Stage: Rotating Dual-Axis Cyber Target Radar & Core Hologram */}
-      <div className="relative z-10 flex flex-col items-center justify-center my-auto py-2 w-full max-w-4xl">
-        <div className="relative w-full max-w-2xl h-64 sm:h-80 flex items-center justify-center">
+        <div className="flex items-center gap-4 text-xs">
+          <span className="hidden md:inline text-[#888888]">SYS_STATUS: <span className="text-[#00C853] font-bold">ONLINE</span></span>
+          <div className="px-3 py-1 bg-black border border-[#444444] rounded text-white font-bold tracking-wider">
+            CYBER LOGISTICS v4.2
+          </div>
+        </div>
+      </header>
+
+      {/* Main Terminal Dashboard Body */}
+      <main className="w-full max-w-7xl mx-auto z-20 my-auto py-4 space-y-4">
+
+        {/* 2. Three Data Cards Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           
-          {/* Concentric Rotating Target Radar Rings (New Visual Pattern) */}
-          <svg className="absolute inset-0 w-full h-full text-[#00f5d4]/40 pointer-events-none" viewBox="0 0 800 400" fill="none">
-            {/* Outer Degrees Ring */}
-            <circle cx="400" cy="200" r="175" stroke="#7209b7" strokeWidth="1.5" strokeDasharray="6 6" className="opacity-60 animate-spin" style={{ animationDuration: '60s' }} />
-            <circle cx="400" cy="200" r="130" stroke="#00f5d4" strokeWidth="1.5" strokeDasharray="4 4" className="opacity-70 animate-spin" style={{ animationDuration: '40s', animationDirection: 'reverse' }} />
-            <circle cx="400" cy="200" r="85" stroke="#f72585" strokeWidth="1.5" strokeDasharray="3 3" className="opacity-80" />
-
-            {/* Radar Crosshairs */}
-            <line x1="200" y1="200" x2="600" y2="200" stroke="#00f5d4" strokeWidth="1" strokeDasharray="4 4" className="opacity-40" />
-            <line x1="400" y1="25" x2="400" y2="375" stroke="#00f5d4" strokeWidth="1" strokeDasharray="4 4" className="opacity-40" />
-
-            {/* Pulsing Radar Target Lock Nodes */}
-            <circle cx="280" cy="140" r="6" fill="#00f5d4" className="animate-ping" />
-            <circle cx="280" cy="140" r="4" fill="#00f5d4" />
-            <text x="290" y="144" fill="#00f5d4" fontSize="10" fontFamily="monospace">MALE' PORT [S-01]</text>
-
-            <circle cx="530" cy="260" r="6" fill="#f72585" className="animate-ping" />
-            <circle cx="530" cy="260" r="4" fill="#f72585" />
-            <text x="540" y="264" fill="#f72585" fontSize="10" fontFamily="monospace">AIR CARGO [F-09]</text>
-
-            <circle cx="480" cy="120" r="6" fill="#fee440" className="animate-ping" />
-            <circle cx="480" cy="120" r="4" fill="#fee440" />
-            <text x="490" y="124" fill="#fee440" fontSize="10" fontFamily="monospace">GODOWN A-R GRID</text>
-          </svg>
-
-          {/* Central 3D Floating Cyber Hologram Core */}
-          <div className="relative z-20 p-6 rounded-3xl bg-gradient-to-br from-[#7209b7]/90 via-[#0f0c29]/95 to-[#f72585]/90 border-2 border-[#00f5d4] shadow-[0_0_45px_rgba(0,245,212,0.5)] backdrop-blur-2xl flex flex-col items-center gap-3 animate-pulse">
-            <div className="w-16 h-16 rounded-2xl bg-black/80 border border-[#00f5d4] text-[#00f5d4] flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(0,245,212,0.6)]">
-              ⚡
+          {/* Card 1: Ocean Freight */}
+          <div className="p-4 bg-[#121212] border border-[#333333] rounded-lg shadow-md flex flex-col justify-between gap-3 text-left">
+            <div className="flex justify-between items-center border-b border-[#222222] pb-2">
+              <span className="text-[#FFD700] text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                <Ship size={14} className="text-[#00C853]" />
+                Ocean Freight
+              </span>
+              <span className="text-[#00C853] text-xs font-bold">78% CAPACITY</span>
             </div>
-            <div className="space-y-1 text-center">
-              <div className="text-xs font-mono font-bold text-[#fee440] tracking-widest uppercase">
-                CYBER RADAR CORE
+            <div className="space-y-1">
+              <div className="text-xl font-bold text-white">12 Active Routes</div>
+              <div className="text-[11px] text-[#888888]">Direct Indian Ocean & Arabian Sea Cargo</div>
+            </div>
+            {/* Progress Bar at 78% */}
+            <div className="w-full bg-[#222222] h-2 rounded overflow-hidden p-0.5">
+              <div className="bg-[#00C853] h-full rounded transition-all duration-500" style={{ width: '78%' }} />
+            </div>
+          </div>
+
+          {/* Card 2: Air Express */}
+          <div className="p-4 bg-[#121212] border border-[#333333] rounded-lg shadow-md flex flex-col justify-between gap-3 text-left">
+            <div className="flex justify-between items-center border-b border-[#222222] pb-2">
+              <span className="text-[#FFD700] text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                <Plane size={14} className="text-[#00C853]" />
+                Air Express
+              </span>
+              <span className="text-[#00C853] text-xs font-bold">62% FLEET</span>
+            </div>
+            <div className="space-y-1">
+              <div className="text-xl font-bold text-white">8 Active Routes</div>
+              <div className="text-[11px] text-[#888888]">Velana International Priority Cargo</div>
+            </div>
+            {/* Progress Bar at 62% */}
+            <div className="w-full bg-[#222222] h-2 rounded overflow-hidden p-0.5">
+              <div className="bg-[#00C853] h-full rounded transition-all duration-500" style={{ width: '62%' }} />
+            </div>
+          </div>
+
+          {/* Card 3: Multi-Currency */}
+          <div className="p-4 bg-[#121212] border border-[#333333] rounded-lg shadow-md flex flex-col justify-between gap-3 text-left">
+            <div className="flex justify-between items-center border-b border-[#222222] pb-2">
+              <span className="text-[#FFD700] text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                <Coins size={14} className="text-[#FFD700]" />
+                Multi-Currency Rates
+              </span>
+              <span className="text-[10px] text-[#888888]">LIVE FX</span>
+            </div>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between items-center py-0.5">
+                <span className="text-[#888888]">MVR (Maldivian Rufiyaa):</span>
+                <span className="font-bold text-[#FFFFFF]">
+                  15.42 <span className="text-[#00C853]">▲ +0.3%</span>
+                </span>
               </div>
-              <div className="text-[10px] font-mono text-[#00f5d4]">
-                18 Godowns (A to R) Network
+              <div className="flex justify-between items-center py-0.5">
+                <span className="text-[#888888]">USD (US Dollar):</span>
+                <span className="font-bold text-[#FFFFFF]">
+                  0.062 <span className="text-[#FF1744]">▼ -0.1%</span>
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-0.5">
+                <span className="text-[#888888]">INR (Indian Rupee):</span>
+                <span className="font-bold text-[#FFFFFF]">
+                  5.18 <span className="text-[#00C853]">▲ +0.7%</span>
+                </span>
               </div>
             </div>
+            <div className="w-full bg-[#222222] h-1.5 rounded overflow-hidden">
+              <div className="bg-[#FFD700] h-full rounded" style={{ width: '100%' }} />
+            </div>
           </div>
 
-          {/* Floating Cyber Telemetry Badges */}
-          <div className="absolute top-2 left-6 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/85 border border-[#00f5d4] text-[#00f5d4] text-xs font-mono shadow-[0_0_15px_rgba(0,245,212,0.3)] backdrop-blur-md">
-            <Ship size={15} className="text-[#00f5d4]" />
-            <span className="font-bold text-white">Ocean Freight</span>
+        </div>
+
+        {/* 3. Live Ledger Panel (Full Width Table) */}
+        <div className="p-4 bg-[#121212] border border-[#333333] rounded-lg shadow-md text-left space-y-3">
+          <div className="flex justify-between items-center border-b border-[#222222] pb-2">
+            <h2 className="text-xs md:text-sm font-bold text-[#FFD700] uppercase tracking-wider flex items-center gap-2">
+              <TrendingUp size={16} className="text-[#00C853]" />
+              LIVE COMMODITIES LEDGER & PERISHABLES TELEMETRY
+            </h2>
+            <div className="flex items-center gap-2 text-[10px] text-[#888888]">
+              <span className="w-2 h-2 rounded-full bg-[#00C853] animate-ping" />
+              <span>LIVE FEED REAL-TIME UPDATE</span>
+            </div>
           </div>
 
-          <div className="absolute top-2 right-6 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/85 border border-[#f72585] text-[#f72585] text-xs font-mono shadow-[0_0_15px_rgba(247,37,133,0.3)] backdrop-blur-md">
-            <Plane size={15} className="text-[#f72585]" />
-            <span className="font-bold text-white">Air Express</span>
-          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left text-[#FFFFFF]">
+              <thead className="bg-[#1A1A1A] text-[#888888] text-[11px] uppercase border-b border-[#333333]">
+                <tr>
+                  <th className="p-2.5">Commodity</th>
+                  <th className="p-2.5">Current Value</th>
+                  <th className="p-2.5">Change %</th>
+                  <th className="p-2.5 hidden sm:table-cell">Inventory Volume</th>
+                  <th className="p-2.5 w-36">Stock Allocation</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#222222]">
+                <tr className="hover:bg-[#1f1f1f]">
+                  <td className="p-2.5 font-bold text-white flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00C853]" />
+                    Cardamom (Grade A)
+                  </td>
+                  <td className="p-2.5 font-mono">₹ {(2450 + (tick % 3)).toLocaleString()} / kg</td>
+                  <td className="p-2.5 text-[#00C853] font-bold">▲ +1.8%</td>
+                  <td className="p-2.5 hidden sm:table-cell text-[#888888]">4,850 kg</td>
+                  <td className="p-2.5">
+                    <div className="w-full bg-[#222222] h-2 rounded overflow-hidden">
+                      <div className="bg-[#00C853] h-full rounded transition-all duration-500" style={{ width: '82%' }} />
+                    </div>
+                  </td>
+                </tr>
 
-          <div className="absolute bottom-2 left-6 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/85 border border-[#7209b7] text-[#c77dff] text-xs font-mono shadow-[0_0_15px_rgba(114,9,183,0.3)] backdrop-blur-md">
-            <Warehouse size={15} className="text-[#c77dff]" />
-            <span className="font-bold text-white">18 Godowns (A-R)</span>
-          </div>
+                <tr className="hover:bg-[#1f1f1f]">
+                  <td className="p-2.5 font-bold text-white flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00C853]" />
+                    Black Pepper (Tellicherry)
+                  </td>
+                  <td className="p-2.5 font-mono">₹ {(620 + (tick % 2)).toLocaleString()} / kg</td>
+                  <td className="p-2.5 text-[#00C853] font-bold">▲ +0.9%</td>
+                  <td className="p-2.5 hidden sm:table-cell text-[#888888]">12,400 kg</td>
+                  <td className="p-2.5">
+                    <div className="w-full bg-[#222222] h-2 rounded overflow-hidden">
+                      <div className="bg-[#00C853] h-full rounded transition-all duration-500" style={{ width: '68%' }} />
+                    </div>
+                  </td>
+                </tr>
 
-          <div className="absolute bottom-2 right-6 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/85 border border-[#fee440] text-[#fee440] text-xs font-mono shadow-[0_0_15px_rgba(254,228,64,0.3)] backdrop-blur-md">
-            <Coins size={15} className="text-[#fee440]" />
-            <span className="font-bold text-white">Multi-Currency FX</span>
+                <tr className="hover:bg-[#1f1f1f]">
+                  <td className="p-2.5 font-bold text-white flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF1744]" />
+                    Cinnamon (Ceylon Pure)
+                  </td>
+                  <td className="p-2.5 font-mono">₹ {410} / kg</td>
+                  <td className="p-2.5 text-[#FF1744] font-bold">▼ -0.4%</td>
+                  <td className="p-2.5 hidden sm:table-cell text-[#888888]">6,100 kg</td>
+                  <td className="p-2.5">
+                    <div className="w-full bg-[#222222] h-2 rounded overflow-hidden">
+                      <div className="bg-[#FF1744] h-full rounded transition-all duration-500" style={{ width: '45%' }} />
+                    </div>
+                  </td>
+                </tr>
+
+                <tr className="hover:bg-[#1f1f1f]">
+                  <td className="p-2.5 font-bold text-white flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00C853]" />
+                    Turmeric (High Curcumin)
+                  </td>
+                  <td className="p-2.5 font-mono">₹ {(185 + (tick % 2)).toLocaleString()} / kg</td>
+                  <td className="p-2.5 text-[#00C853] font-bold">▲ +2.4%</td>
+                  <td className="p-2.5 hidden sm:table-cell text-[#888888]">18,900 kg</td>
+                  <td className="p-2.5">
+                    <div className="w-full bg-[#222222] h-2 rounded overflow-hidden">
+                      <div className="bg-[#00C853] h-full rounded transition-all duration-500" style={{ width: '91%' }} />
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* Cyber Neon Header Title */}
-        <div className="space-y-2.5 max-w-xl mt-4">
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white font-serif">
-            Spice Route <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f5d4] via-[#f72585] to-[#fee440] animate-pulse">Trading Co.</span>
-          </h1>
-          <p className="text-xs sm:text-sm font-mono text-[#c77dff] leading-relaxed max-w-lg mx-auto font-semibold">
-            CYBER LOGISTICS MATRIX • 18 Godowns Grid (A-R), Air/Sea Fleet Telemetry & Multi-Currency Ledger
-          </p>
+        {/* 4. Boot Progress & Launch CTA Button Section */}
+        <div className="flex flex-col md:flex-row items-center justify-between p-4 bg-[#121212] border border-[#333333] rounded-lg gap-4">
+          
+          {/* Boot Progress: Circular Ring at 40% (or live progress) with label "BOOTING RADAR MATRIX" */}
+          <div className="flex items-center gap-4">
+            <div className="relative w-14 h-14 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                <path
+                  className="text-[#222222]"
+                  strokeWidth="3.5"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path
+                  className="text-[#00C853] transition-all duration-300"
+                  strokeDasharray={`${progress}, 100`}
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <span className="absolute text-xs font-bold text-[#FFD700]">{progress}%</span>
+            </div>
+            <div className="text-left">
+              <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#00C853] animate-ping" />
+                BOOTING RADAR MATRIX
+              </div>
+              <div className="text-[11px] text-[#888888]">18 Godowns & Fleet Data Synced</div>
+            </div>
+          </div>
+
+          {/* CTA: 'LAUNCH DASHBOARD' - Gold Border Button with Subtle Pulse */}
+          <button
+            onClick={onFinish}
+            className="w-full md:w-auto px-8 py-3.5 border-2 border-[#FFD700] text-[#FFD700] bg-black/80 hover:bg-[#FFD700] hover:text-black font-mono font-bold tracking-widest text-xs rounded transition-all duration-300 shadow-[0_0_15px_rgba(255,215,0,0.2)] hover:shadow-[0_0_25px_rgba(255,215,0,0.5)] cursor-pointer flex items-center justify-center gap-3 uppercase group"
+          >
+            <span>LAUNCH DASHBOARD</span>
+            <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+          </button>
         </div>
 
-        {/* 4 Cyber Telemetry Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-xl w-full text-left text-xs font-mono mt-6">
-          <div className="p-3.5 rounded-2xl bg-black/70 border border-[#00f5d4]/40 hover:border-[#00f5d4] shadow-xl transition-all flex items-center gap-3 text-[#00f5d4] backdrop-blur-xl">
-            <div className="p-2 rounded-xl bg-black/80 border border-[#00f5d4] text-[#00f5d4]">
-              <Ship size={18} />
-            </div>
-            <div>
-              <div className="font-bold text-[11px] text-white">Ocean Cargo</div>
-              <div className="text-[9px] text-[#00f5d4]">Global Shipping</div>
-            </div>
-          </div>
+      </main>
 
-          <div className="p-3.5 rounded-2xl bg-black/70 border border-[#f72585]/40 hover:border-[#f72585] shadow-xl transition-all flex items-center gap-3 text-[#f72585] backdrop-blur-xl">
-            <div className="p-2 rounded-xl bg-black/80 border border-[#f72585] text-[#f72585]">
-              <Warehouse size={18} />
-            </div>
-            <div>
-              <div className="font-bold text-[11px] text-white">18 Godowns</div>
-              <div className="text-[9px] text-[#f72585]">A to R Warehouses</div>
-            </div>
-          </div>
+      {/* 5. Warehouse Ticker at Bottom */}
+      <footer className="w-full max-w-7xl mx-auto z-20 border-t border-[#333333] pt-2 text-xs">
+        <div className="flex items-center gap-3 overflow-hidden whitespace-nowrap bg-black/90 px-3 py-2 border border-[#222222] rounded">
+          <span className="text-[#FFD700] font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 shrink-0">
+            <Warehouse size={14} className="text-[#FFD700]" />
+            18 GODOWNS TICKER:
+          </span>
 
-          <div className="p-3.5 rounded-2xl bg-black/70 border border-[#fee440]/40 hover:border-[#fee440] shadow-xl transition-all flex items-center gap-3 text-[#fee440] backdrop-blur-xl">
-            <div className="p-2 rounded-xl bg-black/80 border border-[#fee440] text-[#fee440]">
-              <Coins size={18} />
-            </div>
-            <div>
-              <div className="font-bold text-[11px] text-white">Multi-FX</div>
-              <div className="text-[9px] text-[#fee440]">MVR / USD / INR</div>
-            </div>
-          </div>
-
-          <div className="p-3.5 rounded-2xl bg-black/70 border border-[#7209b7]/40 hover:border-[#c77dff] shadow-xl transition-all flex items-center gap-3 text-[#c77dff] backdrop-blur-xl">
-            <div className="p-2 rounded-xl bg-black/80 border border-[#7209b7] text-[#c77dff]">
-              <TrendingUp size={18} />
-            </div>
-            <div>
-              <div className="font-bold text-[11px] text-white">Live Ledger</div>
-              <div className="text-[9px] text-[#c77dff]">Spices & Produce</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 5. Cyber Neon Action Button */}
-      <div className="space-y-4 max-w-xs w-full z-10 pb-2">
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-[10px] font-mono text-[#00f5d4] font-bold">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#00f5d4] animate-ping" />
-              BOOTING CYBER RADAR MATRIX
+          {/* Horizontal Scrolling Ribbon */}
+          <div className="inline-flex gap-4 animate-marquee font-mono text-[11px]">
+            {["A", "B", "C", "D", "E"].map(g => (
+              <span key={g} className="text-[#888888]">
+                GODOWN {g}: <span className="text-[#00C853]">ONLINE</span>
+              </span>
+            ))}
+            
+            {/* 'F-09 AIR CARGO' highlighted in gold */}
+            <span className="px-2 py-0.5 bg-[#FFD700] text-black font-bold rounded shadow-sm">
+              F-09 AIR CARGO [ACTIVE HIGHLIGHT]
             </span>
-            <span>{progress}%</span>
-          </div>
-          <div className="w-full h-3 bg-black/90 border border-[#00f5d4]/50 rounded-full overflow-hidden shadow-inner p-0.5">
-            <div
-              className="h-full bg-gradient-to-r from-[#7209b7] via-[#f72585] to-[#00f5d4] transition-all duration-75 rounded-full relative"
-              style={{ width: `${progress}%` }}
-            >
-              <div className="absolute right-0 top-0 bottom-0 w-2 bg-white rounded-full shadow-[0_0_12px_#fff]" />
-            </div>
+
+            {["G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R"].map(g => (
+              <span key={g} className="text-[#888888]">
+                GODOWN {g}: <span className="text-[#00C853]">ONLINE</span>
+              </span>
+            ))}
           </div>
         </div>
-
-        <button
-          onClick={onFinish}
-          className="w-full py-4 px-6 bg-gradient-to-r from-[#7209b7] via-[#f72585] to-[#00f5d4] hover:from-[#560bad] hover:to-[#02c39a] text-white font-mono font-black rounded-2xl text-xs uppercase tracking-widest shadow-[0_0_30px_rgba(247,37,133,0.5)] hover:shadow-[0_0_45px_rgba(0,245,212,0.8)] transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 group border border-white/30 relative overflow-hidden"
-        >
-          <span className="relative z-10">ENTER CYBER RADAR MATRIX</span>
-          <ChevronRight size={16} className="group-hover:translate-x-2 transition-transform relative z-10" />
-        </button>
-      </div>
+      </footer>
     </div>
   );
 }
