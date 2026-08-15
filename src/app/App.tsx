@@ -15786,7 +15786,6 @@ function VouchersPage({
 
 function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
   const [progress, setProgress] = useState(0);
-  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -15802,321 +15801,255 @@ function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
     return () => clearInterval(timer);
   }, [onFinish]);
 
-  // Live ticking numbers simulation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTick(t => (t + 1) % 100);
-    }, 1500);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <div className="w-full min-h-screen flex flex-col justify-between p-4 md:p-6 bg-[#1A1A1A] text-white font-mono select-none relative overflow-hidden">
-      {/* Faint Horizontal Scanline Overlay */}
-      <div 
-        className="absolute inset-0 pointer-events-none z-10 opacity-20"
-        style={{
-          backgroundImage: `linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.7) 50%)`,
-          backgroundSize: `100% 4px`
-        }}
-      />
+    <div className="w-full min-h-screen flex flex-col justify-between p-6 md:p-8 bg-[#0A0A0A] text-[#F5F0E1] font-sans select-none relative overflow-hidden">
+      {/* Soft warm vignette radial background glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#C9A84C]/10 via-[#0A0A0A]/80 to-[#0A0A0A] pointer-events-none z-0" />
 
-      {/* Moving Commodity Price Trend Lines Background (Emerald Green SVG) */}
-      <svg className="absolute inset-0 w-full h-full text-[#00C853]/15 pointer-events-none z-0" viewBox="0 0 1200 600" preserveAspectRatio="none" fill="none">
-        <path 
-          d="M 0 450 Q 150 420 300 480 T 600 380 T 900 440 T 1200 320 L 1200 600 L 0 600 Z" 
-          fill="url(#emeraldGradient)" 
-          className="opacity-40"
-        />
-        <path 
-          d="M 0 450 Q 150 420 300 480 T 600 380 T 900 440 T 1200 320" 
-          stroke="#00C853" 
-          strokeWidth="2" 
-          fill="none" 
-          className="opacity-60"
-        />
-        <path 
-          d="M 0 350 Q 200 280 400 320 T 800 220 T 1200 260" 
-          stroke="#00C853" 
-          strokeWidth="1.5" 
-          strokeDasharray="4 4" 
-          fill="none" 
-          className="opacity-40"
-        />
-        <defs>
-          <linearGradient id="emeraldGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#00C853" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#00C853" stopOpacity="0.0" />
-          </linearGradient>
-        </defs>
-      </svg>
+      {/* Subtle 15% opacity rotating Earth satellite vector backdrop */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-15">
+        <svg className="w-[700px] h-[700px] text-[#C9A84C] animate-spin" style={{ animationDuration: '180s' }} viewBox="0 0 500 500" fill="none">
+          {/* Globe latitude & longitude lines */}
+          <circle cx="250" cy="250" r="230" stroke="#C9A84C" strokeWidth="1" strokeDasharray="4 4" />
+          <circle cx="250" cy="250" r="170" stroke="#C9A84C" strokeWidth="1" opacity="0.6" />
+          <circle cx="250" cy="250" r="110" stroke="#C9A84C" strokeWidth="1" opacity="0.4" />
+          <ellipse cx="250" cy="250" rx="230" ry="80" stroke="#C9A84C" strokeWidth="1" strokeDasharray="3 3" />
+          <ellipse cx="250" cy="250" rx="80" ry="230" stroke="#C9A84C" strokeWidth="1" strokeDasharray="3 3" />
+          
+          {/* Earth Landmass Outlines with Gold Rims */}
+          <path d="M 180 140 Q 230 110 310 130 T 360 200 Q 340 260 270 240 T 180 140 Z" fill="#0A192F" stroke="#C9A84C" strokeWidth="1.5" opacity="0.7" />
+          <path d="M 140 290 Q 200 270 240 330 T 210 410 Q 150 400 130 340 Z" fill="#0A192F" stroke="#C9A84C" strokeWidth="1.5" opacity="0.7" />
+          <path d="M 330 280 Q 400 260 420 320 T 370 380 Q 310 360 330 280 Z" fill="#0A192F" stroke="#C9A84C" strokeWidth="1.5" opacity="0.7" />
+        </svg>
+      </div>
 
-      {/* 1. Header Row */}
-      <header className="w-full max-w-7xl mx-auto z-20 flex items-center justify-between border-b border-[#333333] pb-3 text-xs md:text-sm">
-        <div className="flex items-center gap-3">
-          {/* Company Logo */}
-          <div className="w-8 h-8 rounded bg-black border border-[#FFD700] flex items-center justify-center text-[#FFD700] font-bold shadow">
-            🚢
-          </div>
-          <div className="text-left">
-            <h1 className="font-bold tracking-wider text-[#FFD700] text-sm md:text-base">
-              SPICE ROUTE TRADING CO.
-            </h1>
-            <p className="text-[10px] text-[#888888]">BLOOMBERG TERMINAL LOGISTICS ENGINE</p>
-          </div>
+      {/* 1. Top Header */}
+      <header className="w-full max-w-6xl mx-auto z-20 text-center space-y-2 pt-2 border-b border-[#C9A84C]/20 pb-4">
+        <div className="flex items-center justify-center gap-3 text-[#C9A84C] font-serif text-lg md:text-2xl italic tracking-wider">
+          <span>✦</span>
+          <span className="font-serif">Spice Route Trading Co.</span>
+          <span>✦</span>
         </div>
-
-        <div className="flex items-center gap-4 text-xs">
-          <span className="hidden md:inline text-[#888888]">SYS_STATUS: <span className="text-[#00C853] font-bold">ONLINE</span></span>
-          <div className="px-3 py-1 bg-black border border-[#444444] rounded text-white font-bold tracking-wider">
-            CYBER LOGISTICS v4.2
-          </div>
-        </div>
+        <p className="text-[10px] md:text-xs font-sans text-[#F5F0E1]/70 tracking-[0.3em] uppercase">
+          PRIVATE JET EXECUTIVE COMMAND CENTER • LOGISTICS ENGINE v4.2
+        </p>
       </header>
 
-      {/* Main Terminal Dashboard Body */}
-      <main className="w-full max-w-7xl mx-auto z-20 my-auto py-4 space-y-4">
+      {/* 2. Main Executive Content Body */}
+      <main className="w-full max-w-6xl mx-auto z-20 my-auto py-4 space-y-6">
 
-        {/* 2. Three Data Cards Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Two Executive Status Cards (Ocean Freight 78%, Air Express 62%) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           
           {/* Card 1: Ocean Freight */}
-          <div className="p-4 bg-[#121212] border border-[#333333] rounded-lg shadow-md flex flex-col justify-between gap-3 text-left">
-            <div className="flex justify-between items-center border-b border-[#222222] pb-2">
-              <span className="text-[#FFD700] text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-                <Ship size={14} className="text-[#00C853]" />
-                Ocean Freight
+          <div className="p-4 bg-black/60 border border-[#C9A84C]/30 rounded-xl shadow-2xl backdrop-blur-md text-left space-y-3">
+            <div className="flex justify-between items-center border-b border-[#C9A84C]/20 pb-2">
+              <span className="text-[#C9A84C] text-xs font-serif tracking-widest uppercase flex items-center gap-2">
+                <Ship size={15} className="text-[#C9A84C]" />
+                Ocean Freight Command
               </span>
-              <span className="text-[#00C853] text-xs font-bold">78% CAPACITY</span>
+              <span className="text-[#C9A84C] text-xs font-mono font-bold">78% ALLOCATED</span>
             </div>
-            <div className="space-y-1">
-              <div className="text-xl font-bold text-white">12 Active Routes</div>
-              <div className="text-[11px] text-[#888888]">Direct Indian Ocean & Arabian Sea Cargo</div>
+            <div className="flex justify-between items-end">
+              <div>
+                <div className="text-xl font-serif text-[#F5F0E1]">12 Maritime Routes</div>
+                <div className="text-[11px] text-[#F5F0E1]/60">Deep Sea Container Fleet & Male' Harbor</div>
+              </div>
+              <span className="text-xs font-mono text-[#C9A84C]">78%</span>
             </div>
-            {/* Progress Bar at 78% */}
-            <div className="w-full bg-[#222222] h-2 rounded overflow-hidden p-0.5">
-              <div className="bg-[#00C853] h-full rounded transition-all duration-500" style={{ width: '78%' }} />
+            {/* Elegant Champagne Gold Progress Bar */}
+            <div className="w-full bg-[#1A1A1A] h-1.5 rounded-full overflow-hidden border border-[#C9A84C]/20 p-0.5">
+              <div className="bg-gradient-to-r from-[#C9A84C]/60 via-[#F5F0E1] to-[#C9A84C] h-full rounded-full transition-all duration-700 shadow-[0_0_10px_#C9A84C]" style={{ width: '78%' }} />
             </div>
           </div>
 
           {/* Card 2: Air Express */}
-          <div className="p-4 bg-[#121212] border border-[#333333] rounded-lg shadow-md flex flex-col justify-between gap-3 text-left">
-            <div className="flex justify-between items-center border-b border-[#222222] pb-2">
-              <span className="text-[#FFD700] text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-                <Plane size={14} className="text-[#00C853]" />
-                Air Express
+          <div className="p-4 bg-black/60 border border-[#C9A84C]/30 rounded-xl shadow-2xl backdrop-blur-md text-left space-y-3">
+            <div className="flex justify-between items-center border-b border-[#C9A84C]/20 pb-2">
+              <span className="text-[#C9A84C] text-xs font-serif tracking-widest uppercase flex items-center gap-2">
+                <Plane size={15} className="text-[#C9A84C]" />
+                Air Cargo Fleet
               </span>
-              <span className="text-[#00C853] text-xs font-bold">62% FLEET</span>
+              <span className="text-[#C9A84C] text-xs font-mono font-bold">62% CAPACITY</span>
             </div>
-            <div className="space-y-1">
-              <div className="text-xl font-bold text-white">8 Active Routes</div>
-              <div className="text-[11px] text-[#888888]">Velana International Priority Cargo</div>
-            </div>
-            {/* Progress Bar at 62% */}
-            <div className="w-full bg-[#222222] h-2 rounded overflow-hidden p-0.5">
-              <div className="bg-[#00C853] h-full rounded transition-all duration-500" style={{ width: '62%' }} />
-            </div>
-          </div>
-
-          {/* Card 3: Multi-Currency */}
-          <div className="p-4 bg-[#121212] border border-[#333333] rounded-lg shadow-md flex flex-col justify-between gap-3 text-left">
-            <div className="flex justify-between items-center border-b border-[#222222] pb-2">
-              <span className="text-[#FFD700] text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-                <Coins size={14} className="text-[#FFD700]" />
-                Multi-Currency Rates
-              </span>
-              <span className="text-[10px] text-[#888888]">LIVE FX</span>
-            </div>
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between items-center py-0.5">
-                <span className="text-[#888888]">MVR (Maldivian Rufiyaa):</span>
-                <span className="font-bold text-[#FFFFFF]">
-                  15.42 <span className="text-[#00C853]">▲ +0.3%</span>
-                </span>
+            <div className="flex justify-between items-end">
+              <div>
+                <div className="text-xl font-serif text-[#F5F0E1]">8 Priority Air Routes</div>
+                <div className="text-[11px] text-[#F5F0E1]/60">Velana International Executive Express</div>
               </div>
-              <div className="flex justify-between items-center py-0.5">
-                <span className="text-[#888888]">USD (US Dollar):</span>
-                <span className="font-bold text-[#FFFFFF]">
-                  0.062 <span className="text-[#FF1744]">▼ -0.1%</span>
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-0.5">
-                <span className="text-[#888888]">INR (Indian Rupee):</span>
-                <span className="font-bold text-[#FFFFFF]">
-                  5.18 <span className="text-[#00C853]">▲ +0.7%</span>
-                </span>
-              </div>
+              <span className="text-xs font-mono text-[#C9A84C]">62%</span>
             </div>
-            <div className="w-full bg-[#222222] h-1.5 rounded overflow-hidden">
-              <div className="bg-[#FFD700] h-full rounded" style={{ width: '100%' }} />
+            {/* Elegant Champagne Gold Progress Bar */}
+            <div className="w-full bg-[#1A1A1A] h-1.5 rounded-full overflow-hidden border border-[#C9A84C]/20 p-0.5">
+              <div className="bg-gradient-to-r from-[#C9A84C]/60 via-[#F5F0E1] to-[#C9A84C] h-full rounded-full transition-all duration-700 shadow-[0_0_10px_#C9A84C]" style={{ width: '62%' }} />
             </div>
           </div>
 
         </div>
 
-        {/* 3. Live Ledger Panel (Full Width Table) */}
-        <div className="p-4 bg-[#121212] border border-[#333333] rounded-lg shadow-md text-left space-y-3">
-          <div className="flex justify-between items-center border-b border-[#222222] pb-2">
-            <h2 className="text-xs md:text-sm font-bold text-[#FFD700] uppercase tracking-wider flex items-center gap-2">
-              <TrendingUp size={16} className="text-[#00C853]" />
-              LIVE COMMODITIES LEDGER & PERISHABLES TELEMETRY
-            </h2>
-            <div className="flex items-center gap-2 text-[10px] text-[#888888]">
-              <span className="w-2 h-2 rounded-full bg-[#00C853] animate-ping" />
-              <span>LIVE FEED REAL-TIME UPDATE</span>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left text-[#FFFFFF]">
-              <thead className="bg-[#1A1A1A] text-[#888888] text-[11px] uppercase border-b border-[#333333]">
-                <tr>
-                  <th className="p-2.5">Commodity</th>
-                  <th className="p-2.5">Current Value</th>
-                  <th className="p-2.5">Change %</th>
-                  <th className="p-2.5 hidden sm:table-cell">Inventory Volume</th>
-                  <th className="p-2.5 w-36">Stock Allocation</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#222222]">
-                <tr className="hover:bg-[#1f1f1f]">
-                  <td className="p-2.5 font-bold text-white flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00C853]" />
-                    Cardamom (Grade A)
-                  </td>
-                  <td className="p-2.5 font-mono">₹ {(2450 + (tick % 3)).toLocaleString()} / kg</td>
-                  <td className="p-2.5 text-[#00C853] font-bold">▲ +1.8%</td>
-                  <td className="p-2.5 hidden sm:table-cell text-[#888888]">4,850 kg</td>
-                  <td className="p-2.5">
-                    <div className="w-full bg-[#222222] h-2 rounded overflow-hidden">
-                      <div className="bg-[#00C853] h-full rounded transition-all duration-500" style={{ width: '82%' }} />
-                    </div>
-                  </td>
-                </tr>
-
-                <tr className="hover:bg-[#1f1f1f]">
-                  <td className="p-2.5 font-bold text-white flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00C853]" />
-                    Black Pepper (Tellicherry)
-                  </td>
-                  <td className="p-2.5 font-mono">₹ {(620 + (tick % 2)).toLocaleString()} / kg</td>
-                  <td className="p-2.5 text-[#00C853] font-bold">▲ +0.9%</td>
-                  <td className="p-2.5 hidden sm:table-cell text-[#888888]">12,400 kg</td>
-                  <td className="p-2.5">
-                    <div className="w-full bg-[#222222] h-2 rounded overflow-hidden">
-                      <div className="bg-[#00C853] h-full rounded transition-all duration-500" style={{ width: '68%' }} />
-                    </div>
-                  </td>
-                </tr>
-
-                <tr className="hover:bg-[#1f1f1f]">
-                  <td className="p-2.5 font-bold text-white flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF1744]" />
-                    Cinnamon (Ceylon Pure)
-                  </td>
-                  <td className="p-2.5 font-mono">₹ {410} / kg</td>
-                  <td className="p-2.5 text-[#FF1744] font-bold">▼ -0.4%</td>
-                  <td className="p-2.5 hidden sm:table-cell text-[#888888]">6,100 kg</td>
-                  <td className="p-2.5">
-                    <div className="w-full bg-[#222222] h-2 rounded overflow-hidden">
-                      <div className="bg-[#FF1744] h-full rounded transition-all duration-500" style={{ width: '45%' }} />
-                    </div>
-                  </td>
-                </tr>
-
-                <tr className="hover:bg-[#1f1f1f]">
-                  <td className="p-2.5 font-bold text-white flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00C853]" />
-                    Turmeric (High Curcumin)
-                  </td>
-                  <td className="p-2.5 font-mono">₹ {(185 + (tick % 2)).toLocaleString()} / kg</td>
-                  <td className="p-2.5 text-[#00C853] font-bold">▲ +2.4%</td>
-                  <td className="p-2.5 hidden sm:table-cell text-[#888888]">18,900 kg</td>
-                  <td className="p-2.5">
-                    <div className="w-full bg-[#222222] h-2 rounded overflow-hidden">
-                      <div className="bg-[#00C853] h-full rounded transition-all duration-500" style={{ width: '91%' }} />
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* 4. Boot Progress & Launch CTA Button Section */}
-        <div className="flex flex-col md:flex-row items-center justify-between p-4 bg-[#121212] border border-[#333333] rounded-lg gap-4">
+        {/* Centerpiece: 18-Point Starburst Grid (A-R) with Gold Bezier Curves & Sweeping Compass */}
+        <div className="relative p-6 bg-black/70 border border-[#C9A84C]/40 rounded-2xl shadow-2xl backdrop-blur-xl flex flex-col items-center justify-center overflow-hidden">
           
-          {/* Boot Progress: Circular Ring at 40% (or live progress) with label "BOOTING RADAR MATRIX" */}
+          <div className="w-full flex justify-between items-center text-xs font-serif border-b border-[#C9A84C]/20 pb-3 mb-2">
+            <span className="text-[#C9A84C] tracking-widest uppercase flex items-center gap-2">
+              <Warehouse size={16} className="text-[#C9A84C]" />
+              18 GODOWNS STARBURST GRID (A TO R)
+            </span>
+            <span className="text-[#F5F0E1]/70 text-[11px] font-mono">NODE LOCATIONS: 100% ONLINE</span>
+          </div>
+
+          <div className="relative w-full max-w-xl h-56 flex items-center justify-center my-2">
+            
+            {/* SVG 18-Point Starburst Gold Curves & Sweeping Compass Needle */}
+            <svg className="absolute inset-0 w-full h-full text-[#C9A84C] pointer-events-none" viewBox="0 0 600 240" fill="none">
+              {/* Outer Starburst Circle & Compass Ring */}
+              <circle cx="300" cy="120" r="100" stroke="#C9A84C" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
+              <circle cx="300" cy="120" r="60" stroke="#C9A84C" strokeWidth="1" opacity="0.5" />
+              
+              {/* Sweeping Gold Compass Needle (Rotates 360 deg smoothly) */}
+              <line x1="300" y1="120" x2="300" y2="20" stroke="#C9A84C" strokeWidth="2" strokeLinecap="round" className="animate-spin origin-[300px_120px]" style={{ animationDuration: '5s' }} />
+              <circle cx="300" cy="120" r="4" fill="#C9A84C" />
+
+              {/* Connecting Bezier Gold Curves to 18 Godown Nodes */}
+              {Array.from({ length: 18 }).map((_, i) => {
+                const angle = (i * 360) / 18;
+                const rad = (angle * Math.PI) / 180;
+                const x = 300 + 100 * Math.cos(rad);
+                const y = 120 + 100 * Math.sin(rad);
+                const isF = i === 5; // Node F-09
+                return (
+                  <g key={i}>
+                    <path d={`M 300 120 Q ${300 + 50 * Math.cos(rad)} ${120 + 50 * Math.sin(rad)} ${x} ${y}`} stroke="#C9A84C" strokeWidth={isF ? "1.5" : "0.75"} opacity={isF ? "0.9" : "0.4"} />
+                    <circle cx={x} cy={y} r={isF ? "6" : "3.5"} fill={isF ? "#C9A84C" : "#1A1A1A"} stroke="#C9A84C" strokeWidth="1.5" className={isF ? "animate-pulse" : ""} />
+                    {isF && (
+                      <circle cx={x} cy={y} r="10" stroke="#C9A84C" strokeWidth="1" fill="none" className="animate-ping" />
+                    )}
+                  </g>
+                );
+              })}
+            </svg>
+
+            {/* Central Gold Highlight Node Badge */}
+            <div className="relative z-10 px-5 py-2.5 bg-black/90 border border-[#C9A84C] rounded-full shadow-[0_0_20px_rgba(201,168,76,0.3)] text-center backdrop-blur-md">
+              <div className="text-xs font-serif font-bold text-[#C9A84C] tracking-widest uppercase flex items-center gap-1.5">
+                <span>✦</span> F-09 AIR CARGO <span>✦</span>
+              </div>
+              <div className="text-[10px] text-[#F5F0E1]/80 font-mono">PRIORITY AIRVAULT • GODOWNS A-R LINKED</div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Three Data Panels (Multi-Currency, Live Ledger, Fleet Status) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left text-xs">
+          
+          {/* Panel 1: Multi-Currency FX */}
+          <div className="p-4 bg-black/60 border border-[#C9A84C]/30 rounded-xl shadow-xl backdrop-blur-md space-y-2">
+            <div className="text-[#C9A84C] font-serif font-bold border-b border-[#C9A84C]/20 pb-1.5 tracking-wider uppercase flex items-center justify-between">
+              <span>Multi-Currency FX</span>
+              <Coins size={14} />
+            </div>
+            <div className="space-y-1 font-mono text-[11px]">
+              <div className="flex justify-between">
+                <span className="text-[#F5F0E1]/70">MVR (Rufiyaa):</span>
+                <span className="font-bold text-[#C9A84C]">15.42 ▲ +0.3%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#F5F0E1]/70">USD (US Dollar):</span>
+                <span className="font-bold text-[#F5F0E1]">0.062 ▼ -0.1%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#F5F0E1]/70">INR (Indian Rupee):</span>
+                <span className="font-bold text-[#C9A84C]">5.18 ▲ +0.7%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Panel 2: Live Commodity Ledger */}
+          <div className="p-4 bg-black/60 border border-[#C9A84C]/30 rounded-xl shadow-xl backdrop-blur-md space-y-2">
+            <div className="text-[#C9A84C] font-serif font-bold border-b border-[#C9A84C]/20 pb-1.5 tracking-wider uppercase flex items-center justify-between">
+              <span>Live Commodity Ledger</span>
+              <TrendingUp size={14} />
+            </div>
+            <div className="space-y-1 font-mono text-[11px]">
+              <div className="flex justify-between">
+                <span className="text-[#F5F0E1]/70">Cardamom (Grade A):</span>
+                <span className="font-bold text-[#C9A84C]">₹2,450 / kg</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#F5F0E1]/70">Black Pepper:</span>
+                <span className="font-bold text-[#C9A84C]">₹620 / kg</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#F5F0E1]/70">Turmeric Pure:</span>
+                <span className="font-bold text-[#C9A84C]">₹185 / kg</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Panel 3: Executive Fleet Status */}
+          <div className="p-4 bg-black/60 border border-[#C9A84C]/30 rounded-xl shadow-xl backdrop-blur-md space-y-2">
+            <div className="text-[#C9A84C] font-serif font-bold border-b border-[#C9A84C]/20 pb-1.5 tracking-wider uppercase flex items-center justify-between">
+              <span>Fleet Telemetry</span>
+              <Ship size={14} />
+            </div>
+            <div className="space-y-1 font-mono text-[11px]">
+              <div className="flex justify-between">
+                <span className="text-[#F5F0E1]/70">Godowns Network:</span>
+                <span className="font-bold text-[#C9A84C]">18 ONLINE (A-R)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#F5F0E1]/70">Cold Storage:</span>
+                <span className="font-bold text-[#C9A84C]">2 - 8°C STABLE</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#F5F0E1]/70">Executive Dispatch:</span>
+                <span className="font-bold text-[#C9A84C]">READY</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Progress Circular Ring (Gold 40% shimmer) & Launch CTA Button */}
+        <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-black/80 border border-[#C9A84C]/40 rounded-xl gap-4">
+          
           <div className="flex items-center gap-4">
-            <div className="relative w-14 h-14 flex items-center justify-center">
+            <div className="relative w-12 h-12 flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                <path
-                  className="text-[#222222]"
-                  strokeWidth="3.5"
-                  stroke="currentColor"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                <path
-                  className="text-[#00C853] transition-all duration-300"
-                  strokeDasharray={`${progress}, 100`}
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  stroke="currentColor"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
+                <path className="text-[#1A1A1A]" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path className="text-[#C9A84C] transition-all duration-300" strokeDasharray={`${progress}, 100`} strokeWidth="3" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
               </svg>
-              <span className="absolute text-xs font-bold text-[#FFD700]">{progress}%</span>
+              <span className="absolute text-xs font-serif font-bold text-[#C9A84C]">{progress}%</span>
             </div>
             <div className="text-left">
-              <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#00C853] animate-ping" />
-                BOOTING RADAR MATRIX
+              <div className="text-xs font-serif font-bold text-[#F5F0E1] tracking-wider uppercase">
+                SYNCHRONIZING PRIVATE COMMAND CENTER
               </div>
-              <div className="text-[11px] text-[#888888]">18 Godowns & Fleet Data Synced</div>
+              <div className="text-[11px] text-[#F5F0E1]/60 font-mono">18 Godowns & Fleet Encryption Verified</div>
             </div>
           </div>
 
-          {/* CTA: 'LAUNCH DASHBOARD' - Gold Border Button with Subtle Pulse */}
           <button
             onClick={onFinish}
-            className="w-full md:w-auto px-8 py-3.5 border-2 border-[#FFD700] text-[#FFD700] bg-black/80 hover:bg-[#FFD700] hover:text-black font-mono font-bold tracking-widest text-xs rounded transition-all duration-300 shadow-[0_0_15px_rgba(255,215,0,0.2)] hover:shadow-[0_0_25px_rgba(255,215,0,0.5)] cursor-pointer flex items-center justify-center gap-3 uppercase group"
+            className="w-full sm:w-auto px-8 py-3.5 border border-[#C9A84C] text-[#C9A84C] bg-black/80 hover:bg-[#C9A84C] hover:text-black font-serif font-bold tracking-[0.2em] text-xs rounded-lg transition-all duration-500 shadow-[0_0_20px_rgba(201,168,76,0.2)] hover:shadow-[0_0_30px_rgba(201,168,76,0.6)] cursor-pointer flex items-center justify-center gap-3 uppercase group"
           >
-            <span>LAUNCH DASHBOARD</span>
-            <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            <span>ENTER COMMAND CENTER</span>
+            <ChevronRight size={16} className="group-hover:translate-x-1.5 transition-transform" />
           </button>
         </div>
 
       </main>
 
-      {/* 5. Warehouse Ticker at Bottom */}
-      <footer className="w-full max-w-7xl mx-auto z-20 border-t border-[#333333] pt-2 text-xs">
-        <div className="flex items-center gap-3 overflow-hidden whitespace-nowrap bg-black/90 px-3 py-2 border border-[#222222] rounded">
-          <span className="text-[#FFD700] font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 shrink-0">
-            <Warehouse size={14} className="text-[#FFD700]" />
-            18 GODOWNS TICKER:
-          </span>
-
-          {/* Horizontal Scrolling Ribbon */}
-          <div className="inline-flex gap-4 animate-marquee font-mono text-[11px]">
-            {["A", "B", "C", "D", "E"].map(g => (
-              <span key={g} className="text-[#888888]">
-                GODOWN {g}: <span className="text-[#00C853]">ONLINE</span>
-              </span>
-            ))}
-            
-            {/* 'F-09 AIR CARGO' highlighted in gold */}
-            <span className="px-2 py-0.5 bg-[#FFD700] text-black font-bold rounded shadow-sm">
-              F-09 AIR CARGO [ACTIVE HIGHLIGHT]
-            </span>
-
-            {["G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R"].map(g => (
-              <span key={g} className="text-[#888888]">
-                GODOWN {g}: <span className="text-[#00C853]">ONLINE</span>
-              </span>
-            ))}
-          </div>
+      {/* 3. Bottom Footer Marquee */}
+      <footer className="w-full max-w-6xl mx-auto z-20 border-t border-[#C9A84C]/20 pt-3 text-[11px] text-[#F5F0E1]/70 flex items-center justify-between font-serif">
+        <div className="flex items-center gap-2 text-[#C9A84C]">
+          <span>✦</span>
+          <span>SPICE ROUTE TRADING CO. • EXECUTIVE PRIVATE COMMAND CENTER</span>
+        </div>
+        <div className="hidden md:flex items-center gap-4 font-mono text-[10px]">
+          <span>MALDIVES & GLOBAL FLEET</span>
+          <span>MVR/USD/INR FX SYNCHRONIZED</span>
         </div>
       </footer>
     </div>
