@@ -15802,161 +15802,162 @@ function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
   }, [onFinish]);
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center justify-between p-6 md:p-8 text-center bg-gradient-to-br from-[#e8f5e9] via-[#f1f8e9] to-[#d8f3dc] relative overflow-hidden select-none text-[#1b4332] font-sans">
-      {/* 1. Soft Zen Light Glow Orbs */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#81c784]/20 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#ffab91]/20 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#a5d6a7]/15 rounded-full blur-[120px] pointer-events-none" />
+    <div className="w-full min-h-screen flex flex-col items-center justify-between p-6 md:p-8 text-center bg-gradient-to-br from-[#fcf4dd] via-[#ddedf4] to-[#fce1e4] relative overflow-hidden select-none text-[#3d2645] font-sans">
+      {/* 1. Soft Pastel Dream Ambient Glow Orbs */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#ffb5a7]/35 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#d8bbff]/35 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#b7e4c7]/30 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-10 right-20 w-80 h-80 bg-[#fde2e4]/50 rounded-full blur-[90px] pointer-events-none" />
 
-      {/* 2. Floating Fresh Produce & Commodity Badges (Matching Japanese Zen Theme Screenshot) */}
-      <div className="absolute top-8 left-8 text-3xl sm:text-4xl animate-bounce pointer-events-none opacity-80" style={{ animationDuration: '4s' }}>🥭</div>
-      <div className="absolute top-8 right-8 text-3xl sm:text-4xl animate-bounce pointer-events-none opacity-80" style={{ animationDuration: '5s' }}>🍉</div>
-      <div className="absolute bottom-8 left-8 text-3xl sm:text-4xl animate-bounce pointer-events-none opacity-80" style={{ animationDuration: '4.5s' }}>🥥</div>
-      <div className="absolute bottom-8 right-8 text-3xl sm:text-4xl animate-bounce pointer-events-none opacity-80" style={{ animationDuration: '3.8s' }}>🥦</div>
+      {/* 2. Floating Pastel Commodity & Produce Accents */}
+      <div className="absolute top-8 left-8 text-3xl sm:text-4xl animate-bounce pointer-events-none opacity-85" style={{ animationDuration: '4s' }}>🥭</div>
+      <div className="absolute top-8 right-8 text-3xl sm:text-4xl animate-bounce pointer-events-none opacity-85" style={{ animationDuration: '5s' }}>🍉</div>
+      <div className="absolute bottom-8 left-8 text-3xl sm:text-4xl animate-bounce pointer-events-none opacity-85" style={{ animationDuration: '4.5s' }}>🥥</div>
+      <div className="absolute bottom-8 right-8 text-3xl sm:text-4xl animate-bounce pointer-events-none opacity-85" style={{ animationDuration: '3.8s' }}>🥦</div>
 
-      {/* 3. Top Japanese Zen Marquee Header */}
-      <div className="w-full max-w-5xl z-20 pt-2 flex items-center justify-between text-xs font-mono border-b border-[#2e7d32]/20 pb-3">
+      {/* 3. Top Pastel Marquee Header */}
+      <div className="w-full max-w-5xl z-20 pt-2 flex items-center justify-between text-xs font-mono border-b border-[#d8bbff]/40 pb-3">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-[#2e7d32]/30 text-[#1b4332] font-bold shadow-sm backdrop-blur-md">
-            <span className="w-2 h-2 rounded-full bg-[#2e7d32] animate-ping" />
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 border border-[#ffb5a7]/50 text-[#4a3e56] font-bold shadow-sm backdrop-blur-md">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#ff8fa3] animate-ping" />
             <span>SPICE ROUTE TRADING CO.</span>
           </div>
-          <span className="hidden sm:inline text-[#2e7d32]/40">|</span>
-          <span className="hidden sm:inline text-[#2d5a27] font-semibold tracking-wide">JAPANESE ZEN BAMBOO & MATCHA PORTAL</span>
+          <span className="hidden sm:inline text-[#d8bbff]">|</span>
+          <span className="hidden sm:inline text-[#5c4a6b] font-semibold tracking-wide">PASTEL COMMODITIES & LOGISTICS PORTAL</span>
         </div>
-        <div className="flex items-center gap-4 text-[#2d5a27] font-mono text-[11px]">
-          <span className="hidden md:inline">18 GODOWNS (A-R) <span className="text-[#2e7d32] font-bold">100% ONLINE</span></span>
-          <span className="hidden md:inline">USD/MVR <span className="text-[#2e7d32] font-bold">15.42 ▲</span></span>
-          <span className="text-[#1b4332] font-bold bg-white/90 px-2.5 py-1 rounded-full border border-[#2e7d32]/30 shadow-sm">ZEN CORE READY</span>
+        <div className="flex items-center gap-4 text-[#5c4a6b] font-mono text-[11px]">
+          <span className="hidden md:inline">18 GODOWNS (A-R) <span className="text-[#9d0208] font-bold">100% ONLINE</span></span>
+          <span className="hidden md:inline">USD/MVR <span className="text-[#25a244] font-bold">15.42 ▲</span></span>
+          <span className="text-[#4a3e56] font-bold bg-white/90 px-3 py-1 rounded-full border border-[#ffb5a7]/40 shadow-sm">PASTEL READY</span>
         </div>
       </div>
 
-      {/* 4. Center Stage: Zen Bamboo Emblem & SVG World Trade Route Network */}
+      {/* 4. Center Stage: Pastel World Trade Network Engine */}
       <div className="relative z-10 flex flex-col items-center justify-center my-auto py-2 w-full max-w-3xl">
         <div className="relative w-full max-w-xl h-64 sm:h-72 flex items-center justify-center">
           
-          {/* World Trade SVG Vector Arcs in Zen Matcha Green and Coral */}
-          <svg className="absolute inset-0 w-full h-full text-[#2e7d32]/30 pointer-events-none" viewBox="0 0 800 400" fill="none">
-            <circle cx="400" cy="200" r="170" stroke="#2e7d32" strokeWidth="1.5" strokeDasharray="4 4" className="opacity-40" />
-            <circle cx="400" cy="200" r="110" stroke="#e64a19" strokeWidth="1.5" strokeDasharray="3 3" className="opacity-40" />
-            <circle cx="400" cy="200" r="55" stroke="#f57f17" strokeWidth="1.5" className="opacity-60" />
+          {/* World Trade SVG Vector Arcs in Pastel Pink, Lavender, and Mint */}
+          <svg className="absolute inset-0 w-full h-full text-[#c77dff]/35 pointer-events-none" viewBox="0 0 800 400" fill="none">
+            <circle cx="400" cy="200" r="170" stroke="#b8c0ff" strokeWidth="1.5" strokeDasharray="4 4" className="opacity-50" />
+            <circle cx="400" cy="200" r="110" stroke="#ff9ebb" strokeWidth="1.5" strokeDasharray="3 3" className="opacity-60" />
+            <circle cx="400" cy="200" r="55" stroke="#85d7b7" strokeWidth="1.5" className="opacity-70" />
             
-            <path d="M 150 220 Q 300 100 400 200" stroke="#2e7d32" strokeWidth="2.5" strokeDasharray="6 6" className="animate-pulse" />
-            <path d="M 400 200 Q 550 100 650 230" stroke="#e64a19" strokeWidth="2.5" strokeDasharray="6 6" className="animate-pulse" />
-            <path d="M 250 300 Q 400 240 550 310" stroke="#f57f17" strokeWidth="2.5" strokeDasharray="6 6" className="animate-pulse" />
+            <path d="M 150 220 Q 300 100 400 200" stroke="#ff8fa3" strokeWidth="2.5" strokeDasharray="6 6" className="animate-pulse" />
+            <path d="M 400 200 Q 550 100 650 230" stroke="#c77dff" strokeWidth="2.5" strokeDasharray="6 6" className="animate-pulse" />
+            <path d="M 250 300 Q 400 240 550 310" stroke="#4ea8de" strokeWidth="2.5" strokeDasharray="6 6" className="animate-pulse" />
 
-            <circle cx="400" cy="200" r="6" fill="#2e7d32" className="animate-ping" />
+            <circle cx="400" cy="200" r="6" fill="#ff8fa3" className="animate-ping" />
             <circle cx="400" cy="200" r="4" fill="#ffffff" />
 
-            <circle cx="150" cy="220" r="5" fill="#2e7d32" />
-            <circle cx="650" cy="230" r="5" fill="#e64a19" />
-            <circle cx="250" cy="300" r="5" fill="#f57f17" />
+            <circle cx="150" cy="220" r="5" fill="#ff8fa3" />
+            <circle cx="650" cy="230" r="5" fill="#c77dff" />
+            <circle cx="250" cy="300" r="5" fill="#4ea8de" />
           </svg>
 
-          {/* Japanese Zen Bamboo Central Emblem (Matching Zen Portal Screenshot) */}
-          <div className="relative z-20 p-6 rounded-3xl bg-white/95 border-2 border-[#2e7d32]/40 shadow-xl backdrop-blur-xl flex flex-col items-center gap-2 max-w-xs">
-            <div className="w-16 h-16 rounded-full bg-[#e8f5e9] border border-[#2e7d32]/40 flex items-center justify-center text-3xl shadow-inner">
-              🎋
+          {/* Central Luxury Pastel Emblem Card */}
+          <div className="relative z-20 p-6 rounded-3xl bg-white/95 border-2 border-[#ffb5a7]/60 shadow-xl backdrop-blur-xl flex flex-col items-center gap-2.5 max-w-xs">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#ffcad4] via-[#b5e2fa] to-[#edafb8] border border-white flex items-center justify-center text-3xl shadow-inner">
+              ✨
             </div>
             <div className="space-y-0.5 text-center">
-              <div className="text-xs font-mono font-bold text-[#1b4332] tracking-widest uppercase">
-                ZEN TRADING HUB
+              <div className="text-xs font-mono font-bold text-[#4a3e56] tracking-widest uppercase">
+                PASTEL LOGISTICS ENGINE
               </div>
-              <div className="text-[10px] font-mono text-[#2d5a27]">
-                18 Godowns (A to R) Integrated Network
+              <div className="text-[10px] font-mono text-[#6c587c]">
+                18 Godowns (A to R) Network
               </div>
             </div>
           </div>
 
-          {/* Floating Trade Hub Badges in Pure White Zen Glass */}
-          <div className="absolute top-2 left-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/90 border border-[#2e7d32]/30 text-[#1b4332] text-xs font-mono shadow-md backdrop-blur-md">
-            <Ship size={15} className="text-[#2e7d32]" />
-            <span className="font-bold">Ocean Cargo Freight</span>
+          {/* Floating Trade Badges in Soft Pastel Cards */}
+          <div className="absolute top-2 left-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#d8f3dc] border border-[#b7e4c7] text-[#1b4332] text-xs font-mono shadow-sm backdrop-blur-md">
+            <Ship size={15} className="text-[#2d6a4f]" />
+            <span className="font-bold">Ocean Freight</span>
           </div>
 
-          <div className="absolute top-2 right-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/90 border border-[#e64a19]/30 text-[#1b4332] text-xs font-mono shadow-md backdrop-blur-md">
-            <Plane size={15} className="text-[#e64a19]" />
-            <span className="font-bold">Air Express Cargo</span>
+          <div className="absolute top-2 right-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#f3e8ff] border border-[#d8bbff] text-[#5b21b6] text-xs font-mono shadow-sm backdrop-blur-md">
+            <Plane size={15} className="text-[#7c3aed]" />
+            <span className="font-bold">Air Express</span>
           </div>
 
-          <div className="absolute bottom-2 left-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/90 border border-[#f57f17]/30 text-[#1b4332] text-xs font-mono shadow-md backdrop-blur-md">
-            <Warehouse size={15} className="text-[#f57f17]" />
+          <div className="absolute bottom-2 left-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#ffe5ec] border border-[#ffb5a7] text-[#9f1239] text-xs font-mono shadow-sm backdrop-blur-md">
+            <Warehouse size={15} className="text-[#be123c]" />
             <span className="font-bold">18 Godowns (A-R)</span>
           </div>
 
-          <div className="absolute bottom-2 right-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/90 border border-[#2e7d32]/30 text-[#1b4332] text-xs font-mono shadow-md backdrop-blur-md">
-            <Coins size={15} className="text-[#388e3c]" />
+          <div className="absolute bottom-2 right-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#fef9c3] border border-[#fef08a] text-[#854d0e] text-xs font-mono shadow-sm backdrop-blur-md">
+            <Coins size={15} className="text-[#ca8a04]" />
             <span className="font-bold">Multi-Currency FX</span>
           </div>
         </div>
 
-        {/* Japanese Zen Corporate Header Typography */}
+        {/* Corporate Title in Soft Pastel Shimmer Gradient */}
         <div className="space-y-2 max-w-xl mt-3">
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-[#1b4332] font-serif">
-            Spice Route <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2e7d32] via-[#388e3c] to-[#e64a19]">Trading Co.</span>
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-[#3d2645] font-serif">
+            Spice Route <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff8fa3] via-[#c77dff] to-[#4ea8de]">Trading Co.</span>
           </h1>
-          <p className="text-xs sm:text-sm font-mono text-[#2d5a27] leading-relaxed max-w-md mx-auto font-medium">
-            Japanese Zen Bamboo & Matcha Portal • 18 Godowns Matrix (A-R), Air/Sea Freight & Real-Time Financials
+          <p className="text-xs sm:text-sm font-mono text-[#5c4a6b] leading-relaxed max-w-md mx-auto font-medium">
+            Pastel Commodities & ERP Portal • 18 Godowns Matrix (A-R), Air/Sea Freight & Real-Time Financials
           </p>
         </div>
 
-        {/* 4 Zen Matcha Feature Cards */}
+        {/* 4 Pastel Feature Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-xl w-full text-left text-xs font-mono mt-5">
-          <div className="p-3 rounded-2xl bg-white/90 border border-[#81c784]/50 shadow-md hover:shadow-lg transition-all flex items-center gap-2.5 backdrop-blur-md">
-            <div className="p-2 rounded-xl bg-[#e8f5e9] text-[#2e7d32]">
+          <div className="p-3 rounded-2xl bg-white/90 border border-[#ffcad4] shadow-sm hover:shadow-md transition-all flex items-center gap-2.5 backdrop-blur-md">
+            <div className="p-2 rounded-xl bg-[#ffe5ec] text-[#9f1239]">
               <Ship size={16} />
             </div>
             <div>
-              <div className="font-bold text-[11px] text-[#1b4332]">Ocean & Air</div>
-              <div className="text-[9px] text-[#2d5a27]">Global Cargo</div>
+              <div className="font-bold text-[11px] text-[#3d2645]">Ocean & Air</div>
+              <div className="text-[9px] text-[#5c4a6b]">Global Cargo</div>
             </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-white/90 border border-[#ffab91]/50 shadow-md hover:shadow-lg transition-all flex items-center gap-2.5 backdrop-blur-md">
-            <div className="p-2 rounded-xl bg-[#fbe9e7] text-[#e64a19]">
+          <div className="p-3 rounded-2xl bg-white/90 border border-[#e7c6ff] shadow-sm hover:shadow-md transition-all flex items-center gap-2.5 backdrop-blur-md">
+            <div className="p-2 rounded-xl bg-[#f3e8ff] text-[#6b21a8]">
               <Warehouse size={16} />
             </div>
             <div>
-              <div className="font-bold text-[11px] text-[#1b4332]">18 Godowns</div>
-              <div className="text-[9px] text-[#2d5a27]">Warehouses A to R</div>
+              <div className="font-bold text-[11px] text-[#3d2645]">18 Godowns</div>
+              <div className="text-[9px] text-[#5c4a6b]">Warehouses A to R</div>
             </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-white/90 border border-[#ffe082]/50 shadow-md hover:shadow-lg transition-all flex items-center gap-2.5 backdrop-blur-md">
-            <div className="p-2 rounded-xl bg-[#fff8e1] text-[#f57f17]">
+          <div className="p-3 rounded-2xl bg-white/90 border border-[#fef08a] shadow-sm hover:shadow-md transition-all flex items-center gap-2.5 backdrop-blur-md">
+            <div className="p-2 rounded-xl bg-[#fef9c3] text-[#854d0e]">
               <Coins size={16} />
             </div>
             <div>
-              <div className="font-bold text-[11px] text-[#1b4332]">Multi-Currency</div>
-              <div className="text-[9px] text-[#2d5a27]">MVR / USD / INR</div>
+              <div className="font-bold text-[11px] text-[#3d2645]">Multi-Currency</div>
+              <div className="text-[9px] text-[#5c4a6b]">MVR / USD / INR</div>
             </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-white/90 border border-[#a5d6a7]/50 shadow-md hover:shadow-lg transition-all flex items-center gap-2.5 backdrop-blur-md">
-            <div className="p-2 rounded-xl bg-[#e8f5e9] text-[#2e7d32]">
+          <div className="p-3 rounded-2xl bg-white/90 border border-[#b7e4c7] shadow-sm hover:shadow-md transition-all flex items-center gap-2.5 backdrop-blur-md">
+            <div className="p-2 rounded-xl bg-[#d8f3dc] text-[#1b4332]">
               <TrendingUp size={16} />
             </div>
             <div>
-              <div className="font-bold text-[11px] text-[#1b4332]">Live Financials</div>
-              <div className="text-[9px] text-[#2d5a27]">Perishable Audit</div>
+              <div className="font-bold text-[11px] text-[#3d2645]">Live Financials</div>
+              <div className="text-[9px] text-[#5c4a6b]">Perishable Audit</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 5. Progress Bar & Primary Action Button Matching Screenshot */}
+      {/* 5. Progress Bar & Action Button in Pastel Theme Palette */}
       <div className="space-y-3 max-w-xs w-full z-10 pb-2">
         <div className="space-y-1">
-          <div className="flex justify-between text-[10px] font-mono text-[#2e7d32] font-bold">
+          <div className="flex justify-between text-[10px] font-mono text-[#6c587c] font-bold">
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#2e7d32] animate-ping" />
-              AUTHENTICATING ZEN PORTAL
+              <span className="w-2.5 h-2.5 rounded-full bg-[#ff8fa3] animate-ping" />
+              AUTHENTICATING PASTEL PORTAL
             </span>
             <span>{progress}%</span>
           </div>
-          <div className="w-full h-2.5 bg-white/90 border border-[#2e7d32]/30 rounded-full overflow-hidden shadow-inner p-0.5">
+          <div className="w-full h-2.5 bg-white/90 border border-[#ffb5a7]/40 rounded-full overflow-hidden shadow-inner p-0.5">
             <div
-              className="h-full bg-gradient-to-r from-[#2e7d32] via-[#388e3c] to-[#e64a19] transition-all duration-75 rounded-full relative"
+              className="h-full bg-gradient-to-r from-[#ff8fa3] via-[#c77dff] to-[#4ea8de] transition-all duration-75 rounded-full relative"
               style={{ width: `${progress}%` }}
             >
               <div className="absolute right-0 top-0 bottom-0 w-2 bg-white rounded-full shadow-sm" />
@@ -15966,9 +15967,9 @@ function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
 
         <button
           onClick={onFinish}
-          className="w-full py-3.5 px-6 bg-gradient-to-r from-[#2e7d32] via-[#388e3c] to-[#e64a19] hover:from-[#1b5e20] hover:to-[#d84315] text-white font-mono font-bold rounded-2xl text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 group border border-white/40 relative overflow-hidden"
+          className="w-full py-3.5 px-6 bg-gradient-to-r from-[#ff8fa3] via-[#c77dff] to-[#4ea8de] hover:from-[#ff4d6d] hover:to-[#0077b6] text-white font-mono font-bold rounded-2xl text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 group border border-white/50 relative overflow-hidden"
         >
-          <span className="relative z-10">AUTHENTICATE & OPEN ZEN PORTAL</span>
+          <span className="relative z-10">ENTER PASTEL TRADING PORTAL</span>
           <ChevronRight size={16} className="group-hover:translate-x-1.5 transition-transform relative z-10" />
         </button>
       </div>
