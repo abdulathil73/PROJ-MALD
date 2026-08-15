@@ -1,0 +1,546 @@
+{
+  "products": [
+    {
+      "id": "p1_swz",
+      "isPerishable": false,
+      "expiryDays": 0,
+      "buyPrice": 100,
+      "sellPrice": 150,
+      "name": "pista",
+      "category": "Spices",
+      "unit": "kg",
+      "packingType": "Standard",
+      "packingTypes": [
+        "Standard"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "id": "e_q3gp2kg",
+      "productId": "p1_swz",
+      "godown": "A",
+      "type": "in",
+      "quantity": 10,
+      "pricePerUnit": 100,
+      "date": "2026-08-08",
+      "partner": "ras",
+      "note": "Multi-product Purchase",
+      "subType": "billing",
+      "paymentType": "cash",
+      "partnerAddress": "asdfg",
+      "partnerPhone": "236547899",
+      "partnerGST": "123654789632541",
+      "gstPercent": 12,
+      "subTotal": 1000,
+      "grandTotal": 1120,
+      "invoiceNo": "PUR-260808-0001",
+      "items": [
+        {
+          "productId": "p1_swz",
+          "godown": "A",
+          "quantity": 10,
+          "pricePerUnit": 100,
+          "gstPercent": 12,
+          "subTotal": 1000,
+          "grandTotal": 1120
+        }
+      ],
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 1120
+        }
+      ]
+    },
+    {
+      "id": "e_hrrxhtg",
+      "productId": "p1_swz",
+      "godown": "A",
+      "type": "out",
+      "quantity": 5,
+      "pricePerUnit": 150,
+      "date": "2026-08-08",
+      "partner": "KENSA MALDIVES PVT LTD",
+      "note": "Multi-product Sale",
+      "subType": "billing",
+      "paymentType": "cash",
+      "partnerAddress": "Rising Sun, Ground Floor Finifenmaa Goali, Maldives 20014",
+      "partnerPhone": "+9607896188",
+      "partnerGST": "1138601GST501",
+      "gstPercent": 12,
+      "subTotal": 750,
+      "grandTotal": 840,
+      "invoiceNo": "INV-260808-0002",
+      "items": [
+        {
+          "productId": "p1_swz",
+          "godown": "A",
+          "quantity": 5,
+          "pricePerUnit": 150,
+          "gstPercent": 12,
+          "subTotal": 750,
+          "grandTotal": 840
+        }
+      ],
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 840
+        }
+      ]
+    },
+    {
+      "id": "e_7l0wvlz",
+      "productId": "p1_swz",
+      "godown": "A",
+      "type": "out",
+      "quantity": 5,
+      "pricePerUnit": 150,
+      "date": "2026-08-08",
+      "partner": "KENSA MALDIVES PVT LTD",
+      "note": "Re-opened: Multi-product Sale",
+      "subType": "billing",
+      "paymentType": "credit",
+      "partnerAddress": "Rising Sun, Ground Floor Finifenmaa Goali, Maldives 20014",
+      "partnerPhone": "+9607896188",
+      "partnerGST": "1138601GST501",
+      "gstPercent": 12,
+      "subTotal": 750,
+      "grandTotal": 840,
+      "invoiceNo": "INV-260808-0003",
+      "items": [
+        {
+          "productId": "p1_swz",
+          "godown": "A",
+          "quantity": 5,
+          "pricePerUnit": 150,
+          "gstPercent": 12,
+          "subTotal": 750,
+          "grandTotal": 840
+        }
+      ],
+      "payments": [
+        {
+          "method": "credit",
+          "amount": 840
+        }
+      ]
+    },
+    {
+      "id": "e_0pvrlob",
+      "productId": "p1_swz",
+      "godown": "A",
+      "type": "in",
+      "quantity": 50,
+      "pricePerUnit": 100,
+      "date": "2026-08-08",
+      "partner": "rasvi",
+      "note": "Multi-product Purchase",
+      "subType": "billing",
+      "paymentType": "cash",
+      "partnerAddress": "queen palace, north street, chennai, tamil nadu",
+      "partnerPhone": "8667677179",
+      "partnerGST": "123654789632541",
+      "gstPercent": 12,
+      "subTotal": 5000,
+      "grandTotal": 5600,
+      "invoiceNo": "PUR-260808-0004",
+      "items": [
+        {
+          "productId": "p1_swz",
+          "godown": "A",
+          "quantity": 50,
+          "pricePerUnit": 100,
+          "gstPercent": 12,
+          "subTotal": 5000,
+          "grandTotal": 5600
+        }
+      ],
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 5600
+        }
+      ]
+    },
+    {
+      "id": "e_pydylw6",
+      "productId": "p1_swz",
+      "godown": "A",
+      "type": "out",
+      "quantity": 5,
+      "pricePerUnit": 150,
+      "date": "2026-08-08",
+      "partner": "rushwin",
+      "note": "Multi-product Sale",
+      "subType": "billing",
+      "paymentType": "credit",
+      "partnerAddress": "efefe, fefefe, fefef",
+      "partnerPhone": "8667677179",
+      "partnerGST": "123654789632145",
+      "gstPercent": 12,
+      "subTotal": 750,
+      "grandTotal": 840,
+      "invoiceNo": "INV-260808-0005",
+      "items": [
+        {
+          "productId": "p1_swz",
+          "godown": "A",
+          "quantity": 5,
+          "pricePerUnit": 150,
+          "gstPercent": 12,
+          "subTotal": 750,
+          "grandTotal": 840
+        }
+      ],
+      "payments": [
+        {
+          "method": "credit",
+          "amount": 840
+        }
+      ]
+    },
+    {
+      "id": "e_m461rxn",
+      "productId": "p1_swz",
+      "godown": "A",
+      "type": "in",
+      "quantity": 100,
+      "pricePerUnit": 100,
+      "expiryDate": "2026-08-31",
+      "date": "2026-08-09",
+      "partner": "rasvi",
+      "note": "Multi-product Purchase",
+      "subType": "billing",
+      "paymentType": "cash",
+      "partnerAddress": "queen palace, north street, chennai, tamil nadu",
+      "partnerPhone": "8667677179",
+      "partnerGST": "123654789632541",
+      "gstPercent": 12,
+      "subTotal": 10000,
+      "grandTotal": 11200,
+      "invoiceNo": "PUR-260809-0006",
+      "items": [
+        {
+          "productId": "p1_swz",
+          "godown": "A",
+          "quantity": 100,
+          "pricePerUnit": 100,
+          "gstPercent": 12,
+          "subTotal": 10000,
+          "grandTotal": 11200,
+          "expiryDate": "2026-08-31"
+        }
+      ],
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 11200
+        }
+      ]
+    },
+    {
+      "id": "e_76my4q9",
+      "productId": "p1_swz",
+      "godown": "A",
+      "type": "out",
+      "quantity": 50,
+      "pricePerUnit": 150,
+      "date": "2026-08-09",
+      "partner": "rasool",
+      "note": "Multi-product Sale",
+      "subType": "billing",
+      "paymentType": "cash",
+      "partnerAddress": "gftgfy, jgfgh, hggfiytkg, 65675657",
+      "partnerPhone": "9042457162",
+      "partnerGST": "909090909090909",
+      "gstPercent": 12,
+      "subTotal": 7500,
+      "grandTotal": 8400,
+      "invoiceNo": "INV-260809-0007",
+      "items": [
+        {
+          "productId": "p1_swz",
+          "godown": "A",
+          "quantity": 50,
+          "pricePerUnit": 150,
+          "gstPercent": 12,
+          "subTotal": 7500,
+          "grandTotal": 8400
+        }
+      ],
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 8400
+        }
+      ]
+    },
+    {
+      "id": "e_swkbi0r",
+      "productId": "p1_swz",
+      "godown": "A",
+      "type": "out",
+      "quantity": 50,
+      "pricePerUnit": 150,
+      "date": "2026-08-09",
+      "partner": "rasool",
+      "note": "Multi-product Sale",
+      "subType": "billing",
+      "paymentType": "credit",
+      "partnerAddress": "gftgfy, jgfgh, hggfiytkg, 65675657",
+      "partnerPhone": "9042457162",
+      "partnerGST": "909090909090909",
+      "gstPercent": 12,
+      "subTotal": 7500,
+      "grandTotal": 8400,
+      "invoiceNo": "INV-260809-0008",
+      "items": [
+        {
+          "productId": "p1_swz",
+          "godown": "A",
+          "quantity": 50,
+          "pricePerUnit": 150,
+          "gstPercent": 12,
+          "subTotal": 7500,
+          "grandTotal": 8400,
+          "packingType": "Standard"
+        }
+      ],
+      "payments": [
+        {
+          "method": "credit",
+          "amount": 8400
+        }
+      ]
+    },
+    {
+      "id": "e_sgtd8rt",
+      "productId": "p1_swz",
+      "godown": "A",
+      "type": "out",
+      "quantity": 5,
+      "pricePerUnit": 150,
+      "date": "2026-08-09",
+      "partner": "rasool",
+      "note": "Multi-product Sale",
+      "subType": "billing",
+      "paymentType": "credit",
+      "partnerAddress": "gftgfy, jgfgh, hggfiytkg, 65675657",
+      "partnerPhone": "9042457162",
+      "partnerGST": "909090909090909",
+      "gstPercent": 12,
+      "subTotal": 750,
+      "grandTotal": 840,
+      "invoiceNo": "INV-260809-0009",
+      "items": [
+        {
+          "productId": "p1_swz",
+          "godown": "A",
+          "quantity": 5,
+          "pricePerUnit": 150,
+          "gstPercent": 12,
+          "subTotal": 750,
+          "grandTotal": 840
+        }
+      ],
+      "payments": [
+        {
+          "method": "credit",
+          "amount": 840
+        }
+      ]
+    },
+    {
+      "id": "e_2bhdg3q",
+      "productId": "p1_swz",
+      "godown": "A",
+      "type": "out",
+      "quantity": 5,
+      "pricePerUnit": 150,
+      "date": "2026-08-09",
+      "partner": "rasool",
+      "note": "Multi-product Sale",
+      "subType": "billing",
+      "paymentType": "credit",
+      "partnerAddress": "gftgfy, jgfgh, hggfiytkg, 65675657",
+      "partnerPhone": "9042457162",
+      "partnerGST": "909090909090909",
+      "gstPercent": 12,
+      "subTotal": 750,
+      "grandTotal": 840,
+      "invoiceNo": "INV-260809-0010",
+      "items": [
+        {
+          "productId": "p1_swz",
+          "godown": "A",
+          "quantity": 5,
+          "pricePerUnit": 150,
+          "gstPercent": 12,
+          "subTotal": 750,
+          "grandTotal": 840
+        }
+      ],
+      "payments": [
+        {
+          "method": "credit",
+          "amount": 840
+        }
+      ]
+    },
+    {
+      "id": "e_mqh1hd8",
+      "productId": "p1_swz",
+      "godown": "A",
+      "type": "out",
+      "quantity": 1,
+      "pricePerUnit": 150,
+      "date": "2026-08-09",
+      "partner": "rasool",
+      "note": "Multi-product Sale",
+      "subType": "billing",
+      "paymentType": "credit",
+      "partnerAddress": "gftgfy, jgfgh, hggfiytkg, 65675657",
+      "partnerPhone": "9042457162",
+      "partnerGST": "909090909090909",
+      "gstPercent": 12,
+      "subTotal": 150,
+      "grandTotal": 168,
+      "invoiceNo": "INV-260809-0011",
+      "items": [
+        {
+          "productId": "p1_swz",
+          "godown": "A",
+          "quantity": 1,
+          "pricePerUnit": 150,
+          "gstPercent": 12,
+          "subTotal": 150,
+          "grandTotal": 168
+        }
+      ],
+      "payments": [
+        {
+          "method": "credit",
+          "amount": 168
+        }
+      ]
+    },
+    {
+      "id": "e_0ewzlb6",
+      "productId": "p1_swz",
+      "godown": "A",
+      "type": "out",
+      "quantity": 1,
+      "pricePerUnit": 150,
+      "date": "2026-08-15",
+      "partner": "ravi",
+      "note": "Multi-product Sale",
+      "subType": "billing",
+      "paymentType": "credit",
+      "partnerAddress": "jhhg, gfytk, hgvvfk, hghj",
+      "partnerPhone": "8667677179",
+      "partnerGST": "987987987987987",
+      "gstPercent": 12,
+      "subTotal": 150,
+      "grandTotal": 168,
+      "invoiceNo": "INV-260815-0012",
+      "items": [
+        {
+          "productId": "p1_swz",
+          "godown": "A",
+          "quantity": 1,
+          "pricePerUnit": 150,
+          "gstPercent": 12,
+          "subTotal": 150,
+          "grandTotal": 168
+        }
+      ],
+      "payments": [
+        {
+          "method": "credit",
+          "amount": 168
+        }
+      ]
+    }
+  ],
+  "customers": [
+    {
+      "id": "c_f92xdtx",
+      "name": "KENSA MALDIVES PVT LTD",
+      "address": "Rising Sun, Ground Floor Finifenmaa Goali, Maldives 20014",
+      "phone": "+9607896188",
+      "gstNo": "1138601GST501",
+      "email": "",
+      "creditLimitDays": 15,
+      "creditLimitAmount": 150000
+    },
+    {
+      "id": "c_bgmydsu",
+      "name": "GOLDEN HYPE",
+      "address": "BODUKURUFANU MAGU",
+      "phone": "+9607376765",
+      "gstNo": "1009569GST501"
+    },
+    {
+      "id": "c_bmygju8",
+      "name": "rushwin",
+      "address": "efefe, fefefe, fefef",
+      "phone": "8667677179",
+      "gstNo": "123654789632145",
+      "email": "rushwinahmad123456@gmail.com",
+      "creditLimitDays": 30,
+      "creditLimitAmount": 20000
+    },
+    {
+      "id": "c_xrlbjg9",
+      "name": "rasool",
+      "address": "gftgfy, jgfgh, hggfiytkg, 65675657",
+      "phone": "9042457162",
+      "gstNo": "909090909090909",
+      "email": "rasooldeenr15@gmail.com",
+      "creditLimitDays": 30,
+      "creditLimitAmount": 1000000
+    },
+    {
+      "id": "c_z37wzxg",
+      "name": "ras",
+      "address": "N/A",
+      "phone": "9999999999",
+      "gstNo": "909098989898989",
+      "email": "",
+      "creditLimitDays": 0,
+      "creditLimitAmount": 0
+    },
+    {
+      "id": "c_1h4wo5e",
+      "name": "ravi",
+      "address": "jhhg, gfytk, hgvvfk, hghj",
+      "phone": "8667677179",
+      "gstNo": "987987987987987",
+      "email": "rushwinahmad12345678@gmail.com",
+      "creditLimitDays": 0,
+      "creditLimitAmount": 999999990
+    }
+  ],
+  "suppliers": [
+    {
+      "id": "s_bo2disu",
+      "name": "ras",
+      "address": "asdfg",
+      "phone": "236547899",
+      "gstNo": "123654789632541",
+      "email": ""
+    },
+    {
+      "id": "s_wphba90",
+      "name": "rasvi",
+      "address": "queen palace, north street, chennai, tamil nadu",
+      "phone": "8667677179",
+      "gstNo": "123654789632541",
+      "email": "rushwinahmad123456@gmail.com"
+    }
+  ],
+  "vouchers": [],
+  "spoilages": []
+}

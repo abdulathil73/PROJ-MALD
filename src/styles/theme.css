@@ -1,0 +1,466 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 16px;
+  --background: #f4f6f0;
+  --foreground: #14281d;
+  --card: #ffffff;
+  --card-foreground: #14281d;
+  --popover: #ffffff;
+  --popover-foreground: #14281d;
+  --primary: #2d6a4f;
+  --primary-foreground: #ffffff;
+  --secondary: #e8ecd6;
+  --secondary-foreground: #14281d;
+  --muted: #d8f3dc;
+  --muted-foreground: #2d6a4f;
+  --accent: #e76f51;
+  --accent-foreground: #ffffff;
+  --destructive: #d90429;
+  --destructive-foreground: #ffffff;
+  --border: rgba(45, 106, 79, 0.2);
+  --input: transparent;
+  --input-background: #edf1e4;
+  --switch-background: #b7e4c7;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: #52b788;
+  --chart-1: #2d6a4f;
+  --chart-2: #e76f51;
+  --chart-3: #e9c46a;
+  --chart-4: #40916c;
+  --chart-5: #1b4332;
+  --radius: 1.1rem;
+  --sidebar: #e8ecd6;
+  --sidebar-foreground: #14281d;
+  --sidebar-primary: #2d6a4f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #d8f3dc;
+  --sidebar-accent-foreground: #14281d;
+  --sidebar-border: rgba(45, 106, 79, 0.2);
+  --sidebar-ring: #52b788;
+}
+
+.dark {
+  --background: #0b1912;
+  --foreground: #f4f1de;
+  --card: #14281d;
+  --card-foreground: #f4f1de;
+  --popover: #14281d;
+  --popover-foreground: #f4f1de;
+  --primary: #52b788;
+  --primary-foreground: #0b1912;
+  --secondary: #1b4332;
+  --secondary-foreground: #f4f1de;
+  --muted: #2d6a4f;
+  --muted-foreground: #b7e4c7;
+  --accent: #e9c46a;
+  --accent-foreground: #0b1912;
+  --destructive: #f43f5e;
+  --destructive-foreground: #ffffff;
+  --border: rgba(82, 183, 136, 0.25);
+  --input: transparent;
+  --input-background: #14281d;
+  --switch-background: #1b4332;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --chart-1: #52b788;
+  --chart-2: #f4a261;
+  --chart-3: #e76f51;
+  --chart-4: #74c69d;
+  --chart-5: #95d5b2;
+  --sidebar: #07100b;
+  --sidebar-foreground: #f4f1de;
+  --sidebar-primary: #52b788;
+  --sidebar-primary-foreground: #0b1912;
+  --sidebar-accent: #14281d;
+  --sidebar-accent-foreground: #f4f1de;
+  --sidebar-border: rgba(82, 183, 136, 0.2);
+  --sidebar-ring: #52b788;
+}
+
+@theme inline {
+  --font-sans: 'Outfit', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-serif: 'Outfit', sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  html {
+    font-size: var(--font-size);
+  }
+}
+
+@keyframes floatParticle {
+  0% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translateY(-40px) rotate(180deg) scale(1.15);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-80px) rotate(360deg) scale(1);
+    opacity: 0.2;
+  }
+}
+
+@keyframes morphAura {
+  0% {
+    border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    border-radius: 60% 40% 30% 70% / 50% 60% 40% 60%;
+    transform: rotate(180deg) scale(1.08);
+  }
+  100% {
+    border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes shimmerWave {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-float-particle {
+  animation: floatParticle 8s ease-in-out infinite alternate;
+}
+
+.animate-morph-aura {
+  animation: morphAura 12s ease-in-out infinite;
+}
+
+.animate-shimmer-wave {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmerWave 3s infinite;
+}
+
+/* Fluid Blob Wave & Liquid Ripple Animations */
+@keyframes liquidBlobMorph {
+  0% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    transform: rotate(0deg) scale(1);
+  }
+  33% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+    transform: rotate(120deg) scale(1.1);
+  }
+  66% {
+    border-radius: 70% 30% 50% 50% / 30% 70% 60% 40%;
+    transform: rotate(240deg) scale(0.95);
+  }
+  100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes liquidWave {
+  0% {
+    transform: translateX(0) translateZ(0) scaleY(1);
+  }
+  50% {
+    transform: translateX(-25%) translateZ(0) scaleY(1.12);
+  }
+  100% {
+    transform: translateX(-50%) translateZ(0) scaleY(1);
+  }
+}
+
+@keyframes liquidBubble {
+  0% {
+    transform: translateY(0) scale(0.8) rotate(0deg);
+    opacity: 0.1;
+  }
+  50% {
+    transform: translateY(-60px) scale(1.15) rotate(15deg);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-120px) scale(0.9) rotate(-15deg);
+    opacity: 0.1;
+  }
+}
+
+@keyframes liquidPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 15px rgba(56, 142, 60, 0.3));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 30px rgba(56, 142, 60, 0.6));
+  }
+}
+
+.animate-liquid-blob {
+  animation: liquidBlobMorph 14s ease-in-out infinite;
+}
+
+.animate-liquid-wave {
+  animation: liquidWave 10s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite;
+}
+
+.animate-liquid-bubble {
+  animation: liquidBubble 7s ease-in-out infinite;
+}
+
+.animate-liquid-pulse {
+  animation: liquidPulse 4s ease-in-out infinite;
+}
+
+/* Botanical Leaf Fall & Golden Breeze Animations */
+@keyframes leafFall {
+  0% {
+    transform: translateY(-20px) translateX(0px) rotate(0deg) scale(0.9);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.85;
+  }
+  50% {
+    transform: translateY(220px) translateX(45px) rotate(120deg) scale(1.1);
+  }
+  80% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(480px) translateX(-35px) rotate(240deg) scale(0.9);
+    opacity: 0;
+  }
+}
+
+@keyframes breezeSway {
+  0%, 100% {
+    transform: rotate(0deg) translateY(0px);
+  }
+  25% {
+    transform: rotate(2.5deg) translateY(-4px);
+  }
+  75% {
+    transform: rotate(-2.5deg) translateY(2px);
+  }
+}
+
+@keyframes goldenSparkle {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.85) rotate(0deg);
+    filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.4));
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.25) rotate(180deg);
+    filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.8));
+  }
+}
+
+@keyframes goldenGlowPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.25), inset 0 0 15px rgba(254, 243, 199, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(245, 158, 11, 0.55), inset 0 0 25px rgba(254, 243, 199, 0.8);
+  }
+}
+
+.animate-leaf-fall {
+  animation: leafFall 12s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-breeze-sway {
+  animation: breezeSway 6s ease-in-out infinite;
+}
+
+.animate-golden-sparkle {
+  animation: goldenSparkle 3s ease-in-out infinite;
+}
+
+.animate-golden-glow {
+  animation: goldenGlowPulse 4s ease-in-out infinite;
+}
+
+/* Tropical Rainforest Fruit Festival Animations */
+@keyframes fruitShower {
+  0% {
+    transform: translateY(-30px) rotate(0deg) scale(0.85);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(260px) rotate(180deg) scale(1.15);
+  }
+  80% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(520px) rotate(360deg) scale(0.85);
+    opacity: 0;
+  }
+}
+
+@keyframes fruitWobble {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(-6deg) scale(1.08);
+  }
+  75% {
+    transform: rotate(6deg) scale(0.96);
+  }
+}
+
+.animate-fruit-shower {
+  animation: fruitShower 10s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+
+.animate-fruit-wobble {
+  animation: fruitWobble 4s ease-in-out infinite;
+}
+
+/* Produce Orbital Gravity Animations (Objects move, fonts stay STILL) */
+@keyframes produceOrbit {
+  0% {
+    transform: rotate(0deg) translateX(110px) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(110px) rotate(-360deg);
+  }
+}
+
+@keyframes produceOrbitReverse {
+  0% {
+    transform: rotate(360deg) translateX(140px) rotate(-360deg);
+  }
+  100% {
+    transform: rotate(0deg) translateX(140px) rotate(0deg);
+  }
+}
+
+@keyframes produceFloatStream {
+  0% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-25px) translateX(15px) rotate(15deg);
+  }
+  66% {
+    transform: translateY(15px) translateX(-15px) rotate(-10deg);
+  }
+  100% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+}
+
+.animate-produce-orbit {
+  animation: produceOrbit 16s linear infinite;
+}
+
+.animate-produce-orbit-reverse {
+  animation: produceOrbitReverse 22s linear infinite;
+}
+
+.animate-produce-stream {
+  animation: produceFloatStream 7s ease-in-out infinite;
+}
+
+/* Luxury Royal Velvet & Gold Standard Keyframe Animations */
+@keyframes goldFoilShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes goldGlowPulse {
+  0%, 100% {
+    box-shadow: 0 0 25px rgba(251, 191, 36, 0.25), inset 0 0 15px rgba(251, 191, 36, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 50px rgba(251, 191, 36, 0.55), inset 0 0 30px rgba(251, 191, 36, 0.3);
+  }
+}
+
+.animate-gold-foil {
+  background: linear-gradient(90deg, #d97706, #fbbf24, #fef08a, #fbbf24, #d97706);
+  background-size: 200% auto;
+  animation: goldFoilShimmer 6s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.animate-gold-border {
+  border-image: linear-gradient(135deg, #fbbf24, #d97706, #fde047, #fbbf24) 1;
+}
+
+.animate-gold-glow-pulse {
+  animation: goldGlowPulse 4s ease-in-out infinite;
+}
+
+
+
+
+
+
