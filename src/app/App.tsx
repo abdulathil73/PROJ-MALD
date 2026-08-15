@@ -15797,107 +15797,110 @@ function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
         }
         return prev + 2;
       });
-    }, 30);
+    }, 28);
     return () => clearInterval(timer);
   }, [onFinish]);
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center justify-between p-6 text-center bg-[#040a07] relative overflow-hidden select-none text-white font-sans">
-      {/* 1. Professional Latitude/Longitude Mesh & Ambient Lighting */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#0d2818] via-[#040a07] to-[#010402] pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#10b9810d_1px,transparent_1px),linear-gradient(to_bottom,#10b9810d_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
+    <div className="w-full min-h-screen flex flex-col items-center justify-between p-6 md:p-8 text-center bg-[#020704] relative overflow-hidden select-none text-white font-sans">
+      {/* 1. Neat Ambient Mesh Background */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#0b2416] via-[#020704] to-[#010302] pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#10b9810a_1px,transparent_1px),linear-gradient(to_bottom,#10b9810a_1px,transparent_1px)] bg-[size:3rem_3rem] pointer-events-none" />
 
-      {/* 2. Top Telemetry Financial Ticker Header */}
-      <div className="w-full max-w-6xl z-20 pt-2 flex items-center justify-between text-[11px] font-mono border-b border-emerald-500/20 pb-3">
+      {/* 2. Top Neat Corporate Marquee Header */}
+      <div className="w-full max-w-6xl z-20 pt-2 flex items-center justify-between text-xs font-mono border-b border-emerald-500/20 pb-3">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span>SRT-ENTERPRISE CORE v4.2</span>
+          <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>SPICE ROUTE TRADING CO.</span>
           </div>
-          <span className="hidden sm:inline text-emerald-500/70">|</span>
-          <span className="hidden sm:inline text-gray-400 font-medium">18 GODOWNS (A-R) ACTIVE</span>
+          <span className="hidden sm:inline text-emerald-500/50">|</span>
+          <span className="hidden sm:inline text-gray-400 font-medium tracking-wide">ENTERPRISE LOGISTICS & COMMODITIES ENGINE</span>
         </div>
-        <div className="flex items-center gap-4 text-gray-400 font-mono text-[10px]">
-          <span className="hidden md:inline">FX: USD/MVR 15.42 <span className="text-emerald-400 font-bold">▲ +0.12%</span></span>
-          <span className="hidden md:inline">SPICE INDEX <span className="text-emerald-400 font-bold">2,480.50 ▲</span></span>
-          <span className="text-emerald-400/90 font-bold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">SYSTEM ONLINE</span>
+        <div className="flex items-center gap-4 text-gray-400 font-mono text-[11px]">
+          <span className="hidden md:inline">18 GODOWNS (A-R) <span className="text-emerald-400 font-bold">100% ONLINE</span></span>
+          <span className="hidden md:inline">USD/MVR <span className="text-emerald-400 font-bold">15.42 ▲</span></span>
+          <span className="text-emerald-400 font-bold bg-emerald-950/80 px-2.5 py-1 rounded border border-emerald-500/30">SYSTEM READY</span>
         </div>
       </div>
 
-      {/* 3. Central Professional HUD Vector Radar & Telemetry Engine */}
-      <div className="relative z-10 flex flex-col items-center justify-center my-auto py-4">
-        <div className="relative w-[420px] h-[420px] sm:w-[480px] sm:h-[480px] flex items-center justify-center">
+      {/* 3. Center Piece: Neat & Impressive SVG World Trade Map Engine */}
+      <div className="relative z-10 flex flex-col items-center justify-center my-auto py-2 w-full max-w-4xl">
+        <div className="relative w-full max-w-2xl h-64 sm:h-80 flex items-center justify-center">
           
-          {/* Radar Sweep & Coordinate Rings */}
-          <div className="absolute inset-0 border border-emerald-500/20 rounded-full" />
-          <div className="absolute inset-10 border border-dashed border-emerald-500/30 rounded-full" />
-          <div className="absolute inset-24 border border-emerald-500/20 rounded-full" />
-          
-          {/* Rotating Vector Radar Scanner */}
-          <div className="absolute inset-0 rounded-full animate-radar-sweep pointer-events-none">
-            <div className="w-1/2 h-1/2 bg-gradient-to-br from-emerald-500/20 to-transparent origin-bottom-right rounded-tl-full" />
-          </div>
+          {/* World Trade SVG Vector Connections */}
+          <svg className="absolute inset-0 w-full h-full text-emerald-500/30 pointer-events-none" viewBox="0 0 800 400" fill="none">
+            {/* World Grid Latitude/Longitude Circles */}
+            <circle cx="400" cy="200" r="180" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" className="opacity-40" />
+            <circle cx="400" cy="200" r="120" stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" className="opacity-60" />
+            <circle cx="400" cy="200" r="60" stroke="currentColor" strokeWidth="1" className="opacity-80" />
+            
+            {/* Animated Trade Arcs */}
+            <path d="M 150 220 Q 300 100 400 200" stroke="#10b981" strokeWidth="2" strokeDasharray="6 6" className="animate-pulse" />
+            <path d="M 400 200 Q 550 100 650 230" stroke="#3b82f6" strokeWidth="2" strokeDasharray="6 6" className="animate-pulse" />
+            <path d="M 250 300 Q 400 240 550 310" stroke="#f59e0b" strokeWidth="2" strokeDasharray="6 6" className="animate-pulse" />
+            <path d="M 400 200 Q 450 320 600 280" stroke="#10b981" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse" />
 
-          {/* Outer Orbit Data Vector Nodes (Ship, Plane, Warehouse, Coins) */}
-          <div className="absolute inset-0 animate-gyro-3 pointer-events-none flex items-center justify-center">
-            {/* Ocean Freight Node */}
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 animate-upright-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-[#091f14]/90 border border-emerald-500/60 rounded-lg shadow-[0_0_20px_rgba(16,185,129,0.3)] backdrop-blur-md">
-                <Ship size={16} className="text-emerald-400" />
-                <span className="text-[10px] font-mono font-bold tracking-wider text-emerald-100">OCEAN FREIGHT</span>
-              </div>
+            {/* Trade Hub Coordinates Dots */}
+            <circle cx="400" cy="200" r="6" fill="#10b981" className="animate-ping" />
+            <circle cx="400" cy="200" r="4" fill="#ffffff" />
+
+            <circle cx="150" cy="220" r="4" fill="#3b82f6" />
+            <circle cx="650" cy="230" r="4" fill="#f59e0b" />
+            <circle cx="250" cy="300" r="4" fill="#10b981" />
+            <circle cx="600" cy="280" r="4" fill="#3b82f6" />
+          </svg>
+
+          {/* Central Glassmorphic Core emblem */}
+          <div className="relative z-20 p-6 rounded-2xl bg-[#06180e]/90 border border-emerald-500/50 shadow-[0_0_50px_rgba(16,185,129,0.25)] backdrop-blur-xl flex flex-col items-center gap-3">
+            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+              <Globe size={42} className="animate-pulse" />
             </div>
-
-            {/* Air Cargo Node */}
-            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 animate-upright-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-[#091f14]/90 border border-amber-500/60 rounded-lg shadow-[0_0_20px_rgba(245,158,11,0.3)] backdrop-blur-md">
-                <Plane size={16} className="text-amber-400" />
-                <span className="text-[10px] font-mono font-bold tracking-wider text-amber-100">AIR EXPRESS</span>
+            <div className="space-y-1">
+              <div className="text-xs font-mono font-bold text-emerald-400 tracking-widest uppercase">
+                GLOBAL TRADING HUB
               </div>
-            </div>
-
-            {/* 18 Godowns Matrix Node */}
-            <div className="absolute top-1/2 -left-6 -translate-y-1/2 animate-upright-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-[#091f14]/90 border border-teal-500/60 rounded-lg shadow-[0_0_20px_rgba(20,184,166,0.3)] backdrop-blur-md">
-                <Warehouse size={16} className="text-teal-400" />
-                <span className="text-[10px] font-mono font-bold tracking-wider text-teal-100">18 GODOWNS (A-R)</span>
-              </div>
-            </div>
-
-            {/* Multi-Currency FX Node */}
-            <div className="absolute top-1/2 -right-6 -translate-y-1/2 animate-upright-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-[#091f14]/90 border border-yellow-500/60 rounded-lg shadow-[0_0_20px_rgba(234,179,8,0.3)] backdrop-blur-md">
-                <Coins size={16} className="text-yellow-400" />
-                <span className="text-[10px] font-mono font-bold tracking-wider text-yellow-100">FX LEDGER</span>
+              <div className="text-[10px] font-mono text-gray-400">
+                18 Godowns (A to R) Integrated Network
               </div>
             </div>
           </div>
 
-          {/* Central Holographic Core Emblem */}
-          <div className="relative w-36 h-36 rounded-full bg-gradient-to-br from-[#0b2416] via-[#040d08] to-[#07170e] border-2 border-emerald-500/60 flex flex-col items-center justify-center shadow-[0_0_50px_rgba(16,185,129,0.35)] backdrop-blur-xl animate-corp-glow z-20 group">
-            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 group-hover:scale-110 transition-transform duration-300">
-              <Globe size={36} className="animate-pulse" />
-            </div>
-            <div className="text-[9px] font-mono font-black tracking-widest text-emerald-400 uppercase mt-2">
-              SRT CORE
-            </div>
+          {/* Floating Neat Trade Hub Badges */}
+          <div className="absolute top-4 left-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#07190f]/90 border border-emerald-500/40 text-emerald-300 text-xs font-mono backdrop-blur-md shadow-lg">
+            <Ship size={14} className="text-emerald-400" />
+            <span>Ocean Cargo Freight</span>
           </div>
 
+          <div className="absolute top-4 right-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#07190f]/90 border border-blue-500/40 text-blue-300 text-xs font-mono backdrop-blur-md shadow-lg">
+            <Plane size={14} className="text-blue-400" />
+            <span>Air Cargo Express</span>
+          </div>
+
+          <div className="absolute bottom-4 left-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#07190f]/90 border border-amber-500/40 text-amber-300 text-xs font-mono backdrop-blur-md shadow-lg">
+            <Warehouse size={14} className="text-amber-400" />
+            <span>18 Godowns (A-R) Grid</span>
+          </div>
+
+          <div className="absolute bottom-4 right-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#07190f]/90 border border-emerald-500/40 text-emerald-300 text-xs font-mono backdrop-blur-md shadow-lg">
+            <Coins size={14} className="text-yellow-400" />
+            <span>Multi-Currency FX</span>
+          </div>
         </div>
 
         {/* Corporate Title & Executive Subtitle */}
-        <div className="space-y-2.5 max-w-xl mt-4">
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white font-serif">
-            Spice Route <span className="animate-gold-foil">Trading Co.</span>
+        <div className="space-y-2 max-w-xl mt-4">
+          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white font-serif">
+            Spice Route <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300">Trading Co.</span>
           </h1>
-          <p className="text-xs font-mono text-gray-300 leading-relaxed font-medium max-w-lg mx-auto">
-            Institutional Commodities ERP • 18 Godowns Matrix (A-R), Global Air/Sea Freight & Real-Time Multi-Currency Ledger
+          <p className="text-xs sm:text-sm font-mono text-gray-300 leading-relaxed max-w-lg mx-auto font-medium">
+            Next-Gen Enterprise Trading ERP • 18 Godowns Matrix (A-R), Air/Sea Freight & Real-Time Multi-Currency Ledger
           </p>
         </div>
 
-        {/* 4 Professional Enterprise HUD Feature Cards */}
+        {/* 4 Neat & Clean Professional Feature Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl w-full text-left text-xs font-mono mt-6">
-          <div className="p-3 rounded-xl bg-[#07140c]/80 border border-emerald-500/30 shadow-lg hover:border-emerald-400 transition-all flex items-center gap-3 backdrop-blur-md">
+          <div className="p-3.5 rounded-xl bg-[#06150c]/80 border border-emerald-500/30 hover:border-emerald-400 transition-all flex items-center gap-3 backdrop-blur-md shadow-md">
             <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <Ship size={18} />
             </div>
@@ -15907,17 +15910,17 @@ function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-[#07140c]/80 border border-emerald-500/30 shadow-lg hover:border-emerald-400 transition-all flex items-center gap-3 backdrop-blur-md">
+          <div className="p-3.5 rounded-xl bg-[#06150c]/80 border border-emerald-500/30 hover:border-emerald-400 transition-all flex items-center gap-3 backdrop-blur-md shadow-md">
             <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <Warehouse size={18} />
             </div>
             <div>
-              <div className="font-bold text-[11px] text-white">18 Godowns Grid</div>
+              <div className="font-bold text-[11px] text-white">18 Godowns Hub</div>
               <div className="text-[9px] text-gray-400">Warehouses A to R</div>
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-[#07140c]/80 border border-emerald-500/30 shadow-lg hover:border-emerald-400 transition-all flex items-center gap-3 backdrop-blur-md">
+          <div className="p-3.5 rounded-xl bg-[#06150c]/80 border border-emerald-500/30 hover:border-emerald-400 transition-all flex items-center gap-3 backdrop-blur-md shadow-md">
             <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <Coins size={18} />
             </div>
@@ -15927,19 +15930,19 @@ function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-[#07140c]/80 border border-emerald-500/30 shadow-lg hover:border-emerald-400 transition-all flex items-center gap-3 backdrop-blur-md">
+          <div className="p-3.5 rounded-xl bg-[#06150c]/80 border border-emerald-500/30 hover:border-emerald-400 transition-all flex items-center gap-3 backdrop-blur-md shadow-md">
             <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <TrendingUp size={18} />
             </div>
             <div>
-              <div className="font-bold text-[11px] text-white">Real-Time P&L</div>
+              <div className="font-bold text-[11px] text-white">Live Financials</div>
               <div className="text-[9px] text-gray-400">Perishable Audit</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 4. Telemetry Progress & Executive Launch Engine */}
+      {/* 4. Slim Progress Bar & Portal Entrance Action */}
       <div className="w-full max-w-sm z-20 pb-4 space-y-3">
         <div className="space-y-1.5">
           <div className="flex justify-between text-[10px] font-mono text-emerald-400 font-bold">
@@ -15949,21 +15952,21 @@ function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
             </span>
             <span>{progress}%</span>
           </div>
-          <div className="w-full h-2.5 bg-black/90 border border-emerald-500/40 rounded-full overflow-hidden p-0.5">
+          <div className="w-full h-2 bg-black/90 border border-emerald-500/40 rounded-full overflow-hidden p-0.5">
             <div
               className="h-full bg-gradient-to-r from-emerald-600 via-teal-400 to-amber-400 transition-all duration-75 rounded-full relative"
               style={{ width: `${progress}%` }}
             >
-              <div className="absolute right-0 top-0 bottom-0 w-2 bg-white shadow-[0_0_10px_#fff]" />
+              <div className="absolute right-0 top-0 bottom-0 w-2 bg-white shadow-[0_0_8px_#fff]" />
             </div>
           </div>
         </div>
 
         <button
           onClick={onFinish}
-          className="w-full py-3.5 px-6 bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 hover:from-emerald-600 hover:to-teal-500 text-white font-mono font-bold rounded-xl text-xs uppercase tracking-widest shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(16,185,129,0.6)] transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 group border border-emerald-400/40 relative overflow-hidden"
+          className="w-full py-3.5 px-6 bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 hover:from-emerald-600 hover:to-teal-500 text-white font-mono font-bold rounded-xl text-xs uppercase tracking-widest shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:shadow-[0_0_35px_rgba(16,185,129,0.6)] transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 group border border-emerald-400/40 relative overflow-hidden"
         >
-          <span>ENTER ENTERPRISE PORTAL</span>
+          <span>ENTER TRADING PORTAL</span>
           <ChevronRight size={16} className="group-hover:translate-x-1.5 transition-transform" />
         </button>
       </div>
