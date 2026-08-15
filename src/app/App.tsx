@@ -15792,182 +15792,190 @@ function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
       setProgress(prev => {
         if (prev >= 100) {
           clearInterval(timer);
-          setTimeout(() => onFinish(), 350);
+          setTimeout(() => onFinish(), 300);
           return 100;
         }
         return prev + 2;
       });
-    }, 28);
+    }, 32);
     return () => clearInterval(timer);
   }, [onFinish]);
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center justify-between p-6 md:p-8 text-center bg-[#020704] relative overflow-hidden select-none text-white font-sans">
-      {/* 1. Neat Ambient Mesh Background */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#0b2416] via-[#020704] to-[#010302] pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#10b9810a_1px,transparent_1px),linear-gradient(to_bottom,#10b9810a_1px,transparent_1px)] bg-[size:3rem_3rem] pointer-events-none" />
+    <div className="w-full min-h-screen flex flex-col items-center justify-between p-6 md:p-8 text-center bg-gradient-to-br from-[#061510] via-[#091f16] to-[#040d09] animate-ambient-shift relative overflow-hidden select-none text-white font-sans">
+      {/* 1. Rich Ambient Holographic Glow Orbs & Light Field */}
+      <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-[#2d6a4f]/25 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-[#e76f51]/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#52b788]/10 rounded-full blur-[140px] pointer-events-none" />
 
-      {/* 2. Top Neat Corporate Marquee Header */}
-      <div className="w-full max-w-6xl z-20 pt-2 flex items-center justify-between text-xs font-mono border-b border-emerald-500/20 pb-3">
+      {/* 2. Meteor Shooting Laser Energy Beams */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-20 left-10 w-48 h-0.5 bg-gradient-to-r from-transparent via-[#52b788] to-transparent animate-meteor" style={{ animationDelay: "0s" }} />
+        <div className="absolute top-20 left-1/4 w-64 h-0.5 bg-gradient-to-r from-transparent via-[#e76f51] to-transparent animate-meteor" style={{ animationDelay: "2.5s" }} />
+        <div className="absolute top-1/3 right-10 w-52 h-0.5 bg-gradient-to-r from-transparent via-[#f4a261] to-transparent animate-meteor" style={{ animationDelay: "5s" }} />
+      </div>
+
+      {/* 3. Top Neat Corporate Marquee Header */}
+      <div className="w-full max-w-6xl z-20 pt-2 flex items-center justify-between text-xs font-mono border-b border-[#52b788]/25 pb-3">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-black/60 border border-[#52b788]/60 text-[#52b788] font-bold shadow-md">
+            <span className="w-2 h-2 rounded-full bg-[#52b788] animate-ping" />
             <span>SPICE ROUTE TRADING CO.</span>
           </div>
-          <span className="hidden sm:inline text-emerald-500/50">|</span>
-          <span className="hidden sm:inline text-gray-400 font-medium tracking-wide">ENTERPRISE LOGISTICS & COMMODITIES ENGINE</span>
+          <span className="hidden sm:inline text-[#52b788]/50">|</span>
+          <span className="hidden sm:inline text-[#b7e4c7] font-medium tracking-wide">ENTERPRISE LOGISTICS & COMMODITIES ENGINE</span>
         </div>
-        <div className="flex items-center gap-4 text-gray-400 font-mono text-[11px]">
-          <span className="hidden md:inline">18 GODOWNS (A-R) <span className="text-emerald-400 font-bold">100% ONLINE</span></span>
-          <span className="hidden md:inline">USD/MVR <span className="text-emerald-400 font-bold">15.42 ▲</span></span>
-          <span className="text-emerald-400 font-bold bg-emerald-950/80 px-2.5 py-1 rounded border border-emerald-500/30">SYSTEM READY</span>
+        <div className="flex items-center gap-4 text-[#b7e4c7] font-mono text-[11px]">
+          <span className="hidden md:inline">18 GODOWNS (A-R) <span className="text-[#e9c46a] font-bold">100% ACTIVE</span></span>
+          <span className="hidden md:inline">USD/MVR <span className="text-[#52b788] font-bold">15.42 ▲</span></span>
+          <span className="text-[#52b788] font-bold bg-black/70 px-2.5 py-1 rounded-full border border-[#52b788]/40 shadow-sm">SYSTEM ONLINE</span>
         </div>
       </div>
 
-      {/* 3. Center Piece: Neat & Impressive SVG World Trade Map Engine */}
+      {/* 4. Center Stage: SVG World Trade Network Engine with Previous Vibrant Color Palette */}
       <div className="relative z-10 flex flex-col items-center justify-center my-auto py-2 w-full max-w-4xl">
         <div className="relative w-full max-w-2xl h-64 sm:h-80 flex items-center justify-center">
           
-          {/* World Trade SVG Vector Connections */}
-          <svg className="absolute inset-0 w-full h-full text-emerald-500/30 pointer-events-none" viewBox="0 0 800 400" fill="none">
-            {/* World Grid Latitude/Longitude Circles */}
-            <circle cx="400" cy="200" r="180" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" className="opacity-40" />
-            <circle cx="400" cy="200" r="120" stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" className="opacity-60" />
-            <circle cx="400" cy="200" r="60" stroke="currentColor" strokeWidth="1" className="opacity-80" />
+          {/* World Trade SVG Vector Arcs in Emerald, Coral Spice, and Gold */}
+          <svg className="absolute inset-0 w-full h-full text-[#52b788]/30 pointer-events-none" viewBox="0 0 800 400" fill="none">
+            {/* Latitude/Longitude Circles */}
+            <circle cx="400" cy="200" r="180" stroke="#52b788" strokeWidth="1" strokeDasharray="4 4" className="opacity-30" />
+            <circle cx="400" cy="200" r="120" stroke="#e76f51" strokeWidth="1" strokeDasharray="3 3" className="opacity-40" />
+            <circle cx="400" cy="200" r="60" stroke="#e9c46a" strokeWidth="1" className="opacity-60" />
             
-            {/* Animated Trade Arcs */}
-            <path d="M 150 220 Q 300 100 400 200" stroke="#10b981" strokeWidth="2" strokeDasharray="6 6" className="animate-pulse" />
-            <path d="M 400 200 Q 550 100 650 230" stroke="#3b82f6" strokeWidth="2" strokeDasharray="6 6" className="animate-pulse" />
-            <path d="M 250 300 Q 400 240 550 310" stroke="#f59e0b" strokeWidth="2" strokeDasharray="6 6" className="animate-pulse" />
-            <path d="M 400 200 Q 450 320 600 280" stroke="#10b981" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse" />
+            {/* Animated Trade Vector Arcs */}
+            <path d="M 150 220 Q 300 100 400 200" stroke="#52b788" strokeWidth="2.5" strokeDasharray="6 6" className="animate-pulse" />
+            <path d="M 400 200 Q 550 100 650 230" stroke="#e76f51" strokeWidth="2.5" strokeDasharray="6 6" className="animate-pulse" />
+            <path d="M 250 300 Q 400 240 550 310" stroke="#e9c46a" strokeWidth="2.5" strokeDasharray="6 6" className="animate-pulse" />
+            <path d="M 400 200 Q 450 320 600 280" stroke="#52b788" strokeWidth="2" strokeDasharray="4 4" className="animate-pulse" />
 
-            {/* Trade Hub Coordinates Dots */}
-            <circle cx="400" cy="200" r="6" fill="#10b981" className="animate-ping" />
-            <circle cx="400" cy="200" r="4" fill="#ffffff" />
+            {/* Trade Hub Vector Node Pulsers */}
+            <circle cx="400" cy="200" r="7" fill="#52b788" className="animate-ping" />
+            <circle cx="400" cy="200" r="4" fill="#e9c46a" />
 
-            <circle cx="150" cy="220" r="4" fill="#3b82f6" />
-            <circle cx="650" cy="230" r="4" fill="#f59e0b" />
-            <circle cx="250" cy="300" r="4" fill="#10b981" />
-            <circle cx="600" cy="280" r="4" fill="#3b82f6" />
+            <circle cx="150" cy="220" r="5" fill="#52b788" />
+            <circle cx="650" cy="230" r="5" fill="#e76f51" />
+            <circle cx="250" cy="300" r="5" fill="#e9c46a" />
+            <circle cx="600" cy="280" r="5" fill="#f4a261" />
           </svg>
 
-          {/* Central Glassmorphic Core emblem */}
-          <div className="relative z-20 p-6 rounded-2xl bg-[#06180e]/90 border border-emerald-500/50 shadow-[0_0_50px_rgba(16,185,129,0.25)] backdrop-blur-xl flex flex-col items-center gap-3">
-            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+          {/* Central Glassmorphic Core Emblem */}
+          <div className="relative z-20 p-6 rounded-2xl bg-gradient-to-br from-[#1b4332]/90 via-[#0b1912]/95 to-[#14281d]/90 border-2 border-[#52b788] shadow-2xl backdrop-blur-2xl flex flex-col items-center gap-3 animate-corp-glow">
+            <div className="p-4 rounded-xl bg-black/60 border border-[#52b788] text-[#52b788] shadow-lg">
               <Globe size={42} className="animate-pulse" />
             </div>
             <div className="space-y-1">
-              <div className="text-xs font-mono font-bold text-emerald-400 tracking-widest uppercase">
-                GLOBAL TRADING HUB
+              <div className="text-xs font-mono font-bold text-[#e9c46a] tracking-widest uppercase">
+                SRT GLOBAL ENGINE
               </div>
-              <div className="text-[10px] font-mono text-gray-400">
-                18 Godowns (A to R) Integrated Network
+              <div className="text-[10px] font-mono text-[#b7e4c7]">
+                18 Godowns (A to R) Network
               </div>
             </div>
           </div>
 
-          {/* Floating Neat Trade Hub Badges */}
-          <div className="absolute top-4 left-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#07190f]/90 border border-emerald-500/40 text-emerald-300 text-xs font-mono backdrop-blur-md shadow-lg">
-            <Ship size={14} className="text-emerald-400" />
-            <span>Ocean Cargo Freight</span>
+          {/* Floating Trade Hub Badges with Previous Signature Colors */}
+          <div className="absolute top-4 left-6 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/70 border border-[#52b788]/60 text-[#52b788] text-xs font-mono backdrop-blur-md shadow-lg">
+            <Ship size={15} className="text-[#52b788]" />
+            <span className="font-bold text-white">Ocean Freight</span>
           </div>
 
-          <div className="absolute top-4 right-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#07190f]/90 border border-blue-500/40 text-blue-300 text-xs font-mono backdrop-blur-md shadow-lg">
-            <Plane size={14} className="text-blue-400" />
-            <span>Air Cargo Express</span>
+          <div className="absolute top-4 right-6 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/70 border border-[#e76f51]/60 text-[#e76f51] text-xs font-mono backdrop-blur-md shadow-lg">
+            <Plane size={15} className="text-[#e76f51]" />
+            <span className="font-bold text-white">Air Cargo</span>
           </div>
 
-          <div className="absolute bottom-4 left-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#07190f]/90 border border-amber-500/40 text-amber-300 text-xs font-mono backdrop-blur-md shadow-lg">
-            <Warehouse size={14} className="text-amber-400" />
-            <span>18 Godowns (A-R) Grid</span>
+          <div className="absolute bottom-4 left-6 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/70 border border-[#e9c46a]/60 text-[#e9c46a] text-xs font-mono backdrop-blur-md shadow-lg">
+            <Warehouse size={15} className="text-[#e9c46a]" />
+            <span className="font-bold text-white">18 Godowns (A-R)</span>
           </div>
 
-          <div className="absolute bottom-4 right-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#07190f]/90 border border-emerald-500/40 text-emerald-300 text-xs font-mono backdrop-blur-md shadow-lg">
-            <Coins size={14} className="text-yellow-400" />
-            <span>Multi-Currency FX</span>
+          <div className="absolute bottom-4 right-6 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/70 border border-[#f4a261]/60 text-[#f4a261] text-xs font-mono backdrop-blur-md shadow-lg">
+            <Coins size={15} className="text-[#f4a261]" />
+            <span className="font-bold text-white">Multi-Currency FX</span>
           </div>
         </div>
 
-        {/* Corporate Title & Executive Subtitle */}
-        <div className="space-y-2 max-w-xl mt-4">
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white font-serif">
-            Spice Route <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300">Trading Co.</span>
+        {/* Corporate Title with Shimmering Gold Foil Gradient */}
+        <div className="space-y-2.5 max-w-xl mt-4">
+          <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white font-serif">
+            Spice Route <span className="animate-gold-foil">Trading Co.</span>
           </h1>
-          <p className="text-xs sm:text-sm font-mono text-gray-300 leading-relaxed max-w-lg mx-auto font-medium">
-            Next-Gen Enterprise Trading ERP • 18 Godowns Matrix (A-R), Air/Sea Freight & Real-Time Multi-Currency Ledger
+          <p className="text-xs sm:text-sm font-mono text-[#b7e4c7] leading-relaxed max-w-lg mx-auto font-semibold">
+            Next-Gen Enterprise ERP • 18 Godowns Matrix (A-R), Air/Sea Freight & Real-Time Multi-Currency Ledger
           </p>
         </div>
 
-        {/* 4 Neat & Clean Professional Feature Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl w-full text-left text-xs font-mono mt-6">
-          <div className="p-3.5 rounded-xl bg-[#06150c]/80 border border-emerald-500/30 hover:border-emerald-400 transition-all flex items-center gap-3 backdrop-blur-md shadow-md">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        {/* 4 Feature Cards with Previous Signature Color Accent Borders */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-xl w-full text-left text-xs font-mono mt-6">
+          <div className="p-3.5 rounded-2xl bg-black/50 border border-[#52b788]/40 shadow-xl hover:border-[#52b788] transition-all flex items-center gap-3 text-[#52b788] backdrop-blur-xl">
+            <div className="p-2 rounded-xl bg-black/60 border border-[#52b788]/60 text-[#52b788]">
               <Ship size={18} />
             </div>
             <div>
-              <div className="font-bold text-[11px] text-white">Global Freight</div>
-              <div className="text-[9px] text-gray-400">Air & Sea Cargo</div>
+              <div className="font-bold text-[11px] text-white">Ocean & Air Freight</div>
+              <div className="text-[9px] text-[#b7e4c7]">Global Cargo</div>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#06150c]/80 border border-emerald-500/30 hover:border-emerald-400 transition-all flex items-center gap-3 backdrop-blur-md shadow-md">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <div className="p-3.5 rounded-2xl bg-black/50 border border-[#e76f51]/40 shadow-xl hover:border-[#e76f51] transition-all flex items-center gap-3 text-[#e76f51] backdrop-blur-xl">
+            <div className="p-2 rounded-xl bg-black/60 border border-[#e76f51]/60 text-[#e76f51]">
               <Warehouse size={18} />
             </div>
             <div>
-              <div className="font-bold text-[11px] text-white">18 Godowns Hub</div>
-              <div className="text-[9px] text-gray-400">Warehouses A to R</div>
+              <div className="font-bold text-[11px] text-white">18 Godowns (A-R)</div>
+              <div className="text-[9px] text-[#f4a261]">Smart Warehouse Grid</div>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#06150c]/80 border border-emerald-500/30 hover:border-emerald-400 transition-all flex items-center gap-3 backdrop-blur-md shadow-md">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <div className="p-3.5 rounded-2xl bg-black/50 border border-[#e9c46a]/40 shadow-xl hover:border-[#e9c46a] transition-all flex items-center gap-3 text-[#e9c46a] backdrop-blur-xl">
+            <div className="p-2 rounded-xl bg-black/60 border border-[#e9c46a]/60 text-[#e9c46a]">
               <Coins size={18} />
             </div>
             <div>
-              <div className="font-bold text-[11px] text-white">Multi-Currency</div>
-              <div className="text-[9px] text-gray-400">MVR / USD / INR</div>
+              <div className="font-bold text-[11px] text-white">Multi-Currency FX</div>
+              <div className="text-[9px] text-[#e9c46a]">MVR / USD / INR</div>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#06150c]/80 border border-emerald-500/30 hover:border-emerald-400 transition-all flex items-center gap-3 backdrop-blur-md shadow-md">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <div className="p-3.5 rounded-2xl bg-black/50 border border-[#52b788]/40 shadow-xl hover:border-[#52b788] transition-all flex items-center gap-3 text-[#52b788] backdrop-blur-xl">
+            <div className="p-2 rounded-xl bg-black/60 border border-[#52b788]/60 text-[#52b788]">
               <TrendingUp size={18} />
             </div>
             <div>
-              <div className="font-bold text-[11px] text-white">Live Financials</div>
-              <div className="text-[9px] text-gray-400">Perishable Audit</div>
+              <div className="font-bold text-[11px] text-white">Produce & Spices</div>
+              <div className="text-[9px] text-[#b7e4c7]">Live P&L Ledger</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 4. Slim Progress Bar & Portal Entrance Action */}
-      <div className="w-full max-w-sm z-20 pb-4 space-y-3">
+      {/* 5. Cyber Progress Bar & Executive Portal Button in Previous Color Scheme */}
+      <div className="space-y-4 max-w-xs w-full z-10 pb-2">
         <div className="space-y-1.5">
-          <div className="flex justify-between text-[10px] font-mono text-emerald-400 font-bold">
+          <div className="flex justify-between text-[10px] font-mono text-[#52b788] font-bold">
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-[#52b788] animate-ping" />
               BOOTING ENTERPRISE TRADING SYSTEM
             </span>
             <span>{progress}%</span>
           </div>
-          <div className="w-full h-2 bg-black/90 border border-emerald-500/40 rounded-full overflow-hidden p-0.5">
+          <div className="w-full h-3 bg-black/80 border border-[#52b788]/50 rounded-full overflow-hidden shadow-inner relative p-0.5">
             <div
-              className="h-full bg-gradient-to-r from-emerald-600 via-teal-400 to-amber-400 transition-all duration-75 rounded-full relative"
+              className="h-full bg-gradient-to-r from-[#2d6a4f] via-[#52b788] to-[#e76f51] transition-all duration-75 rounded-full relative"
               style={{ width: `${progress}%` }}
             >
-              <div className="absolute right-0 top-0 bottom-0 w-2 bg-white shadow-[0_0_8px_#fff]" />
+              <div className="absolute right-0 top-0 bottom-0 w-2 bg-white rounded-full shadow-[0_0_12px_#fff]" />
             </div>
           </div>
         </div>
 
         <button
           onClick={onFinish}
-          className="w-full py-3.5 px-6 bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 hover:from-emerald-600 hover:to-teal-500 text-white font-mono font-bold rounded-xl text-xs uppercase tracking-widest shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:shadow-[0_0_35px_rgba(16,185,129,0.6)] transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 group border border-emerald-400/40 relative overflow-hidden"
+          className="w-full py-4 px-6 bg-gradient-to-r from-[#2d6a4f] via-[#40916c] to-[#e76f51] hover:from-[#1b4332] hover:to-[#d90429] text-white font-mono font-black rounded-2xl text-xs uppercase tracking-widest shadow-2xl hover:shadow-[0_0_35px_rgba(82,183,136,0.6)] transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 group border border-white/30 relative overflow-hidden"
         >
-          <span>ENTER TRADING PORTAL</span>
-          <ChevronRight size={16} className="group-hover:translate-x-1.5 transition-transform" />
+          <span className="relative z-10">ENTER LOGISTICS PORTAL</span>
+          <ChevronRight size={16} className="group-hover:translate-x-2 transition-transform relative z-10" />
         </button>
       </div>
     </div>
