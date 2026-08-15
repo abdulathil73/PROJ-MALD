@@ -15786,292 +15786,191 @@ function VouchersPage({
 
 function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
   const [progress, setProgress] = useState(0);
+  const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    const interval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) {
-          clearInterval(timer);
-          setTimeout(() => onFinish(), 300);
+          clearInterval(interval);
+          setTimeout(() => {
+            setFadeOut(true);
+            setTimeout(onFinish, 800);
+          }, 400);
           return 100;
         }
         return prev + 2;
       });
-    }, 40);
-    return () => clearInterval(timer);
+    }, 60);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === "Escape") {
+        clearInterval(interval);
+        setFadeOut(true);
+        setTimeout(onFinish, 800);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [onFinish]);
 
+  // Determine active category text and phase
+  const phase = useMemo(() => {
+    if (progress < 25) return { text: "SCANNING SPICES INVENTORY...", cat: "spices" };
+    if (progress < 50) return { text: "COUNTING NUTS & DRY FRUITS...", cat: "nuts" };
+    if (progress < 75) return { text: "VERIFYING FRESH FRUIT CARGO...", cat: "fruits" };
+    if (progress < 100) return { text: "CALIBRATING VEGETABLES REVENUE...", cat: "veggies" };
+    return { text: "LEDGER SYNCED & SECURE!", cat: "ready" };
+  }, [progress]);
+
   return (
-    <div className="w-full min-h-screen flex flex-col justify-between p-6 md:p-10 bg-[#FFFFFF] text-[#262626] font-sans select-none relative overflow-hidden">
-      {/* Subtle animated geometric pattern background (light gray dots drifting) */}
+    <div
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#FAF8F5] text-gray-800 overflow-hidden select-none transition-all duration-700 ${
+        fadeOut ? "opacity-0 scale-95 pointer-events-none" : "opacity-100"
+      }`}
+    >
+      <style>{`
+        @keyframes float-slow {
+          0% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-12px) rotate(5deg); }
+          100% { transform: translateY(0px) rotate(0deg); }
+        }
+        @keyframes float-medium {
+          0% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(-8deg); }
+          100% { transform: translateY(0px) rotate(0deg); }
+        }
+        @keyframes float-fast {
+          0% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-16px) rotate(8deg); }
+          100% { transform: translateY(0px) rotate(0deg); }
+        }
+        .animate-float-1 { animation: float-slow 6s ease-in-out infinite; }
+        .animate-float-2 { animation: float-medium 7s ease-in-out infinite; }
+        .animate-float-3 { animation: float-fast 5s ease-in-out infinite; }
+      `}</style>
+
+      {/* Background radial glow */}
+      <div className="absolute w-[500px] h-[500px] rounded-full bg-emerald-100/40 blur-[100px] -z-10 animate-pulse duration-[3000ms]" />
+
+      {/* Sequential Floating Produce Categories */}
+      
+      {/* PHASE 1: Spices (🌶️, 🌿) */}
       <div 
-        className="absolute inset-0 pointer-events-none opacity-40 z-0"
-        style={{
-          backgroundImage: `radial-gradient(#CBD5E1 1.5px, transparent 1.5px)`,
-          backgroundSize: `24px 24px`
-        }}
-      />
+        className={`absolute top-[18%] left-[10%] w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-sm transition-all duration-500 animate-float-1 ${
+          phase.cat === "spices" || phase.cat === "ready" 
+            ? "scale-110 opacity-100 ring-2 ring-emerald-400 bg-emerald-500/10 shadow-emerald-200" 
+            : "scale-90 opacity-20 bg-gray-100/30"
+        }`}
+      >
+        🌶️
+      </div>
+      <div 
+        className={`absolute bottom-[18%] right-[15%] w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-sm transition-all duration-500 animate-float-2 ${
+          phase.cat === "spices" || phase.cat === "ready" 
+            ? "scale-110 opacity-100 ring-2 ring-emerald-400 bg-emerald-500/10 shadow-emerald-200" 
+            : "scale-90 opacity-20 bg-gray-100/30"
+        }`}
+      >
+        🌿
+      </div>
 
-      {/* 1. Header (Company name top-left, version top-right) */}
-      <header className="w-full max-w-7xl mx-auto z-20 flex items-center justify-between border-b border-[#E5E7EB] pb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#006B6B] flex items-center justify-center text-white font-bold text-sm shadow-sm">
-            SR
-          </div>
-          <span className="font-semibold text-lg md:text-xl text-[#006B6B] tracking-tight">
-            Spice Route Trading Co.
-          </span>
+      {/* PHASE 2: Nuts & Dry Fruits (🥜, 🌰) */}
+      <div 
+        className={`absolute top-[15%] right-[22%] w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-sm transition-all duration-500 animate-float-3 ${
+          phase.cat === "nuts" || phase.cat === "ready" 
+            ? "scale-110 opacity-100 ring-2 ring-amber-400 bg-amber-500/10 shadow-amber-200" 
+            : "scale-90 opacity-20 bg-gray-100/30"
+        }`}
+      >
+        🥜
+      </div>
+      <div 
+        className={`absolute bottom-[15%] left-[22%] w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-sm transition-all duration-500 animate-float-1 ${
+          phase.cat === "nuts" || phase.cat === "ready" 
+            ? "scale-110 opacity-100 ring-2 ring-amber-400 bg-amber-500/10 shadow-amber-200" 
+            : "scale-90 opacity-20 bg-gray-100/30"
+        }`}
+      >
+        🌰
+      </div>
+
+      {/* PHASE 3: Fresh Fruits (🍎, 🍇) */}
+      <div 
+        className={`absolute top-[45%] right-[8%] w-14 h-14 rounded-full flex items-center justify-center text-xl shadow-sm transition-all duration-500 animate-float-2 ${
+          phase.cat === "fruits" || phase.cat === "ready" 
+            ? "scale-110 opacity-100 ring-2 ring-rose-400 bg-rose-500/10 shadow-rose-200" 
+            : "scale-90 opacity-20 bg-gray-100/30"
+        }`}
+      >
+        🍎
+      </div>
+      <div 
+        className={`absolute top-[48%] left-[8%] w-14 h-14 rounded-full flex items-center justify-center text-xl shadow-sm transition-all duration-500 animate-float-3 ${
+          phase.cat === "fruits" || phase.cat === "ready" 
+            ? "scale-110 opacity-100 ring-2 ring-rose-400 bg-rose-500/10 shadow-rose-200" 
+            : "scale-90 opacity-20 bg-gray-100/30"
+        }`}
+      >
+        🍇
+      </div>
+
+      {/* PHASE 4: Vegetables (🥕, 🥑) */}
+      <div 
+        className={`absolute top-[8%] left-[46%] w-14 h-14 rounded-full flex items-center justify-center text-xl shadow-sm transition-all duration-500 animate-float-1 ${
+          phase.cat === "veggies" || phase.cat === "ready" 
+            ? "scale-110 opacity-100 ring-2 ring-orange-400 bg-orange-500/10 shadow-orange-200" 
+            : "scale-90 opacity-20 bg-gray-100/30"
+        }`}
+      >
+        🥕
+      </div>
+      <div 
+        className={`absolute bottom-[8%] left-[46%] w-14 h-14 rounded-full flex items-center justify-center text-xl shadow-sm transition-all duration-500 animate-float-2 ${
+          phase.cat === "veggies" || phase.cat === "ready" 
+            ? "scale-110 opacity-100 ring-2 ring-orange-400 bg-orange-500/10 shadow-orange-200" 
+            : "scale-90 opacity-20 bg-gray-100/30"
+        }`}
+      >
+        🥑
+      </div>
+
+      {/* Center Logo branding */}
+      <div className="relative mb-6 flex flex-col items-center">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-300 via-teal-400 to-emerald-500 flex items-center justify-center shadow-md shadow-emerald-200/50 animate-bounce duration-[1800ms]">
+          <Sparkles size={28} className="text-white animate-pulse" />
         </div>
-        <div className="text-xs font-mono text-[#8C8C8C] bg-[#F5F7FA] px-3 py-1 rounded-md border border-[#E5E7EB]">
-          CYBER LOGISTICS v4.2
+        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-emerald-300 to-teal-400 blur opacity-30 animate-pulse" />
+      </div>
+
+      <h1 className="text-3xl font-extrabold tracking-[0.2em] text-emerald-800 font-serif mb-2 select-none">
+        SPICE ROUTE
+      </h1>
+      <p className="text-[10px] text-emerald-600/80 font-mono tracking-[0.3em] uppercase mb-12 select-none">
+        Nuts, Spices & Fresh Produce Ledger
+      </p>
+
+      {/* Progress loader */}
+      <div className="w-64 max-w-xs space-y-2 relative z-10">
+        <div className="flex justify-between items-center text-[9px] font-mono text-emerald-700/80">
+          <span>{phase.text}</span>
+          <span>{progress}%</span>
         </div>
-      </header>
-
-      {/* 2. Main Soft Light Gray SaaS Card Area */}
-      <main className="w-full max-w-7xl mx-auto z-20 my-auto py-6 space-y-6">
-        
-        <div className="p-6 md:p-8 bg-[#F5F7FA] rounded-2xl border border-[#E5E7EB] shadow-sm space-y-6">
-
-          {/* Three Data Cards Row (Ocean Freight 78%, Air Express 62%, Multi-Currency) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-            
-            {/* Card 1: Ocean Freight */}
-            <div className="p-5 bg-white rounded-xl border border-[#E5E7EB] shadow-sm space-y-3">
-              <div className="flex justify-between items-center border-b border-[#F0F0F0] pb-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#006B6B] flex items-center gap-2">
-                  <Ship size={16} className="text-[#006B6B]" />
-                  Ocean Freight
-                </span>
-                <span className="text-xs font-bold text-[#006B6B] bg-[#E6F0F0] px-2 py-0.5 rounded">78%</span>
-              </div>
-              <div className="space-y-1">
-                <div className="text-2xl font-bold text-[#111827]">12 Active Routes</div>
-                <div className="text-xs text-[#8C8C8C]">Direct Port Connectivity</div>
-              </div>
-              {/* Progress bar at 78% */}
-              <div className="w-full bg-[#F0F0F0] h-2 rounded-full overflow-hidden p-0.5">
-                <div className="bg-[#006B6B] h-full rounded-full transition-all duration-500" style={{ width: '78%' }} />
-              </div>
-            </div>
-
-            {/* Card 2: Air Express */}
-            <div className="p-5 bg-white rounded-xl border border-[#E5E7EB] shadow-sm space-y-3">
-              <div className="flex justify-between items-center border-b border-[#F0F0F0] pb-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#006B6B] flex items-center gap-2">
-                  <Plane size={16} className="text-[#006B6B]" />
-                  Air Express
-                </span>
-                <span className="text-xs font-bold text-[#006B6B] bg-[#E6F0F0] px-2 py-0.5 rounded">62%</span>
-              </div>
-              <div className="space-y-1">
-                <div className="text-2xl font-bold text-[#111827]">8 Active Routes</div>
-                <div className="text-xs text-[#8C8C8C]">Velana Priority Cargo</div>
-              </div>
-              {/* Progress bar at 62% */}
-              <div className="w-full bg-[#F0F0F0] h-2 rounded-full overflow-hidden p-0.5">
-                <div className="bg-[#006B6B] h-full rounded-full transition-all duration-500" style={{ width: '62%' }} />
-              </div>
-            </div>
-
-            {/* Card 3: Multi-Currency */}
-            <div className="p-5 bg-white rounded-xl border border-[#E5E7EB] shadow-sm space-y-3">
-              <div className="flex justify-between items-center border-b border-[#F0F0F0] pb-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#006B6B] flex items-center gap-2">
-                  <Coins size={16} className="text-[#006B6B]" />
-                  Multi-Currency Rates
-                </span>
-                <span className="text-xs font-mono text-[#8C8C8C]">LIVE FX</span>
-              </div>
-              <div className="space-y-1 text-xs text-[#374151] font-mono">
-                <div className="flex justify-between">
-                  <span className="text-[#8C8C8C]">MVR:</span>
-                  <span className="font-bold text-[#006B6B]">15.42 ▲ +0.3%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#8C8C8C]">USD:</span>
-                  <span className="font-bold text-[#E8815E]">0.062 ▼ -0.1%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#8C8C8C]">INR:</span>
-                  <span className="font-bold text-[#006B6B]">5.18 ▲ +0.7%</span>
-                </div>
-              </div>
-              <div className="w-full bg-[#F0F0F0] h-1.5 rounded-full overflow-hidden">
-                <div className="bg-[#006B6B] h-full rounded-full" style={{ width: '100%' }} />
-              </div>
-            </div>
-
-          </div>
-
-          {/* Centerpiece: Flat 18-Node Network Diagram (A-R) with Teal Dots & Coral Highlight for F-09 */}
-          <div className="p-6 bg-white rounded-xl border border-[#E5E7EB] shadow-sm text-left space-y-4">
-            <div className="flex justify-between items-center border-b border-[#F0F0F0] pb-3">
-              <h2 className="text-sm font-semibold text-[#006B6B] flex items-center gap-2">
-                <Warehouse size={16} className="text-[#006B6B]" />
-                18 Godowns Logistics Network (Grid A to R)
-              </h2>
-              <span className="text-xs font-mono text-[#8C8C8C]">18 GODOWNS ACTIVE</span>
-            </div>
-
-            <div className="relative w-full h-44 flex items-center justify-center my-2 bg-[#FAFBFD] rounded-lg border border-[#F0F0F0] overflow-hidden">
-              <svg className="absolute inset-0 w-full h-full text-[#006B6B]" viewBox="0 0 600 180" fill="none">
-                {/* Connecting Thin Gray Lines */}
-                {Array.from({ length: 18 }).map((_, i) => {
-                  const angle = (i * 360) / 18;
-                  const rad = (angle * Math.PI) / 180;
-                  const x = 300 + 130 * Math.cos(rad);
-                  const y = 90 + 65 * Math.sin(rad);
-                  const isF = i === 5; // Node F-09
-                  return (
-                    <line key={i} x1="300" y1="90" x2={x} y2={y} stroke={isF ? "#E8815E" : "#E5E7EB"} strokeWidth={isF ? "2" : "1"} />
-                  );
-                })}
-
-                {/* Nodes rendering */}
-                {Array.from({ length: 18 }).map((_, i) => {
-                  const angle = (i * 360) / 18;
-                  const rad = (angle * Math.PI) / 180;
-                  const x = 300 + 130 * Math.cos(rad);
-                  const y = 90 + 65 * Math.sin(rad);
-                  const isF = i === 5; // Node F-09
-                  const godownLetter = String.fromCharCode(65 + i);
-
-                  return (
-                    <g key={i}>
-                      <circle cx={x} cy={y} r={isF ? "7" : "4.5"} fill={isF ? "#E8815E" : "#006B6B"} />
-                      <text x={x} y={y + 16} textAnchor="middle" fill={isF ? "#E8815E" : "#8C8C8C"} fontSize="9" fontFamily="sans-serif" fontWeight={isF ? "bold" : "normal"}>
-                        {godownLetter}
-                      </text>
-                    </g>
-                  );
-                })}
-              </svg>
-
-              {/* Node F-09 Coral Highlight Badge */}
-              <div className="relative z-10 px-4 py-2 bg-white border border-[#E8815E] rounded-lg shadow-sm text-center">
-                <div className="text-xs font-bold text-[#E8815E] flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#E8815E]" />
-                  NODE F-09 AIR CARGO
-                </div>
-                <div className="text-[10px] text-[#888888] font-mono">18 Godowns Synced</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Live Ledger (Full Width Table) */}
-          <div className="p-6 bg-white rounded-xl border border-[#E5E7EB] shadow-sm text-left space-y-3">
-            <div className="flex justify-between items-center border-b border-[#F0F0F0] pb-2">
-              <h3 className="text-xs font-semibold text-[#006B6B] uppercase tracking-wider flex items-center gap-2">
-                <TrendingUp size={16} className="text-[#006B6B]" />
-                Live Commodity Ledger & Stock Allocation
-              </h3>
-              <span className="text-xs font-mono text-[#8C8C8C]">REAL-TIME SYNC</span>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left text-[#374151]">
-                <thead className="bg-[#F9FAFB] text-[#6B7280] text-[11px] uppercase border-b border-[#E5E7EB]">
-                  <tr>
-                    <th className="p-2.5">Commodity</th>
-                    <th className="p-2.5">Market Value</th>
-                    <th className="p-2.5">Change %</th>
-                    <th className="p-2.5 hidden sm:table-cell">Inventory Volume</th>
-                    <th className="p-2.5 w-36">Allocation</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F0F0F0]">
-                  <tr className="hover:bg-[#F9FAFB]">
-                    <td className="p-2.5 font-medium text-[#111827]">Cardamom (Grade A)</td>
-                    <td className="p-2.5 font-mono">₹ 2,450 / kg</td>
-                    <td className="p-2.5 text-[#006B6B] font-bold">▲ +1.8%</td>
-                    <td className="p-2.5 hidden sm:table-cell text-[#6B7280]">4,850 kg</td>
-                    <td className="p-2.5">
-                      <div className="w-full bg-[#F0F0F0] h-2 rounded-full overflow-hidden">
-                        <div className="bg-[#006B6B] h-full rounded-full transition-all duration-500" style={{ width: '82%' }} />
-                      </div>
-                    </td>
-                  </tr>
-
-                  <tr className="hover:bg-[#F9FAFB]">
-                    <td className="p-2.5 font-medium text-[#111827]">Black Pepper (Tellicherry)</td>
-                    <td className="p-2.5 font-mono">₹ 620 / kg</td>
-                    <td className="p-2.5 text-[#006B6B] font-bold">▲ +0.9%</td>
-                    <td className="p-2.5 hidden sm:table-cell text-[#6B7280]">12,400 kg</td>
-                    <td className="p-2.5">
-                      <div className="w-full bg-[#F0F0F0] h-2 rounded-full overflow-hidden">
-                        <div className="bg-[#006B6B] h-full rounded-full transition-all duration-500" style={{ width: '68%' }} />
-                      </div>
-                    </td>
-                  </tr>
-
-                  <tr className="hover:bg-[#F9FAFB]">
-                    <td className="p-2.5 font-medium text-[#111827]">Cinnamon (Ceylon Pure)</td>
-                    <td className="p-2.5 font-mono">₹ 410 / kg</td>
-                    <td className="p-2.5 text-[#E8815E] font-bold">▼ -0.4%</td>
-                    <td className="p-2.5 hidden sm:table-cell text-[#6B7280]">6,100 kg</td>
-                    <td className="p-2.5">
-                      <div className="w-full bg-[#F0F0F0] h-2 rounded-full overflow-hidden">
-                        <div className="bg-[#E8815E] h-full rounded-full transition-all duration-500" style={{ width: '45%' }} />
-                      </div>
-                    </td>
-                  </tr>
-
-                  <tr className="hover:bg-[#F9FAFB]">
-                    <td className="p-2.5 font-medium text-[#111827]">Turmeric (High Curcumin)</td>
-                    <td className="p-2.5 font-mono">₹ 185 / kg</td>
-                    <td className="p-2.5 text-[#006B6B] font-bold">▲ +2.4%</td>
-                    <td className="p-2.5 hidden sm:table-cell text-[#6B7280]">18,900 kg</td>
-                    <td className="p-2.5">
-                      <div className="w-full bg-[#F0F0F0] h-2 rounded-full overflow-hidden">
-                        <div className="bg-[#006B6B] h-full rounded-full transition-all duration-500" style={{ width: '91%' }} />
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
+        <div className="h-1.5 bg-emerald-100/70 rounded-full overflow-hidden border border-emerald-200/20">
+          <div
+            className="h-full bg-gradient-to-r from-emerald-400 via-teal-400 to-amber-300 rounded-full transition-all duration-75"
+            style={{ width: `${progress}%` }}
+          />
         </div>
+      </div>
 
-        {/* Progress Ring & CTA Button */}
-        <div className="flex flex-col sm:flex-row items-center justify-between p-5 bg-white rounded-xl border border-[#E5E7EB] shadow-sm gap-4">
-          <div className="flex items-center gap-4">
-            <div className="relative w-12 h-12 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                <path className="text-[#F0F0F0]" strokeWidth="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path className="text-[#006B6B] transition-all duration-300" strokeDasharray={`${progress}, 100`} strokeWidth="3.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              </svg>
-              <span className="absolute text-xs font-bold text-[#006B6B]">{progress}%</span>
-            </div>
-            <div className="text-left">
-              <div className="text-xs font-semibold text-[#111827] uppercase tracking-wider">
-                BOOTING SAAS LOGISTICS MATRIX
-              </div>
-              <div className="text-xs text-[#8C8C8C]">Initializing 18 Godowns Data Feeds</div>
-            </div>
-          </div>
-
-          <button
-            onClick={onFinish}
-            className="w-full sm:w-auto px-8 py-3.5 bg-[#006B6B] hover:bg-[#005555] text-white font-medium rounded-lg text-xs tracking-wider transition-colors duration-200 shadow-sm cursor-pointer flex items-center justify-center gap-2 uppercase group"
-          >
-            <span>LAUNCH DASHBOARD</span>
-            <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
-
-      </main>
-
-      {/* 3. Footer */}
-      <footer className="w-full max-w-7xl mx-auto z-20 border-t border-[#E5E7EB] pt-4 text-xs text-[#8C8C8C] flex items-center justify-between">
-        <span>© 2026 Spice Route Trading Co. • Modern Logistics Engine</span>
-        <div className="hidden sm:flex gap-4">
-          <span>Ocean Cargo Fleet</span>
-          <span>18 Godowns Grid</span>
-          <span>Multi-Currency FX</span>
-        </div>
-      </footer>
+      <div className="mt-16 text-[9px] font-mono text-emerald-700/40 animate-pulse relative z-10">
+        Press <span className="px-1 py-0.5 border border-emerald-200/80 rounded bg-[#FFFFFF] text-emerald-700 shadow-sm font-bold">Enter</span> or <span className="px-1 py-0.5 border border-emerald-200/80 rounded bg-[#FFFFFF] text-emerald-700 shadow-sm font-bold">Esc</span> to Skip Intro
+      </div>
     </div>
   );
 }
