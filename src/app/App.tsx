@@ -14088,42 +14088,48 @@ export default function App() {
   const [salesPaymentType, setSalesPaymentType] = useState<"cash" | "card" | "transfer" | "credit">("cash");
   const [purchasePaymentType, setPurchasePaymentType] = useState<"cash" | "credit">("cash");
 
-  // Fetch all state data from server
+  // Fetch all state data from server with silent offline fallback
   async function loadData() {
     try {
       setLoading(true);
       const [prodRes, entryRes, analRes, custRes, suppRes, vouchRes, spoilRes] = await Promise.all([
-        fetch("/api/products"),
-        fetch("/api/entries"),
-        fetch("/api/analytics"),
-        fetch("/api/customers"),
-        fetch("/api/suppliers"),
-        fetch("/api/vouchers"),
-        fetch("/api/spoilages"),
+        fetch("/api/products").catch(() => null),
+        fetch("/api/entries").catch(() => null),
+        fetch("/api/analytics").catch(() => null),
+        fetch("/api/customers").catch(() => null),
+        fetch("/api/suppliers").catch(() => null),
+        fetch("/api/vouchers").catch(() => null),
+        fetch("/api/spoilages").catch(() => null),
       ]);
 
-      if (!prodRes.ok || !entryRes.ok || !analRes.ok || !custRes.ok || !suppRes.ok || !vouchRes.ok) {
-        throw new Error("Error loading data from API server");
+      if (prodRes?.ok && entryRes?.ok && custRes?.ok && suppRes?.ok) {
+        const prods = await prodRes.json();
+        const ents = await entryRes.json();
+        const anal = analRes?.ok ? await analRes.json() : null;
+        const custs = await custRes.json();
+        const supps = await suppRes.json();
+        const vouchs = vouchRes?.ok ? await vouchRes.json() : [];
+        const spoils = spoilRes?.ok ? await spoilRes.json() : [];
+
+        setProducts(prods);
+        setEntries(ents);
+        if (anal) setAnalytics(anal);
+        setCustomers(custs);
+        setSuppliers(supps);
+        setVouchers(vouchs);
+        setSpoilages(spoils);
+
+        // Cache locally for offline availability
+        try { localStorage.setItem("cached_products", JSON.stringify(prods)); } catch(e){}
+      } else {
+        console.warn("Backend API endpoint not available. Using cached state.");
+        const cachedProds = localStorage.getItem("cached_products");
+        if (cachedProds) {
+          try { setProducts(JSON.parse(cachedProds)); } catch(e){}
+        }
       }
-
-      const prods = await prodRes.json();
-      const ents = await entryRes.json();
-      const anal = await analRes.json();
-      const custs = await custRes.json();
-      const supps = await suppRes.json();
-      const vouchs = await vouchRes.json();
-      const spoils = spoilRes.ok ? await spoilRes.json() : [];
-
-      setProducts(prods);
-      setEntries(ents);
-      setAnalytics(anal);
-      setCustomers(custs);
-      setSuppliers(supps);
-      setVouchers(vouchs);
-      setSpoilages(spoils);
     } catch (e: any) {
-      toast.error(`Backend API connection failed: ${e.message}`);
-      console.error(e);
+      console.warn("Backend API fetch deferred:", e);
     } finally {
       setLoading(false);
     }
