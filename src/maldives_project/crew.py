@@ -8,7 +8,10 @@ import json
 import re
 from typing import Dict, Any, List
 
-from crewai import Agent, Task, Crew, Process, LLM
+try:
+    from crewai import Agent, Task, Crew, Process, LLM
+except ImportError:
+    Agent = Task = Crew = Process = LLM = None
 from maldives_project.tools import (
     FindProductTool,
     FindCustomerOrSupplierTool,

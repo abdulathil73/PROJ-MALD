@@ -10,7 +10,15 @@ Implements:
 import json
 from typing import Type, Optional, List, Dict, Any
 from pydantic import BaseModel, Field
-from crewai.tools import BaseTool
+try:
+    from crewai.tools import BaseTool
+except ImportError:
+    class BaseTool(BaseModel):
+        name: str = ""
+        description: str = ""
+        args_schema: Optional[Type[BaseModel]] = None
+        def _run(self, *args, **kwargs):
+            pass
 
 from maldives_project.db import (
     search_products,
