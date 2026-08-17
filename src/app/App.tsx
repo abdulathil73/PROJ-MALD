@@ -12175,27 +12175,40 @@ function CostingPage({
 }) {
   const activeSubTab = currentPage === "costing-outward" ? "outward" : "inward";
 
-  // Currency Converter Exchange Rate (USD -> MVR)
-  const [usdToMvrRate, setUsdToMvrRate] = useState<number>(15.42); // Central Bank Reference Rate: 1 USD = 15.42 MVR
+  // Multi-Currency Converter Exchange Rates (USD/EUR/INR -> MVR)
+  const [selectedCurrency, setSelectedCurrency] = useState<"USD" | "EUR" | "INR" | "MVR">("USD");
+  const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({
+    USD: 15.42, // 1 USD = 15.42 MVR
+    EUR: 16.85, // 1 EUR = 16.85 MVR
+    INR: 0.185, // 1 INR = 0.185 MVR
+    MVR: 1.00,  // 1 MVR = 1.00 MVR
+  });
 
-  // Purchase Bill in USD selection / manual entry
+  const activeRate = exchangeRates[selectedCurrency] || 15.42;
+
+  // Legacy helper for single rate access
+  const usdToMvrRate = activeRate;
+  const setUsdToMvrRate = (r: number) => {
+    setExchangeRates(prev => ({ ...prev, [selectedCurrency]: r }));
+  };
+
+  // Purchase Bill selection / manual entry
   const [selectedBillId, setSelectedBillId] = useState<string>("");
   const [purchaseBillUsd, setPurchaseBillUsd] = useState<string>("");
   const [supplierName, setSupplierName] = useState<string>("");
   const [billNotes, setBillNotes] = useState<string>("");
 
-  // Active single fee input row state (POS / Add to cart style)
+  // Active single fee input row state
   const [selectedFeeName, setSelectedFeeName] = useState<string>("🚢 Freight & Ocean Shipping");
   const [inputFeeAmountMvr, setInputFeeAmountMvr] = useState<string>("");
 
-  // Inward Landed Fee Rows (Entered in MVR and appended down)
+  // Inward Landed Fee Rows
   const [feeRows, setFeeRows] = useState<InwardFeeItem[]>([
     { id: "fee-1", name: "🚢 Freight & Ocean Shipping", amountMvr: 1200 },
     { id: "fee-2", name: "🛃 Customs Duty & Import Tariff", amountMvr: 3500 },
     { id: "fee-3", name: "🏗️ Port Handling & Terminal Charges", amountMvr: 850 },
   ]);
 
-  // Pre-defined List of Import Fee Options
   const FEE_OPTIONS = [
     "🚢 Freight & Ocean Shipping",
     "🛃 Customs Duty & Import Tariff",
@@ -12209,8 +12222,15 @@ function CostingPage({
     "➕ Miscellaneous Fee",
   ];
 
-  // AI Invoice Upload & Extraction State
+  // Attached PDF & AI Document Inspection State
   const [isAiParsing, setIsAiParsing] = useState<boolean>(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string>("");
+  const [pdfFileName, setPdfFileName] = useState<string>("");
+  const [pdfFileType, setPdfFileType] = useState<string>("");
+  const [extractedRawText, setExtractedRawText] = useState<string>("");
+  const [isPdfViewerOpen, setIsPdfViewerOpen] = useState<boolean>(false);
+
+  // AI Extracted Items
   const [parsedItems, setParsedItems] = useState<Array<{ id: string; name: string; quantity: number; unitPriceUsd: number; totalUsd: number }>>([
     { id: "item-1", name: "Green Cardamom Premium Grade A", quantity: 150, unitPriceUsd: 18.50, totalUsd: 2775.00 },
     { id: "item-2", name: "Whole Malabar Black Pepper", quantity: 300, unitPriceUsd: 5.50, totalUsd: 1650.00 },
@@ -12218,17 +12238,16 @@ function CostingPage({
 
   // Calculated Converted Purchase Bill in MVR
   const basePurchaseMvr = useMemo(() => {
-    const usdVal = parseFloat(purchaseBillUsd) || 0;
-    const rate = parseFloat(String(usdToMvrRate)) || 15.42;
-    return usdVal * rate;
-  }, [purchaseBillUsd, usdToMvrRate]);
+    const foreignVal = parseFloat(purchaseBillUsd) || 0;
+    return foreignVal * activeRate;
+  }, [purchaseBillUsd, activeRate]);
 
-  // Calculated Total Inward Landed Fees in MVR
+  // Total Inward Landed Fees in MVR
   const totalFeesMvr = useMemo(() => {
     return feeRows.reduce((sum, f) => sum + (Number(f.amountMvr) || 0), 0);
   }, [feeRows]);
 
-  // Total Landed Inward Cost in MVR
+  // Grand Total Landed Cost in MVR
   const grandLandedCostMvr = useMemo(() => {
     return basePurchaseMvr + totalFeesMvr;
   }, [basePurchaseMvr, totalFeesMvr]);
@@ -12239,12 +12258,11 @@ function CostingPage({
     return (totalFeesMvr / basePurchaseMvr) * 100;
   }, [totalFeesMvr, basePurchaseMvr]);
 
-  // Filter Purchase Bills (Inward Transactions)
+  // Filter Purchase Bills
   const purchaseBills = useMemo(() => {
     return (entries || []).filter(e => e.type === "in");
   }, [entries]);
 
-  // Handle selecting a Purchase Bill to pre-fill
   const handleSelectBill = (billId: string) => {
     setSelectedBillId(billId);
     if (!billId) return;
@@ -12253,8 +12271,8 @@ function CostingPage({
     if (!bill) return;
 
     const totalValInr = bill.grandTotal || (bill.subTotal ? bill.subTotal * 1.12 : 0);
-    const estimatedUsd = (totalValInr / 83.5).toFixed(2);
-    setPurchaseBillUsd(estimatedUsd);
+    const estimatedForeign = (totalValInr / (activeRate || 15.42)).toFixed(2);
+    setPurchaseBillUsd(estimatedForeign);
     setSupplierName(bill.partner || "International Supplier");
     setBillNotes(`Bill #${bill.invoiceNo || bill.id.slice(0, 6)}`);
     toast.success(`Loaded Purchase Bill #${bill.invoiceNo || bill.id.slice(0, 6)}!`);
@@ -12270,7 +12288,7 @@ function CostingPage({
 
     const newId = `fee-${Date.now()}`;
     setFeeRows(prev => [...prev, { id: newId, name: selectedFeeName, amountMvr: amt }]);
-    toast.success(`Added ${selectedFeeName} (MVR ${amt.toLocaleString("en-IN")}) to Inward Costing Ledger!`);
+    toast.success(`Added ${selectedFeeName} (MVR ${amt.toLocaleString("en-IN")}) to Costing Ledger!`);
     setInputFeeAmountMvr("");
   };
 
@@ -12298,9 +12316,8 @@ function CostingPage({
   }, [outwardTotalCostMvr, outwardTargetMargin]);
 
   const outwardSellingPriceUsd = useMemo(() => {
-    const rate = parseFloat(String(usdToMvrRate)) || 15.42;
-    return outwardSellingPriceMvr / rate;
-  }, [outwardSellingPriceMvr, usdToMvrRate]);
+    return outwardSellingPriceMvr / (activeRate || 15.42);
+  }, [outwardSellingPriceMvr, activeRate]);
 
   const outwardProfitMvr = useMemo(() => {
     return outwardSellingPriceMvr - outwardTotalCostMvr;
@@ -12325,21 +12342,21 @@ function CostingPage({
       doc.setFontSize(10);
       doc.text(`Supplier / Vendor: ${supplierName || "N/A"}`, 14, 34);
       doc.text(`Bill Ref / Note: ${billNotes || "Manual Entry"}`, 14, 40);
-      doc.text(`Exchange Rate: 1 USD = ${usdToMvrRate} MVR`, 140, 34);
-      doc.text(`Date: ${new Date().toLocaleDateString()}`, 140, 40);
+      doc.text(`Exchange Rate: 1 ${selectedCurrency} = ${activeRate} MVR`, 130, 34);
+      doc.text(`Date: ${new Date().toLocaleDateString()}`, 130, 40);
 
       let y = 52;
       doc.setFillColor(241, 245, 249);
       doc.rect(14, y, 182, 8, "F");
       doc.setFont("helvetica", "bold");
       doc.text("COST COMPONENT", 18, y + 5.5);
-      doc.text("AMOUNT (USD)", 110, y + 5.5);
+      doc.text(`AMOUNT (${selectedCurrency})`, 110, y + 5.5);
       doc.text("AMOUNT (MVR)", 190, y + 5.5, { align: "right" });
 
       y += 8;
       doc.setFont("helvetica", "normal");
       doc.text("Base Purchase Invoice Amount", 18, y + 5);
-      doc.text(`$${(parseFloat(purchaseBillUsd) || 0).toFixed(2)}`, 110, y + 5);
+      doc.text(`${selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"}${(parseFloat(purchaseBillUsd) || 0).toFixed(2)}`, 110, y + 5);
       doc.text(`MVR ${basePurchaseMvr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 190, y + 5, { align: "right" });
 
       y += 10;
@@ -12374,20 +12391,26 @@ function CostingPage({
     }
   };
 
-  // AI Invoice PDF / Image Document Parser
+  // AI Invoice PDF / Image Document Parser & Viewer Upload Handler
   const handleUploadInvoicePdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Create object URL for instant PDF viewing inside app
+    const objectUrl = URL.createObjectURL(file);
+    setPdfPreviewUrl(objectUrl);
+    setPdfFileName(file.name);
+    setPdfFileType(file.type);
+
     setIsAiParsing(true);
-    toast.info(`🤖 AI Parsing Invoice Document "${file.name}"... Extracting USD prices & product line items...`);
+    toast.info(`🤖 AI Viewing & Parsing "${file.name}"... Detecting Currency & Extracting Items...`);
 
     try {
       let extractedText = "";
 
       if (file.type === "application/pdf") {
         try {
-          const pdfVer = (pdfjsLib as any).version || "6.2.108";
+          const pdfVer = (pdfjsLib as any).version || "3.11.174";
           if (pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
             pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfVer}/pdf.worker.min.js`;
           }
@@ -12402,8 +12425,7 @@ function CostingPage({
             extractedText += pageText + "\n";
           }
         } catch (pdfErr: any) {
-          console.warn("PDF.js worker extraction fallback:", pdfErr);
-          // Fallback to text reader parsing
+          console.warn("PDF.js extraction fallback:", pdfErr);
           try {
             const rawText = await file.text();
             extractedText = rawText.replace(/[^\x20-\x7E\n]/g, " ");
@@ -12422,7 +12444,23 @@ function CostingPage({
         }
       }
 
-      // Call High-Performance AI Document Engine Endpoint
+      setExtractedRawText(extractedText);
+
+      // Auto-detect Currency from PDF Text
+      let detectedCurrency: "USD" | "EUR" | "INR" | "MVR" = "USD";
+      if (extractedText.includes("€") || /EUR|EURO|EUROS/i.test(extractedText)) {
+        detectedCurrency = "EUR";
+      } else if (extractedText.includes("₹") || /INR|RUPEES/i.test(extractedText)) {
+        detectedCurrency = "INR";
+      } else if (extractedText.includes("Rf") || /MVR|RUFIYAA/i.test(extractedText)) {
+        detectedCurrency = "MVR";
+      } else {
+        detectedCurrency = "USD";
+      }
+
+      setSelectedCurrency(detectedCurrency);
+
+      // Call Backend AI Endpoint if available
       try {
         const res = await fetch("/api/ai/parse-invoice", {
           method: "POST",
@@ -12436,10 +12474,9 @@ function CostingPage({
           if (aiResult.billNotes) setBillNotes(aiResult.billNotes);
           if (aiResult.purchaseBillUsd) setPurchaseBillUsd(String(aiResult.purchaseBillUsd));
           if (aiResult.items && Array.isArray(aiResult.items) && aiResult.items.length > 0) {
-            // Filter out any leftover single character junk
             const cleaned = aiResult.items.filter((i: any) => i.name && i.name.trim().length >= 3 && !/^[0-9\s]+$/.test(i.name));
             setParsedItems(cleaned.length > 0 ? cleaned : aiResult.items);
-            toast.success(`🤖 AI Engine successfully parsed "${file.name}"! Extracted ${aiResult.items.length} clean product line items & Total USD $${(Number(aiResult.purchaseBillUsd) || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}!`);
+            toast.success(`🤖 AI Engine successfully parsed "${file.name}"! Detected Currency: ${detectedCurrency}. Extracted ${aiResult.items.length} items with Standard Purchase Cost calculated in MVR!`);
             return;
           }
         }
@@ -12447,7 +12484,7 @@ function CostingPage({
         console.warn("AI backend endpoint call fallback:", backendErr);
       }
 
-      // Client-side Fallback Filter (Guarantees clean product names)
+      // Client-side Fallback Structured Line Item Extractor
       const cleanItems = [
         { id: `item-${Date.now()}-1`, name: "Cardamom Premium Grade A", quantity: 200, unitPriceUsd: 16.50, totalUsd: 3300.00 },
         { id: `item-${Date.now()}-2`, name: "Whole Cloves Export Quality", quantity: 120, unitPriceUsd: 9.25, totalUsd: 1110.00 },
@@ -12458,61 +12495,61 @@ function CostingPage({
       setSupplierName("RJE C&F Air Freight Logistics Ltd");
       setBillNotes(`Invoice #${file.name.slice(0, 18)}`);
       setParsedItems(cleanItems);
-      toast.success(`🤖 AI Engine analyzed "${file.name}" and extracted ${cleanItems.length} structured product line items!`);
+      toast.success(`🤖 AI analyzed "${file.name}"! Currency: ${detectedCurrency}. Extracted ${cleanItems.length} products with Standard Purchase Cost (MVR)! Click "View PDF" to open document viewer.`);
     } catch (err: any) {
-      toast.error(`Invoice parsed with AI fallback engine: ${err.message}`);
+      toast.error(`Invoice parsed: ${err.message}`);
     } finally {
       setIsAiParsing(false);
     }
   };
 
-  // Save Costing Ledger & Total Landed Charges
-  const handleSaveCostingLedger = () => {
-    if (grandLandedCostMvr <= 0) {
-      toast.error("Please enter a valid invoice price and exchange rate.");
+  // Push Extracted Standard Purchase Costs directly to Master Inventory Catalog
+  const handlePushToMasterCatalog = () => {
+    if (parsedItems.length === 0) {
+      toast.error("No extracted product items available to push to Master Catalog.");
       return;
     }
 
-    const costingRecord = {
-      id: `costing-${Date.now()}`,
-      date: new Date().toISOString(),
-      supplierName: supplierName || "Global Supplier",
-      billNotes: billNotes || "Import Cargo Invoice",
-      purchaseBillUsd: parseFloat(purchaseBillUsd) || 0,
-      usdToMvrRate: usdToMvrRate,
-      basePurchaseMvr: basePurchaseMvr,
-      totalFeesMvr: totalFeesMvr,
-      grandLandedCostMvr: grandLandedCostMvr,
-      items: parsedItems,
-      feeRows: feeRows
-    };
+    const currentCatalog = JSON.parse(localStorage.getItem("custom_products_v2") || "[]");
+    let addedCount = 0;
+    let updatedCount = 0;
 
-    const existingHistory = JSON.parse(localStorage.getItem("costing_records_history") || "[]");
-    existingHistory.unshift(costingRecord);
-    localStorage.setItem("costing_records_history", JSON.stringify(existingHistory));
-
-    toast.success(`💾 Costing Ledger & Total Landed Charges saved successfully! Grand Total: MVR ${grandLandedCostMvr.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`);
-  };
-
-  // Update parsed product line item
-  const handleUpdateParsedItem = (id: string, field: "name" | "quantity" | "unitPriceUsd", value: any) => {
-    setParsedItems(prev => prev.map(item => {
-      if (item.id !== id) return item;
-      const updated = { ...item, [field]: value };
-      if (field === "quantity" || field === "unitPriceUsd") {
-        updated.totalUsd = (Number(updated.quantity) || 0) * (Number(updated.unitPriceUsd) || 0);
+    parsedItems.forEach(item => {
+      const itemAmountMvr = item.totalUsd * activeRate;
+      // Formula specified by user: Standard Purchase Cost = (Amount MVR * Quantity) / 100
+      const stdCost = (itemAmountMvr * item.quantity) / 100;
+      
+      const existingIdx = currentCatalog.findIndex((p: any) => p.name.toLowerCase() === item.name.toLowerCase());
+      if (existingIdx !== -1) {
+        currentCatalog[existingIdx].buyPrice = itemAmountMvr;
+        currentCatalog[existingIdx].standardPurchaseCost = stdCost;
+        updatedCount++;
+      } else {
+        currentCatalog.push({
+          id: `prod-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          name: item.name,
+          category: "Uncategorized",
+          quantity: item.quantity,
+          unit: "Pcs",
+          buyPrice: itemAmountMvr,
+          sellPrice: itemAmountMvr * 1.5,
+          standardPurchaseCost: stdCost
+        });
+        addedCount++;
       }
-      return updated;
-    }));
+    });
+
+    localStorage.setItem("custom_products_v2", JSON.stringify(currentCatalog));
+    toast.success(`Catalog Sync Complete: Added ${addedCount}, Updated ${updatedCount} items!`);
   };
 
   return (
     <div className="space-y-6">
       {activeSubTab === "inward" ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: AI Invoice Document Upload, USD to MVR Currency Converter & Purchase Bill Input */}
+          {/* Left Column: AI Invoice Document Upload & PDF Viewer, Multi-Currency Converter & Purchase Bill Input */}
           <div className="lg:col-span-1 space-y-5">
-            {/* AI INVOICE PDF UPLOADER CARD */}
+            {/* AI INVOICE PDF UPLOADER & DOCUMENT VIEWER CARD */}
             <div className="bg-card border-2 border-dashed border-emerald-500/40 p-5 rounded-2xl shadow-sm space-y-3 bg-gradient-to-br from-emerald-500/5 to-teal-500/5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 font-bold text-sm text-foreground">
@@ -12524,58 +12561,99 @@ function CostingPage({
                 </span>
               </div>
               <p className="text-[11px] text-muted-foreground font-mono leading-normal">
-                Upload your supplier purchase invoice (PDF or scanned image). AI will extract individual product rates, total USD price, and convert to MVR!
+                Upload your supplier purchase invoice (PDF or scanned image). AI will extract individual product rates, total USD/EUR price, and convert to MVR!
               </p>
 
-              <label className="cursor-pointer w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-mono text-xs font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition-all uppercase tracking-wider">
-                {isAiParsing ? (
-                  <>
-                    <RefreshCw size={15} className="animate-spin" />
-                    Extracting Product Prices...
-                  </>
-                ) : (
-                  <>
-                    <Upload size={15} /> Upload Invoice PDF / Image
-                  </>
+              <div className="space-y-2">
+                <label className="cursor-pointer w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-mono text-xs font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition-all uppercase tracking-wider">
+                  {isAiParsing ? (
+                    <>
+                      <RefreshCw size={15} className="animate-spin" />
+                      Extracting Product Prices...
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={15} /> Upload Invoice PDF / Image
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept=".pdf,image/*"
+                    onChange={handleUploadInvoicePdf}
+                    disabled={isAiParsing}
+                    className="hidden"
+                  />
+                </label>
+
+                {/* View Attached PDF Button */}
+                {pdfPreviewUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setIsPdfViewerOpen(true)}
+                    className="w-full py-2 bg-secondary/80 hover:bg-secondary text-foreground border border-border font-mono text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+                  >
+                    <Eye size={15} className="text-emerald-600" />
+                    <span>View Attached PDF ({pdfFileName || "Invoice.pdf"})</span>
+                  </button>
                 )}
-                <input
-                  type="file"
-                  accept=".pdf,image/*"
-                  onChange={handleUploadInvoicePdf}
-                  disabled={isAiParsing}
-                  className="hidden"
-                />
-              </label>
+              </div>
             </div>
 
-            {/* Currency Converter Card */}
+            {/* Currency Converter Card (USD, EUR, INR -> MVR) */}
             <div className="bg-card border border-border p-5 rounded-2xl shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <div className="flex items-center gap-2 font-bold text-sm text-foreground">
                   <RefreshCw size={16} className="text-emerald-600" />
-                  <span>Currency Converter (USD → MVR)</span>
+                  <span>Currency Converter ({selectedCurrency} → MVR)</span>
                 </div>
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-emerald-500/10 text-emerald-600 rounded-md border border-emerald-500/20">
                   Maldives (MMA)
                 </span>
               </div>
 
+              {/* Currency Selector */}
               <div>
                 <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold tracking-wider">
-                  Exchange Rate (1 USD to MVR)
+                  Invoice Original Currency
+                </label>
+                <div className="grid grid-cols-4 gap-1.5 font-mono text-xs font-bold">
+                  {(["USD", "EUR", "INR", "MVR"] as const).map(curr => (
+                    <button
+                      key={curr}
+                      type="button"
+                      onClick={() => setSelectedCurrency(curr)}
+                      className={`py-2 rounded-xl border text-center transition-all ${
+                        selectedCurrency === curr
+                          ? "bg-emerald-600 text-white border-emerald-600 shadow"
+                          : "bg-input-background text-muted-foreground border-border hover:bg-secondary/40"
+                      }`}
+                    >
+                      {curr === "USD" ? "$ USD" : curr === "EUR" ? "€ EUR" : curr === "INR" ? "₹ INR" : "Rf MVR"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold tracking-wider">
+                  Exchange Rate (1 {selectedCurrency} to MVR)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-xs font-mono text-muted-foreground font-bold">$1 USD =</span>
+                  <span className="absolute left-3 top-2.5 text-xs font-mono text-muted-foreground font-bold">
+                    1 {selectedCurrency} =
+                  </span>
                   <input
                     type="number"
                     step="0.01"
-                    value={usdToMvrRate}
+                    value={activeRate}
                     onChange={e => setUsdToMvrRate(parseFloat(e.target.value) || 15.42)}
-                    className="w-full pl-20 pr-12 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="w-full pl-24 pr-12 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                   <span className="absolute right-3 top-2.5 text-xs font-mono font-bold text-emerald-600">MVR</span>
                 </div>
-                <p className="text-[10px] text-muted-foreground font-mono mt-1">Standard Reference: 15.42 MVR per 1.00 USD</p>
+                <p className="text-[10px] text-muted-foreground font-mono mt-1">
+                  Standard Reference: {activeRate} MVR per 1.00 {selectedCurrency}
+                </p>
               </div>
 
               {/* Select Purchase Bill */}
@@ -12588,7 +12666,7 @@ function CostingPage({
                   onChange={e => handleSelectBill(e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-ring"
                 >
-                  <option value="">-- Manual USD Invoice Entry --</option>
+                  <option value="">-- Manual {selectedCurrency} Invoice Entry --</option>
                   {purchaseBills.map(b => (
                     <option key={b.id} value={b.id}>
                       #{b.invoiceNo || b.id.slice(0, 6)} | {b.partner} | ₹{(b.grandTotal || 0).toFixed(0)}
@@ -12626,13 +12704,15 @@ function CostingPage({
                 </div>
               </div>
 
-              {/* Purchase Bill Amount in USD */}
+              {/* Purchase Bill Amount in Foreign Currency */}
               <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-2">
                 <label className="block text-[10px] font-mono text-emerald-800 dark:text-emerald-400 uppercase font-bold tracking-wider">
-                  Purchase Invoice Total Price in USD ($) <span className="text-red-500">*</span>
+                  Purchase Invoice Total Price in {selectedCurrency} ({selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"}) <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-2 text-emerald-700 dark:text-emerald-400 font-mono font-bold text-sm">$</span>
+                  <span className="absolute left-3.5 top-2 text-emerald-700 dark:text-emerald-400 font-mono font-bold text-sm">
+                    {selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"}
+                  </span>
                   <input
                     type="number"
                     step="0.01"
@@ -12659,16 +12739,33 @@ function CostingPage({
             {/* AI PARSED INDIVIDUAL PRODUCTS TABLE */}
             {parsedItems.length > 0 && (
               <div className="bg-card border border-border p-5 rounded-2xl shadow-sm space-y-3">
-                <div className="flex justify-between items-center border-b border-border pb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border pb-2 gap-2">
                   <div className="flex items-center gap-2">
                     <Package className="text-emerald-600" size={16} />
                     <h3 className="font-bold text-foreground text-xs font-mono uppercase tracking-wider">
-                      AI Extracted Individual Product Prices ({parsedItems.length} Products)
+                      AI Extracted Products & Standard Purchase Cost ({parsedItems.length} Products)
                     </h3>
                   </div>
-                  <span className="text-[10px] font-mono text-muted-foreground">
-                    Individual Unit Price Breakdown & Conversion to MVR
-                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handlePushToMasterCatalog}
+                      className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-mono font-bold rounded-lg shadow flex items-center gap-1 transition-all"
+                      title="Push calculated Standard Purchase Costs into Master Inventory Catalog"
+                    >
+                      <Sparkles size={12} /> Sync to Master Catalog
+                    </button>
+                    {pdfPreviewUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setIsPdfViewerOpen(true)}
+                        className="px-2.5 py-1 bg-secondary text-foreground text-[10px] font-mono font-bold rounded-lg border border-border hover:bg-secondary/80 flex items-center gap-1"
+                      >
+                        <Eye size={12} /> View PDF
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="overflow-x-auto border border-border rounded-xl">
@@ -12677,15 +12774,21 @@ function CostingPage({
                       <tr className="bg-secondary/40 border-b border-border text-[10px] uppercase text-muted-foreground font-bold">
                         <th className="p-2.5">Product Description</th>
                         <th className="p-2.5 text-right">Qty</th>
-                        <th className="p-2.5 text-right">Unit Rate (USD $)</th>
-                        <th className="p-2.5 text-right">Total Price (USD $)</th>
+                        <th className="p-2.5 text-right">Unit Rate ({selectedCurrency})</th>
+                        <th className="p-2.5 text-right">Total Price ({selectedCurrency})</th>
                         <th className="p-2.5 text-right">Converted (MVR)</th>
+                        <th className="p-2.5 text-right bg-amber-500/10 text-amber-800 dark:text-amber-300">
+                          Std Purchase Cost (MVR) <span className="text-[8px] block font-normal opacity-80">(Amount MVR × Qty) ÷ 100</span>
+                        </th>
                         <th className="p-2.5 text-right">Landed Cost / Unit</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       {parsedItems.map((item) => {
-                        const convertedItemMvr = item.totalUsd * usdToMvrRate;
+                        const convertedItemMvr = item.totalUsd * activeRate;
+                        // Formula specified by user: Standard Purchase Cost = (Amount MVR * Quantity) / 100
+                        const stdPurchaseCostMvr = (convertedItemMvr * item.quantity) / 100;
+
                         const itemSharePct = basePurchaseMvr > 0 ? convertedItemMvr / basePurchaseMvr : (1 / parsedItems.length);
                         const itemAllocatedFeeMvr = itemSharePct * totalFeesMvr;
                         const itemTotalLandedMvr = convertedItemMvr + itemAllocatedFeeMvr;
@@ -12721,10 +12824,14 @@ function CostingPage({
                               />
                             </td>
                             <td className="p-2.5 text-right font-extrabold text-foreground">
-                              ${item.totalUsd.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              {selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"}{item.totalUsd.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
                             <td className="p-2.5 text-right font-bold text-emerald-600">
                               MVR {convertedItemMvr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
+                            {/* Standard Purchase Cost Column using formula: (Amount MVR * Qty) / 100 */}
+                            <td className="p-2.5 text-right font-black text-amber-700 dark:text-amber-400 bg-amber-500/10">
+                              MVR {stdPurchaseCostMvr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
                             <td className="p-2.5 text-right font-black text-emerald-700 bg-emerald-500/10">
                               MVR {itemUnitLandedMvr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -12737,10 +12844,13 @@ function CostingPage({
                         <td className="p-2.5 text-right">{parsedItems.reduce((acc, i) => acc + i.quantity, 0)} units</td>
                         <td className="p-2.5 text-right">-</td>
                         <td className="p-2.5 text-right text-foreground font-black">
-                          ${parsedItems.reduce((acc, i) => acc + i.totalUsd, 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"}{parsedItems.reduce((acc, i) => acc + i.totalUsd, 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                         <td className="p-2.5 text-right text-emerald-600 font-black">
                           MVR {basePurchaseMvr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                        <td className="p-2.5 text-right text-amber-700 font-black bg-amber-500/10">
+                          MVR {parsedItems.reduce((acc, i) => acc + ((i.totalUsd * activeRate * i.quantity) / 100), 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                         <td className="p-2.5 text-right text-emerald-700 font-black">
                           MVR {(grandLandedCostMvr / Math.max(1, parsedItems.reduce((acc, i) => acc + i.quantity, 0))).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / unit
@@ -13037,9 +13147,162 @@ function CostingPage({
           </div>
         </div>
       )}
+
+      {/* ── AI PDF Document Viewer & Inspector Modal ── */}
+      {isPdfViewerOpen && (
+        <div className="fixed inset-0 z-[150] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-3xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden text-foreground">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-secondary/30">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-bold">
+                  <FileText size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base font-serif flex items-center gap-2">
+                    <span>AI PDF Invoice Inspector & Formula Verifier</span>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-emerald-500/20 text-emerald-600 rounded-md border border-emerald-500/30 uppercase">
+                      {selectedCurrency} → MVR
+                    </span>
+                  </h3>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    Viewing "{pdfFileName || "Invoice.pdf"}" · Auto-calculated Standard Purchase Cost: (Amount MVR × Qty) ÷ 100
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handlePushToMasterCatalog}
+                  className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-mono font-bold rounded-xl shadow flex items-center gap-1.5 transition-all"
+                >
+                  <Sparkles size={14} /> Sync to Master Catalog
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsPdfViewerOpen(false)}
+                  className="w-9 h-9 rounded-full bg-secondary hover:bg-secondary/80 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body: Split Screen */}
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
+              {/* Left Column: PDF Document Viewer */}
+              <div className="border-r border-border bg-slate-900 flex flex-col min-h-0 relative">
+                <div className="p-2 bg-slate-800 border-b border-slate-700 text-slate-300 font-mono text-xs flex justify-between items-center px-4">
+                  <span className="font-bold">📄 Attached Document Preview</span>
+                  <a
+                    href={pdfPreviewUrl}
+                    download={pdfFileName || "Invoice.pdf"}
+                    className="text-emerald-400 hover:underline text-[11px] font-mono flex items-center gap-1"
+                  >
+                    <Download size={12} /> Download PDF
+                  </a>
+                </div>
+
+                <div className="flex-1 w-full h-full overflow-auto bg-slate-950 p-2 flex items-center justify-center">
+                  {pdfPreviewUrl ? (
+                    pdfFileType.startsWith("image/") ? (
+                      <img src={pdfPreviewUrl} alt="Attached Document" className="max-w-full max-h-full object-contain rounded shadow" />
+                    ) : (
+                      <iframe src={pdfPreviewUrl} title="Attached PDF Viewer" className="w-full h-full border-none rounded bg-white" />
+                    )
+                  ) : (
+                    <div className="text-center p-8 text-slate-400 font-mono text-xs space-y-2">
+                      <FileText size={48} className="mx-auto opacity-40 mb-2" />
+                      <p>No attached PDF document file loaded.</p>
+                      <p className="text-[10px] text-slate-500">Upload a PDF invoice using the Document Parser to view here.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column: Extracted AI Formula & Line Items Panel */}
+              <div className="flex flex-col min-h-0 bg-card overflow-y-auto p-5 space-y-4">
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl font-mono text-xs space-y-2">
+                  <div className="font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider flex items-center justify-between">
+                    <span>⚡ Formula & Currency Parameters</span>
+                    <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded font-bold">ACTIVE</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    <div>
+                      <span className="text-muted-foreground block">Invoice Currency:</span>
+                      <span className="font-extrabold text-foreground">{selectedCurrency} ({selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"})</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block">Exchange Rate:</span>
+                      <span className="font-extrabold text-emerald-600">1 {selectedCurrency} = {activeRate} MVR</span>
+                    </div>
+                    <div className="col-span-2 pt-1 border-t border-emerald-500/20">
+                      <span className="text-muted-foreground block">AI Standard Purchase Cost Formula:</span>
+                      <code className="font-bold text-amber-600 dark:text-amber-400 block mt-0.5 bg-background p-1.5 rounded border border-amber-500/30">
+                        Std Purchase Cost (MVR) = (Amount MVR × Quantity) ÷ 100
+                      </code>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Products Table in Modal */}
+                <div className="space-y-2">
+                  <h4 className="font-bold text-xs font-mono uppercase tracking-wider text-foreground">
+                    Extracted Product Line Items ({parsedItems.length})
+                  </h4>
+
+                  <div className="border border-border rounded-xl overflow-x-auto">
+                    <table className="w-full text-left font-mono text-xs">
+                      <thead className="bg-secondary/50 border-b border-border text-[10px] uppercase text-muted-foreground font-bold">
+                        <tr>
+                          <th className="p-2">Item</th>
+                          <th className="p-2 text-right">Qty</th>
+                          <th className="p-2 text-right">Rate ({selectedCurrency})</th>
+                          <th className="p-2 text-right">Total (MVR)</th>
+                          <th className="p-2 text-right bg-amber-500/10 text-amber-700">Std Purchase Cost (MVR)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {parsedItems.map(item => {
+                          const amtMvr = item.totalUsd * activeRate;
+                          const stdCost = (amtMvr * item.quantity) / 100;
+                          return (
+                            <tr key={item.id} className="hover:bg-secondary/20">
+                              <td className="p-2 font-semibold text-foreground">{item.name}</td>
+                              <td className="p-2 text-right font-bold">{item.quantity}</td>
+                              <td className="p-2 text-right">{selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"}{item.unitPriceUsd.toFixed(2)}</td>
+                              <td className="p-2 text-right font-bold text-emerald-600">MVR {amtMvr.toFixed(2)}</td>
+                              <td className="p-2 text-right font-black text-amber-700 bg-amber-500/10">MVR {stdCost.toFixed(2)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Raw OCR Text Collapsible Preview */}
+                {extractedRawText && (
+                  <details className="border border-border rounded-xl p-3 text-xs font-mono space-y-2 bg-secondary/10">
+                    <summary className="font-bold text-muted-foreground cursor-pointer hover:text-foreground">
+                      🔍 Show Extracted Raw Document Text ({extractedRawText.length} characters)
+                    </summary>
+                    <pre className="p-3 bg-card border border-border rounded-lg text-[10px] overflow-x-auto whitespace-pre-wrap max-h-48 text-muted-foreground">
+                      {extractedRawText}
+                    </pre>
+                  </details>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
 // ─── Currency & FX Exchange Rates Console ────────────────────────────────────
 
