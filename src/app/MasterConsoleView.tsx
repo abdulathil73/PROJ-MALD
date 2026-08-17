@@ -790,16 +790,29 @@ export default function MasterConsoleView({
         setGodowns(prev => [...prev, newGdn]);
         toast.success(`Warehouse Godown "${godownForm.name} (${godownForm.code})" registered in Masters!`);
       } else if (effectiveSubPage.startsWith("master-users")) {
+        const name = userForm.employeeName.trim();
+        if (!name) {
+          toast.error("Please enter Employee Name.");
+          return;
+        }
+
+        const autoEmpId = userForm.employeeId.trim() || `EMP-${String(users.length + 1).padStart(3, '0')}`;
+        const autoUsername = userForm.username.trim().toLowerCase() || name.toLowerCase().replace(/\s+/g, "");
+        const autoPassword = userForm.password ? userForm.password.trim() : "123";
+
         const newUser = {
           ...userForm,
           id: "usr_" + Date.now(),
-          username: userForm.username ? userForm.username.trim().toLowerCase() : (userForm.employeeId ? userForm.employeeId.trim().toLowerCase() : "user" + Date.now()),
-          password: userForm.password ? userForm.password.trim() : "123",
+          employeeId: autoEmpId,
+          employeeName: name,
+          username: autoUsername,
+          password: autoPassword,
+          role: userForm.role || "Staff",
           totalSalary: (userForm.basicSalary || 0) + (userForm.allowances || 0) + (userForm.overtime || 0),
           allowedFeatures: userForm.allowedFeatures && userForm.allowedFeatures.length > 0 ? userForm.allowedFeatures : ALL_WEBSITE_FEATURES.map(f => f.id)
         };
         setUsers(prev => [...prev, newUser]);
-        toast.success(`Employee "${userForm.employeeName}" registered with username "${newUser.username}"!`);
+        toast.success(`Employee "${name}" registered! User ID: "${autoUsername}" | Password: "${autoPassword}"`);
         setUserForm({
           employeeId: "", employeeName: "", passportNumber: "", passportIssue: "", passportExpiry: "", workPermitNumber: "",
           workPermitIssue: "", workPermitExpiry: "", visaNumber: "", visaIssue: "", visaExpiry: "", insuranceNumber: "",
@@ -1065,11 +1078,10 @@ export default function MasterConsoleView({
               
               {/* Row 1: Bio & Credentials */}
               <div className="border-l-2 border-l-blue-500 pl-2 space-y-0.5">
-                <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Employee ID *</label>
+                <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Employee ID</label>
                 <input
                   type="text"
-                  required
-                  placeholder="e.g. EMP-001"
+                  placeholder="e.g. EMP-001 (Auto)"
                   value={userForm.employeeId}
                   onChange={e => setUserForm(prev => ({ ...prev, employeeId: e.target.value }))}
                   className="w-full px-2 py-0.5 border border-border rounded bg-input-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all font-mono font-semibold"
@@ -1099,11 +1111,10 @@ export default function MasterConsoleView({
               </div>
 
               <div className="border-l-2 border-l-blue-500 pl-2 space-y-0.5">
-                <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Username *</label>
+                <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Username</label>
                 <input
                   type="text"
-                  required
-                  placeholder="Username"
+                  placeholder="Username (Auto)"
                   value={userForm.username}
                   onChange={e => setUserForm(prev => ({ ...prev, username: e.target.value.toLowerCase().replace(/\s+/g, "") }))}
                   className="w-full px-2 py-0.5 border border-border rounded bg-input-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all font-mono font-semibold"
@@ -1111,11 +1122,10 @@ export default function MasterConsoleView({
               </div>
 
               <div className="border-l-2 border-l-blue-500 pl-2 space-y-0.5">
-                <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Password *</label>
+                <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Password</label>
                 <input
                   type="password"
-                  required
-                  placeholder="Password"
+                  placeholder="Password (Default 123)"
                   value={userForm.password}
                   onChange={e => setUserForm(prev => ({ ...prev, password: e.target.value }))}
                   className="w-full px-2 py-0.5 border border-border rounded bg-input-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all font-mono font-semibold"
@@ -1209,10 +1219,9 @@ export default function MasterConsoleView({
               </div>
 
               <div className="border-l-2 border-l-emerald-500 pl-2 space-y-0.5">
-                <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Basic Salary *</label>
+                <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Basic Salary</label>
                 <input
                   type="number"
-                  required
                   placeholder="Basic Pay"
                   value={userForm.basicSalary || ""}
                   onChange={e => {
@@ -1660,11 +1669,10 @@ export default function MasterConsoleView({
                       
                       {/* Row 1: Bio & Credentials */}
                       <div className="border-l-2 border-l-blue-500 pl-2 space-y-0.5">
-                        <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Employee ID *</label>
+                        <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Employee ID</label>
                         <input
                           type="text"
-                          required
-                          placeholder="e.g. EMP-001"
+                          placeholder="e.g. EMP-001 (Auto)"
                           value={userForm.employeeId}
                           onChange={e => setUserForm(prev => ({ ...prev, employeeId: e.target.value }))}
                           className="w-full px-2 py-0.5 border border-border rounded bg-input-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all font-mono font-semibold"
@@ -1694,11 +1702,10 @@ export default function MasterConsoleView({
                       </div>
 
                       <div className="border-l-2 border-l-blue-500 pl-2 space-y-0.5">
-                        <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Username *</label>
+                        <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Username</label>
                         <input
                           type="text"
-                          required
-                          placeholder="Username"
+                          placeholder="Username (Auto)"
                           value={userForm.username}
                           onChange={e => setUserForm(prev => ({ ...prev, username: e.target.value.toLowerCase().replace(/\s+/g, "") }))}
                           className="w-full px-2 py-0.5 border border-border rounded bg-input-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all font-mono font-semibold"
@@ -1706,11 +1713,10 @@ export default function MasterConsoleView({
                       </div>
 
                       <div className="border-l-2 border-l-blue-500 pl-2 space-y-0.5">
-                        <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Password *</label>
+                        <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Password</label>
                         <input
                           type="password"
-                          required
-                          placeholder="Password"
+                          placeholder="Password (Default 123)"
                           value={userForm.password}
                           onChange={e => setUserForm(prev => ({ ...prev, password: e.target.value }))}
                           className="w-full px-2 py-0.5 border border-border rounded bg-input-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all font-mono font-semibold"
@@ -1804,10 +1810,9 @@ export default function MasterConsoleView({
                       </div>
 
                       <div className="border-l-2 border-l-emerald-500 pl-2 space-y-0.5">
-                        <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Basic Salary *</label>
+                        <label className="block text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Basic Salary</label>
                         <input
                           type="number"
-                          required
                           placeholder="Basic Pay"
                           value={userForm.basicSalary || ""}
                           onChange={e => {
