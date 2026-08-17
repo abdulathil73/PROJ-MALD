@@ -898,9 +898,6 @@ export default function MasterConsoleView({
           totalSalary: (userForm.basicSalary || 0) + (userForm.allowances || 0) + (userForm.overtime || 0),
           allowedFeatures: userForm.allowedFeatures && userForm.allowedFeatures.length > 0 ? userForm.allowedFeatures : x.allowedFeatures
         } : x));
-        toast.success(`Employee "${userForm.employeeName}" updated with permissions!`);
-      } else {
-        toast.success("Record updated successfully.");
       } else {
         toast.success("Record updated successfully.");
       }
