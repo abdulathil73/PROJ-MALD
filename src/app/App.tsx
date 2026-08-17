@@ -6,7 +6,8 @@ import {
   Package, TrendingUp, TrendingDown, Warehouse, ArrowDownToLine, ArrowUpFromLine,
   Sparkles, ChevronRight, Search, Plus, Check, AlertCircle, LayoutDashboard, LayoutGrid,
   BoxIcon, BarChart2, Bot, Menu, Ship, MapPin, Truck, RefreshCw, Calendar, AlertTriangle, Moon, Sun, Database as DbIcon, Printer, X, PlusCircle, CreditCard, DollarSign, Building, Trash2, Keyboard, Play, Lock, User, Coins, Calculator, Tag, Clock, Gift,
-  Mic, MicOff, Volume2, VolumeX, HelpCircle, Eye, Edit, FileText, Download, Filter, ShieldAlert, CheckCircle2, MessageSquare, PhoneCall, Send, Copy, ShoppingCart, Receipt, BookOpen, FileCheck, History, ArrowLeft, Percent, PackageCheck, FileUp, FileSpreadsheet, Upload, Cpu, Cloud, Layers, Zap, Mail
+  Mic, MicOff, Volume2, VolumeX, HelpCircle, Eye, Edit, FileText, Download, Filter, ShieldAlert, CheckCircle2, MessageSquare, PhoneCall, Send, Copy, ShoppingCart, Receipt, BookOpen, FileCheck, History, ArrowLeft, Percent, PackageCheck, FileUp, FileSpreadsheet, Upload, Cpu, Cloud, Layers, Zap, Mail,
+  Globe, Plane, ShieldCheck, Activity, ArrowUpRight, Compass
 } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import MasterConsoleView from "./MasterConsoleView";
@@ -14032,22 +14033,37 @@ export default function App() {
 
   const isFeaturePermitted = (featId: string): boolean => {
     if (!currentUser) return true;
-    if (currentUser.role === "Admin" || currentUser.role === "Owner" || currentUser.username === "admin") return true;
+    if (currentUser.role === "Admin" || currentUser.role === "Owner" || currentUser.username === "admin" || currentUser.role === "System Administrator / Owner") return true;
     const allowed: string[] = currentUser.allowedFeatures || [];
+
+    if (allowed.includes(featId)) return true;
 
     let key = featId;
     if (featId === "sales" || featId === "sales-billing") key = "sales-billing";
     else if (featId === "sales-quotation") key = "sales-quotation";
+    else if (featId === "sales-proforma") key = "sales-proforma";
     else if (featId === "sales-delivery") key = "sales-delivery";
-    else if (featId === "sales-credit") key = "sales-credit-note";
-    else if (featId === "purchase" || featId === "purchase-billing") key = "purchase-bill";
-    else if (featId === "purchase-order") key = "purchase-order";
-    else if (featId === "purchase-spoilage") key = "inventory-spoilage";
-    else if (featId === "godowns") key = "inventory-godowns";
-    else if (featId === "inventory") key = "inventory-items";
-    else if (featId.startsWith("vouchers")) key = featId === "vouchers" ? "vouchers-receipt" : featId;
-    else if (featId.startsWith("reports")) key = featId === "reports" ? "reports-pnl" : featId;
-    else if (featId.startsWith("master-")) key = featId;
+    else if (featId === "sales-credit" || featId === "sales-credit-note") key = "sales-credit-note";
+    else if (featId === "sales-debit-note") key = "sales-debit-note";
+    else if (featId === "sales-pos") key = "sales-pos";
+    else if (featId === "purchase" || featId === "purchase-billing" || featId === "purchase-bill") key = "purchase-bill";
+    else if (featId === "purchase-order" || featId === "purchase-grn") key = "purchase-order";
+    else if (featId === "purchase-debit") key = "purchase-bill";
+    else if (featId === "purchase-spoilage" || featId === "inventory-spoilage") key = "inventory-spoilage";
+    else if (featId === "godowns" || featId === "godown-hub" || featId === "inventory-godowns" || featId === "master-godowns") key = "inventory-godowns";
+    else if (featId === "inventory" || featId === "inventory-items") key = "inventory-items";
+    else if (featId === "costing" || featId.startsWith("costing-")) key = "costing";
+    else if (featId === "currency" || featId === "currency-convert") key = "currency-convert";
+    else if (featId === "expiry" || featId.startsWith("expiry-") || featId === "perishables") key = "expiry";
+    else if (featId === "offers") key = "offers";
+    else if (featId === "vouchers" || featId === "vouchers-all" || featId === "vouchers-receipt") key = "vouchers-receipt";
+    else if (featId === "vouchers-payment") key = "vouchers-payment";
+    else if (featId === "vouchers-journal") key = "vouchers-journal";
+    else if (featId === "vouchers-contra") key = "vouchers-contra";
+    else if (featId === "credit-recovery") key = "credit-recovery";
+    else if (featId === "reports" || featId.startsWith("reports-") || featId === "pl") key = "reports-pnl";
+    else if (featId === "master-console" || featId.startsWith("master-")) key = featId === "master-console" ? "master-users" : featId;
+    else if (featId === "ai") key = "dashboard";
 
     return allowed.includes(key);
   };
@@ -14371,42 +14387,48 @@ export default function App() {
   const [salesPaymentType, setSalesPaymentType] = useState<"cash" | "card" | "transfer" | "credit">("cash");
   const [purchasePaymentType, setPurchasePaymentType] = useState<"cash" | "credit">("cash");
 
-  // Fetch all state data from server
+  // Fetch all state data from server with silent offline fallback
   async function loadData() {
     try {
       setLoading(true);
       const [prodRes, entryRes, analRes, custRes, suppRes, vouchRes, spoilRes] = await Promise.all([
-        fetch("/api/products"),
-        fetch("/api/entries"),
-        fetch("/api/analytics"),
-        fetch("/api/customers"),
-        fetch("/api/suppliers"),
-        fetch("/api/vouchers"),
-        fetch("/api/spoilages"),
+        fetch("/api/products").catch(() => null),
+        fetch("/api/entries").catch(() => null),
+        fetch("/api/analytics").catch(() => null),
+        fetch("/api/customers").catch(() => null),
+        fetch("/api/suppliers").catch(() => null),
+        fetch("/api/vouchers").catch(() => null),
+        fetch("/api/spoilages").catch(() => null),
       ]);
 
-      if (!prodRes.ok || !entryRes.ok || !analRes.ok || !custRes.ok || !suppRes.ok || !vouchRes.ok) {
-        throw new Error("Error loading data from API server");
+      if (prodRes?.ok && entryRes?.ok && custRes?.ok && suppRes?.ok) {
+        const prods = await prodRes.json();
+        const ents = await entryRes.json();
+        const anal = analRes?.ok ? await analRes.json() : null;
+        const custs = await custRes.json();
+        const supps = await suppRes.json();
+        const vouchs = vouchRes?.ok ? await vouchRes.json() : [];
+        const spoils = spoilRes?.ok ? await spoilRes.json() : [];
+
+        setProducts(prods);
+        setEntries(ents);
+        if (anal) setAnalytics(anal);
+        setCustomers(custs);
+        setSuppliers(supps);
+        setVouchers(vouchs);
+        setSpoilages(spoils);
+
+        // Cache locally for offline availability
+        try { localStorage.setItem("cached_products", JSON.stringify(prods)); } catch(e){}
+      } else {
+        console.warn("Backend API endpoint not available. Using cached state.");
+        const cachedProds = localStorage.getItem("cached_products");
+        if (cachedProds) {
+          try { setProducts(JSON.parse(cachedProds)); } catch(e){}
+        }
       }
-
-      const prods = await prodRes.json();
-      const ents = await entryRes.json();
-      const anal = await analRes.json();
-      const custs = await custRes.json();
-      const supps = await suppRes.json();
-      const vouchs = await vouchRes.json();
-      const spoils = spoilRes.ok ? await spoilRes.json() : [];
-
-      setProducts(prods);
-      setEntries(ents);
-      setAnalytics(anal);
-      setCustomers(custs);
-      setSuppliers(supps);
-      setVouchers(vouchs);
-      setSpoilages(spoils);
     } catch (e: any) {
-      toast.error(`Backend API connection failed: ${e.message}`);
-      console.error(e);
+      console.warn("Backend API fetch deferred:", e);
     } finally {
       setLoading(false);
     }
@@ -16062,146 +16084,190 @@ function VouchersPage({
 
 function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
   const [progress, setProgress] = useState(0);
+  const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    const interval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) {
-          clearInterval(timer);
-          setTimeout(() => onFinish(), 300);
+          clearInterval(interval);
+          setTimeout(() => {
+            setFadeOut(true);
+            setTimeout(onFinish, 800);
+          }, 400);
           return 100;
         }
         return prev + 2;
       });
-    }, 40);
-    return () => clearInterval(timer);
+    }, 60);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === "Escape") {
+        clearInterval(interval);
+        setFadeOut(true);
+        setTimeout(onFinish, 800);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [onFinish]);
 
+  // Determine active category text and phase
+  const phase = useMemo(() => {
+    if (progress < 25) return { text: "SCANNING SPICES INVENTORY...", cat: "spices" };
+    if (progress < 50) return { text: "COUNTING NUTS & DRY FRUITS...", cat: "nuts" };
+    if (progress < 75) return { text: "VERIFYING FRESH FRUIT CARGO...", cat: "fruits" };
+    if (progress < 100) return { text: "CALIBRATING VEGETABLES REVENUE...", cat: "veggies" };
+    return { text: "LEDGER SYNCED & SECURE!", cat: "ready" };
+  }, [progress]);
+
   return (
-    <div className="w-full min-h-screen flex flex-col items-center justify-center p-6 text-center space-y-8 bg-gradient-to-br from-[#f4f6f0] via-[#e8ecd6] to-[#d8f3dc] relative overflow-hidden select-none text-[#14281d] font-sans">
-      {/* Zen Matcha Ambient Glow Orbs */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#2d6a4f]/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#e76f51]/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/3 -right-20 w-80 h-80 bg-[#e9c46a]/20 rounded-full blur-3xl pointer-events-none" />
+    <div
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#FAF8F5] text-gray-800 overflow-hidden select-none transition-all duration-700 ${
+        fadeOut ? "opacity-0 scale-95 pointer-events-none" : "opacity-100"
+      }`}
+    >
+      <style>{`
+        @keyframes float-slow {
+          0% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-12px) rotate(5deg); }
+          100% { transform: translateY(0px) rotate(0deg); }
+        }
+        @keyframes float-medium {
+          0% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(-8deg); }
+          100% { transform: translateY(0px) rotate(0deg); }
+        }
+        @keyframes float-fast {
+          0% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-16px) rotate(8deg); }
+          100% { transform: translateY(0px) rotate(0deg); }
+        }
+        .animate-float-1 { animation: float-slow 6s ease-in-out infinite; }
+        .animate-float-2 { animation: float-medium 7s ease-in-out infinite; }
+        .animate-float-3 { animation: float-fast 5s ease-in-out infinite; }
+      `}</style>
 
-      {/* Produce Motion Objects (Moving Objects around Still Container) */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-12 left-12 text-3xl animate-produce-stream" style={{ animationDelay: "0s" }}>🍉</div>
-        <div className="absolute top-20 right-16 text-3xl animate-produce-stream" style={{ animationDelay: "2s" }}>🥭</div>
-        <div className="absolute bottom-24 left-1/5 text-3xl animate-produce-stream" style={{ animationDelay: "4s" }}>🥥</div>
-        <div className="absolute bottom-20 right-1/4 text-3xl animate-produce-stream" style={{ animationDelay: "1s" }}>🍇</div>
-        <div className="absolute top-1/3 left-1/6 text-2xl animate-produce-stream" style={{ animationDelay: "3s" }}>🥑</div>
-        <div className="absolute top-2/3 right-1/6 text-2xl animate-produce-stream" style={{ animationDelay: "5s" }}>🍍</div>
-        <div className="absolute top-1/2 left-10 text-2xl animate-produce-stream" style={{ animationDelay: "2.5s" }}>🥦</div>
-        <div className="absolute bottom-1/3 right-10 text-2xl animate-produce-stream" style={{ animationDelay: "4.5s" }}>🌶️</div>
+      {/* Background radial glow */}
+      <div className="absolute w-[500px] h-[500px] rounded-full bg-emerald-100/40 blur-[100px] -z-10 animate-pulse duration-[3000ms]" />
+
+      {/* Sequential Floating Produce Categories */}
+      
+      {/* PHASE 1: Spices (🌶️, 🌿) */}
+      <div 
+        className={`absolute top-[18%] left-[10%] w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-sm transition-all duration-500 animate-float-1 ${
+          phase.cat === "spices" || phase.cat === "ready" 
+            ? "scale-110 opacity-100 ring-2 ring-emerald-400 bg-emerald-500/10 shadow-emerald-200" 
+            : "scale-90 opacity-20 bg-gray-100/30"
+        }`}
+      >
+        🌶️
+      </div>
+      <div 
+        className={`absolute bottom-[18%] right-[15%] w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-sm transition-all duration-500 animate-float-2 ${
+          phase.cat === "spices" || phase.cat === "ready" 
+            ? "scale-110 opacity-100 ring-2 ring-emerald-400 bg-emerald-500/10 shadow-emerald-200" 
+            : "scale-90 opacity-20 bg-gray-100/30"
+        }`}
+      >
+        🌿
       </div>
 
-      {/* Central Emblem Container with Orbiting Produce Objects */}
-      <div className="relative z-10 flex items-center justify-center">
-        {/* Inner Orbital Ring for Fruits */}
-        <div className="absolute w-64 h-64 pointer-events-none z-20">
-          <div className="absolute inset-0 animate-produce-orbit flex items-center justify-center">
-            <span className="text-3xl">🥭</span>
-          </div>
-          <div className="absolute inset-0 animate-produce-orbit flex items-center justify-center" style={{ animationDelay: "-8s" }}>
-            <span className="text-3xl">🍉</span>
-          </div>
-        </div>
+      {/* PHASE 2: Nuts & Dry Fruits (🥜, 🌰) */}
+      <div 
+        className={`absolute top-[15%] right-[22%] w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-sm transition-all duration-500 animate-float-3 ${
+          phase.cat === "nuts" || phase.cat === "ready" 
+            ? "scale-110 opacity-100 ring-2 ring-amber-400 bg-amber-500/10 shadow-amber-200" 
+            : "scale-90 opacity-20 bg-gray-100/30"
+        }`}
+      >
+        🥜
+      </div>
+      <div 
+        className={`absolute bottom-[15%] left-[22%] w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-sm transition-all duration-500 animate-float-1 ${
+          phase.cat === "nuts" || phase.cat === "ready" 
+            ? "scale-110 opacity-100 ring-2 ring-amber-400 bg-amber-500/10 shadow-amber-200" 
+            : "scale-90 opacity-20 bg-gray-100/30"
+        }`}
+      >
+        🌰
+      </div>
 
-        {/* Outer Orbital Ring for Veggies & Spices */}
-        <div className="absolute w-80 h-80 pointer-events-none z-20">
-          <div className="absolute inset-0 animate-produce-orbit-reverse flex items-center justify-center">
-            <span className="text-3xl">🥦</span>
-          </div>
-          <div className="absolute inset-0 animate-produce-orbit-reverse flex items-center justify-center" style={{ animationDelay: "-11s" }}>
-            <span className="text-3xl">🌶️</span>
-          </div>
-          <div className="absolute inset-0 animate-produce-orbit-reverse flex items-center justify-center" style={{ animationDelay: "-5.5s" }}>
-            <span className="text-3xl">🥑</span>
-          </div>
-        </div>
+      {/* PHASE 3: Fresh Fruits (🍎, 🍇) */}
+      <div 
+        className={`absolute top-[45%] right-[8%] w-14 h-14 rounded-full flex items-center justify-center text-xl shadow-sm transition-all duration-500 animate-float-2 ${
+          phase.cat === "fruits" || phase.cat === "ready" 
+            ? "scale-110 opacity-100 ring-2 ring-rose-400 bg-rose-500/10 shadow-rose-200" 
+            : "scale-90 opacity-20 bg-gray-100/30"
+        }`}
+      >
+        🍎
+      </div>
+      <div 
+        className={`absolute top-[48%] left-[8%] w-14 h-14 rounded-full flex items-center justify-center text-xl shadow-sm transition-all duration-500 animate-float-3 ${
+          phase.cat === "fruits" || phase.cat === "ready" 
+            ? "scale-110 opacity-100 ring-2 ring-rose-400 bg-rose-500/10 shadow-rose-200" 
+            : "scale-90 opacity-20 bg-gray-100/30"
+        }`}
+      >
+        🍇
+      </div>
 
-        {/* Japanese Zen Bamboo Emblem Card (Container stays STILL) */}
-        <div className="relative w-36 h-36 bg-white/95 border-3 border-[#52b788] text-[#2d6a4f] rounded-full flex items-center justify-center shadow-xl backdrop-blur-2xl">
-          <div className="text-6xl select-none">
-            🎋
-          </div>
+      {/* PHASE 4: Vegetables (🥕, 🥑) */}
+      <div 
+        className={`absolute top-[8%] left-[46%] w-14 h-14 rounded-full flex items-center justify-center text-xl shadow-sm transition-all duration-500 animate-float-1 ${
+          phase.cat === "veggies" || phase.cat === "ready" 
+            ? "scale-110 opacity-100 ring-2 ring-orange-400 bg-orange-500/10 shadow-orange-200" 
+            : "scale-90 opacity-20 bg-gray-100/30"
+        }`}
+      >
+        🥕
+      </div>
+      <div 
+        className={`absolute bottom-[8%] left-[46%] w-14 h-14 rounded-full flex items-center justify-center text-xl shadow-sm transition-all duration-500 animate-float-2 ${
+          phase.cat === "veggies" || phase.cat === "ready" 
+            ? "scale-110 opacity-100 ring-2 ring-orange-400 bg-orange-500/10 shadow-orange-200" 
+            : "scale-90 opacity-20 bg-gray-100/30"
+        }`}
+      >
+        🥑
+      </div>
+
+      {/* Center Logo branding */}
+      <div className="relative mb-6 flex flex-col items-center">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-300 via-teal-400 to-emerald-500 flex items-center justify-center shadow-md shadow-emerald-200/50 animate-bounce duration-[1800ms]">
+          <Sparkles size={28} className="text-white animate-pulse" />
+        </div>
+        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-emerald-300 to-teal-400 blur opacity-30 animate-pulse" />
+      </div>
+
+      <h1 className="text-3xl font-extrabold tracking-[0.2em] text-emerald-800 font-serif mb-2 select-none">
+        SPICE ROUTE
+      </h1>
+      <p className="text-[10px] text-emerald-600/80 font-mono tracking-[0.3em] uppercase mb-12 select-none">
+        Nuts, Spices & Fresh Produce Ledger
+      </p>
+
+      {/* Progress loader */}
+      <div className="w-64 max-w-xs space-y-2 relative z-10">
+        <div className="flex justify-between items-center text-[9px] font-mono text-emerald-700/80">
+          <span>{phase.text}</span>
+          <span>{progress}%</span>
+        </div>
+        <div className="h-1.5 bg-emerald-100/70 rounded-full overflow-hidden border border-emerald-200/20">
+          <div
+            className="h-full bg-gradient-to-r from-emerald-400 via-teal-400 to-amber-300 rounded-full transition-all duration-75"
+            style={{ width: `${progress}%` }}
+          />
         </div>
       </div>
 
-      {/* STILL Typography Section (No Sway/Wobble/Bounce) */}
-      <div className="space-y-3 max-w-md z-10">
-        <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/90 border-2 border-[#52b788] text-[#2d6a4f] text-xs font-mono font-bold tracking-wider shadow-sm">
-          <span>🍵</span>
-          <span>JAPANESE ZEN BAMBOO & MATCHA GARDEN</span>
-        </div>
-        <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-[#14281d] font-serif">
-          Spice Route <span className="text-[#2d6a4f] bg-gradient-to-r from-[#2d6a4f] via-[#e76f51] to-[#52b788] bg-clip-text text-transparent">Trading Co.</span>
-        </h1>
-        <p className="text-xs font-mono text-[#2d6a4f] leading-relaxed font-bold">
-          Peaceful Organic ERP • Matcha Spices, Fresh Produce, Godowns (A-R) & Currency Exchange
-        </p>
-      </div>
-
-      {/* STILL Zen Produce Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 max-w-lg w-full text-left text-xs font-mono z-10">
-        <div className="p-3.5 rounded-2xl bg-white/95 border-2 border-[#b7e4c7] shadow-md hover:border-[#2d6a4f] transition-all duration-300 flex items-center gap-2.5 text-[#2d6a4f] group backdrop-blur-md">
-          <span className="text-2xl animate-produce-stream">🥭</span>
-          <div>
-            <div className="font-black text-[11px] text-[#14281d]">Organic Fruits</div>
-            <div className="text-[9px] text-[#2d6a4f]">Mangoes & Papaya</div>
-          </div>
-        </div>
-        <div className="p-3.5 rounded-2xl bg-white/95 border-2 border-[#f4a261]/40 shadow-md hover:border-[#e76f51] transition-all duration-300 flex items-center gap-2.5 text-[#e76f51] group backdrop-blur-md">
-          <span className="text-2xl animate-produce-stream" style={{ animationDelay: "1s" }}>🍉</span>
-          <div>
-            <div className="font-black text-[11px] text-[#14281d]">Fresh Melons</div>
-            <div className="text-[9px] text-[#e76f51]">Watermelons & Berries</div>
-          </div>
-        </div>
-        <div className="p-3.5 rounded-2xl bg-white/95 border-2 border-[#b7e4c7] shadow-md hover:border-[#2d6a4f] transition-all duration-300 flex items-center gap-2.5 text-[#2d6a4f] group backdrop-blur-md">
-          <span className="text-2xl animate-produce-stream" style={{ animationDelay: "2s" }}>🌶️</span>
-          <div>
-            <div className="font-black text-[11px] text-[#14281d]">Matcha Spices</div>
-            <div className="text-[9px] text-[#2d6a4f]">Live P&L Ledger</div>
-          </div>
-        </div>
-        <div className="p-3.5 rounded-2xl bg-white/95 border-2 border-[#b7e4c7] shadow-md hover:border-[#2d6a4f] transition-all duration-300 flex items-center gap-2.5 text-[#2d6a4f] group backdrop-blur-md">
-          <span className="text-2xl animate-produce-stream" style={{ animationDelay: "3s" }}>🥦</span>
-          <div>
-            <div className="font-black text-[11px] text-[#14281d]">Farm Veggies</div>
-            <div className="text-[9px] text-[#2d6a4f]">18 Godowns (A-R)</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Progress & STILL Matcha Action Controls */}
-      <div className="space-y-4 max-w-xs w-full z-10">
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-[10px] font-mono text-[#2d6a4f] font-black">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#52b788]" />
-              HARVESTING MATCHA GARDEN COCKPIT
-            </span>
-            <span>{progress}%</span>
-          </div>
-          <div className="w-full h-3 bg-[#e8ecd6] border border-[#b7e4c7] rounded-full overflow-hidden shadow-inner relative p-0.5">
-            <div
-              className="h-full bg-gradient-to-r from-[#2d6a4f] via-[#52b788] to-[#e76f51] transition-all duration-75 rounded-full relative"
-              style={{ width: `${progress}%` }}
-            >
-              <div className="absolute inset-0 bg-white/30" />
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={onFinish}
-          className="w-full py-4 px-6 bg-gradient-to-r from-[#2d6a4f] via-[#40916c] to-[#e76f51] hover:from-[#1b4332] hover:to-[#d90429] text-white font-mono font-black rounded-2xl text-xs uppercase tracking-wider shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 group border border-white/50 relative overflow-hidden"
-        >
-          <span className="relative z-10">Enter Zen Matcha Portal</span>
-          <ChevronRight size={16} className="group-hover:translate-x-2 transition-transform relative z-10" />
-        </button>
+      <div className="mt-16 text-[9px] font-mono text-emerald-700/40 animate-pulse relative z-10">
+        Press <span className="px-1 py-0.5 border border-emerald-200/80 rounded bg-[#FFFFFF] text-emerald-700 shadow-sm font-bold">Enter</span> or <span className="px-1 py-0.5 border border-emerald-200/80 rounded bg-[#FFFFFF] text-emerald-700 shadow-sm font-bold">Esc</span> to Skip Intro
       </div>
     </div>
   );
@@ -16315,7 +16381,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
     const match = allUsers.find(
       (u: any) =>
         (u.username?.toLowerCase() === inputUser || u.employeeId?.toLowerCase() === inputUser) &&
-        ((u.password || "123") === inputPass || inputPass === "123")
+        (u.password ? u.password === inputPass : inputPass === "123")
     );
 
     if (match) {
