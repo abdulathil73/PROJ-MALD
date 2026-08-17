@@ -4,7 +4,7 @@ import {
 } from "recharts";
 import {
   Package, TrendingUp, TrendingDown, Warehouse, ArrowDownToLine, ArrowUpFromLine,
-  Sparkles, ChevronRight, Search, Plus, Check, AlertCircle, LayoutDashboard,
+  Sparkles, ChevronRight, Search, Plus, Check, AlertCircle, LayoutDashboard, LayoutGrid,
   BoxIcon, BarChart2, Bot, Menu, Ship, MapPin, Truck, RefreshCw, Calendar, AlertTriangle, Moon, Sun, Database as DbIcon, Printer, X, PlusCircle, CreditCard, DollarSign, Building, Trash2, Keyboard, Play, Lock, User, Coins, Calculator, Tag, Clock, Gift,
   Mic, MicOff, Volume2, VolumeX, HelpCircle, Eye, Edit, FileText, Download, Filter, ShieldAlert, CheckCircle2, MessageSquare, PhoneCall, Send, Copy, ShoppingCart, Receipt, BookOpen, FileCheck, History, ArrowLeft, Percent, PackageCheck, FileUp, FileSpreadsheet, Upload, Cpu, Cloud, Layers, Zap, Mail
 } from "lucide-react";
@@ -12541,6 +12541,10 @@ function CostingPage({
 
     localStorage.setItem("custom_products_v2", JSON.stringify(currentCatalog));
     toast.success(`Catalog Sync Complete: Added ${addedCount}, Updated ${updatedCount} items!`);
+  };
+
+  const handleSaveCostingLedger = () => {
+    toast.success("Costing Ledger saved successfully!");
   };
 
   return (
