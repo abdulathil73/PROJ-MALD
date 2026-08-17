@@ -13766,22 +13766,37 @@ export default function App() {
 
   const isFeaturePermitted = (featId: string): boolean => {
     if (!currentUser) return true;
-    if (currentUser.role === "Admin" || currentUser.role === "Owner" || currentUser.username === "admin") return true;
+    if (currentUser.role === "Admin" || currentUser.role === "Owner" || currentUser.username === "admin" || currentUser.role === "System Administrator / Owner") return true;
     const allowed: string[] = currentUser.allowedFeatures || [];
+
+    if (allowed.includes(featId)) return true;
 
     let key = featId;
     if (featId === "sales" || featId === "sales-billing") key = "sales-billing";
     else if (featId === "sales-quotation") key = "sales-quotation";
+    else if (featId === "sales-proforma") key = "sales-proforma";
     else if (featId === "sales-delivery") key = "sales-delivery";
-    else if (featId === "sales-credit") key = "sales-credit-note";
-    else if (featId === "purchase" || featId === "purchase-billing") key = "purchase-bill";
-    else if (featId === "purchase-order") key = "purchase-order";
-    else if (featId === "purchase-spoilage") key = "inventory-spoilage";
-    else if (featId === "godowns") key = "inventory-godowns";
-    else if (featId === "inventory") key = "inventory-items";
-    else if (featId.startsWith("vouchers")) key = featId === "vouchers" ? "vouchers-receipt" : featId;
-    else if (featId.startsWith("reports")) key = featId === "reports" ? "reports-pnl" : featId;
-    else if (featId.startsWith("master-")) key = featId;
+    else if (featId === "sales-credit" || featId === "sales-credit-note") key = "sales-credit-note";
+    else if (featId === "sales-debit-note") key = "sales-debit-note";
+    else if (featId === "sales-pos") key = "sales-pos";
+    else if (featId === "purchase" || featId === "purchase-billing" || featId === "purchase-bill") key = "purchase-bill";
+    else if (featId === "purchase-order" || featId === "purchase-grn") key = "purchase-order";
+    else if (featId === "purchase-debit") key = "purchase-bill";
+    else if (featId === "purchase-spoilage" || featId === "inventory-spoilage") key = "inventory-spoilage";
+    else if (featId === "godowns" || featId === "godown-hub" || featId === "inventory-godowns" || featId === "master-godowns") key = "inventory-godowns";
+    else if (featId === "inventory" || featId === "inventory-items") key = "inventory-items";
+    else if (featId === "costing" || featId.startsWith("costing-")) key = "costing";
+    else if (featId === "currency" || featId === "currency-convert") key = "currency-convert";
+    else if (featId === "expiry" || featId.startsWith("expiry-") || featId === "perishables") key = "expiry";
+    else if (featId === "offers") key = "offers";
+    else if (featId === "vouchers" || featId === "vouchers-all" || featId === "vouchers-receipt") key = "vouchers-receipt";
+    else if (featId === "vouchers-payment") key = "vouchers-payment";
+    else if (featId === "vouchers-journal") key = "vouchers-journal";
+    else if (featId === "vouchers-contra") key = "vouchers-contra";
+    else if (featId === "credit-recovery") key = "credit-recovery";
+    else if (featId === "reports" || featId.startsWith("reports-") || featId === "pl") key = "reports-pnl";
+    else if (featId === "master-console" || featId.startsWith("master-")) key = featId === "master-console" ? "master-users" : featId;
+    else if (featId === "ai") key = "dashboard";
 
     return allowed.includes(key);
   };
@@ -16042,7 +16057,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
     const match = allUsers.find(
       (u: any) =>
         (u.username?.toLowerCase() === inputUser || u.employeeId?.toLowerCase() === inputUser) &&
-        ((u.password || "123") === inputPass || inputPass === "123")
+        (u.password ? u.password === inputPass : inputPass === "123")
     );
 
     if (match) {
