@@ -15,6 +15,83 @@
       ]
     }
   ],
+  "customers": [
+    {
+      "id": "c_f92xdtx",
+      "name": "KENSA MALDIVES PVT LTD",
+      "address": "Rising Sun, Ground Floor Finifenmaa Goali, Maldives 20014",
+      "phone": "+9607896188",
+      "gstNo": "1138601GST501",
+      "email": "",
+      "creditLimitDays": 15,
+      "creditLimitAmount": 150000
+    },
+    {
+      "id": "c_bgmydsu",
+      "name": "GOLDEN HYPE",
+      "address": "BODUKURUFANU MAGU",
+      "phone": "+9607376765",
+      "gstNo": "1009569GST501"
+    },
+    {
+      "id": "c_bmygju8",
+      "name": "rushwin",
+      "address": "efefe, fefefe, fefef",
+      "phone": "8667677179",
+      "gstNo": "123654789632145",
+      "email": "rushwinahmad123456@gmail.com",
+      "creditLimitDays": 30,
+      "creditLimitAmount": 20000
+    },
+    {
+      "id": "c_xrlbjg9",
+      "name": "rasool",
+      "address": "gftgfy, jgfgh, hggfiytkg, 65675657",
+      "phone": "9042457162",
+      "gstNo": "909090909090909",
+      "email": "rasooldeenr15@gmail.com",
+      "creditLimitDays": 30,
+      "creditLimitAmount": 1000000
+    },
+    {
+      "id": "c_z37wzxg",
+      "name": "ras",
+      "address": "N/A",
+      "phone": "9999999999",
+      "gstNo": "909098989898989",
+      "email": "",
+      "creditLimitDays": 0,
+      "creditLimitAmount": 0
+    },
+    {
+      "id": "c_1h4wo5e",
+      "name": "ravi",
+      "address": "jhhg, gfytk, hgvvfk, hghj",
+      "phone": "8667677179",
+      "gstNo": "987987987987987",
+      "email": "rushwinahmad12345678@gmail.com",
+      "creditLimitDays": 0,
+      "creditLimitAmount": 999999990
+    }
+  ],
+  "suppliers": [
+    {
+      "id": "s_bo2disu",
+      "name": "ras",
+      "address": "asdfg",
+      "phone": "236547899",
+      "gstNo": "123654789632541",
+      "email": ""
+    },
+    {
+      "id": "s_wphba90",
+      "name": "rasvi",
+      "address": "queen palace, north street, chennai, tamil nadu",
+      "phone": "8667677179",
+      "gstNo": "123654789632541",
+      "email": "rushwinahmad123456@gmail.com"
+    }
+  ],
   "entries": [
     {
       "id": "e_q3gp2kg",
@@ -462,83 +539,6 @@
           "amount": 168
         }
       ]
-    }
-  ],
-  "customers": [
-    {
-      "id": "c_f92xdtx",
-      "name": "KENSA MALDIVES PVT LTD",
-      "address": "Rising Sun, Ground Floor Finifenmaa Goali, Maldives 20014",
-      "phone": "+9607896188",
-      "gstNo": "1138601GST501",
-      "email": "",
-      "creditLimitDays": 15,
-      "creditLimitAmount": 150000
-    },
-    {
-      "id": "c_bgmydsu",
-      "name": "GOLDEN HYPE",
-      "address": "BODUKURUFANU MAGU",
-      "phone": "+9607376765",
-      "gstNo": "1009569GST501"
-    },
-    {
-      "id": "c_bmygju8",
-      "name": "rushwin",
-      "address": "efefe, fefefe, fefef",
-      "phone": "8667677179",
-      "gstNo": "123654789632145",
-      "email": "rushwinahmad123456@gmail.com",
-      "creditLimitDays": 30,
-      "creditLimitAmount": 20000
-    },
-    {
-      "id": "c_xrlbjg9",
-      "name": "rasool",
-      "address": "gftgfy, jgfgh, hggfiytkg, 65675657",
-      "phone": "9042457162",
-      "gstNo": "909090909090909",
-      "email": "rasooldeenr15@gmail.com",
-      "creditLimitDays": 30,
-      "creditLimitAmount": 1000000
-    },
-    {
-      "id": "c_z37wzxg",
-      "name": "ras",
-      "address": "N/A",
-      "phone": "9999999999",
-      "gstNo": "909098989898989",
-      "email": "",
-      "creditLimitDays": 0,
-      "creditLimitAmount": 0
-    },
-    {
-      "id": "c_1h4wo5e",
-      "name": "ravi",
-      "address": "jhhg, gfytk, hgvvfk, hghj",
-      "phone": "8667677179",
-      "gstNo": "987987987987987",
-      "email": "rushwinahmad12345678@gmail.com",
-      "creditLimitDays": 0,
-      "creditLimitAmount": 999999990
-    }
-  ],
-  "suppliers": [
-    {
-      "id": "s_bo2disu",
-      "name": "ras",
-      "address": "asdfg",
-      "phone": "236547899",
-      "gstNo": "123654789632541",
-      "email": ""
-    },
-    {
-      "id": "s_wphba90",
-      "name": "rasvi",
-      "address": "queen palace, north street, chennai, tamil nadu",
-      "phone": "8667677179",
-      "gstNo": "123654789632541",
-      "email": "rushwinahmad123456@gmail.com"
     }
   ],
   "vouchers": [],

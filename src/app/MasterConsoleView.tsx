@@ -789,17 +789,23 @@ export default function MasterConsoleView({
         const newGdn = { ...godownForm, id: "gdn_" + Date.now() };
         setGodowns(prev => [...prev, newGdn]);
         toast.success(`Warehouse Godown "${godownForm.name} (${godownForm.code})" registered in Masters!`);
-        setGodownForm({ code: "", name: "", location: "", temperature: "22°C Spices Ambient", capacityKg: 50000, managerName: "", status: "Active", notes: "" });
-      } else if (effectiveSubPage === "master-users-creation") {
-        const newUser = { ...userForm, id: "usr_" + Date.now(), totalSalary: userForm.basicSalary + userForm.allowances + userForm.overtime };
+      } else if (effectiveSubPage.startsWith("master-users")) {
+        const newUser = {
+          ...userForm,
+          id: "usr_" + Date.now(),
+          username: userForm.username ? userForm.username.trim().toLowerCase() : (userForm.employeeId ? userForm.employeeId.trim().toLowerCase() : "user" + Date.now()),
+          password: userForm.password ? userForm.password.trim() : "123",
+          totalSalary: (userForm.basicSalary || 0) + (userForm.allowances || 0) + (userForm.overtime || 0),
+          allowedFeatures: userForm.allowedFeatures && userForm.allowedFeatures.length > 0 ? userForm.allowedFeatures : ALL_WEBSITE_FEATURES.map(f => f.id)
+        };
         setUsers(prev => [...prev, newUser]);
-        toast.success(`Employee "${userForm.employeeName}" registered!`);
+        toast.success(`Employee "${userForm.employeeName}" registered with username "${newUser.username}"!`);
         setUserForm({
           employeeId: "", employeeName: "", passportNumber: "", passportIssue: "", passportExpiry: "", workPermitNumber: "",
           workPermitIssue: "", workPermitExpiry: "", visaNumber: "", visaIssue: "", visaExpiry: "", insuranceNumber: "",
           insuranceIssue: "", insuranceExpiry: "", healthMedicalNumber: "", healthMedicalIssue: "", healthMedicalExpiry: "",
           dateOfBirth: "", dateOfJoin: "", dateOfRejoin: "", basicSalary: 0, allowances: 0, overtime: 0, totalSalary: 0,
-          role: "Staff", responsibility: "", username: "", password: ""
+          role: "Staff", responsibility: "", username: "", password: "", allowedFeatures: ALL_WEBSITE_FEATURES.map(f => f.id)
         });
       }
     } else if (activeAction === "edit") {
@@ -883,10 +889,15 @@ export default function MasterConsoleView({
       } else if (effectiveSubPage === "master-inventory-godowns" || effectiveSubPage === "master-godowns") {
         setGodowns(prev => prev.map(x => x.id === selectedId ? { ...x, ...godownForm } : x));
         toast.success(`Godown "${godownForm.name}" details updated.`);
-      } else if (effectiveSubPage === "master-users-status" || effectiveSubPage === "master-users-creation") {
-        setUsers(prev => prev.filter(x => x.id !== selectedId));
-        setUsers(prev => prev.map(x => x.id === selectedId ? { ...x, ...userForm, totalSalary: userForm.basicSalary + userForm.allowances + userForm.overtime } : x));
-        toast.success("Employee profile updated.");
+      } else if (effectiveSubPage.startsWith("master-users")) {
+        setUsers(prev => prev.map(x => x.id === selectedId ? {
+          ...x,
+          ...userForm,
+          username: userForm.username ? userForm.username.trim().toLowerCase() : x.username,
+          password: userForm.password ? userForm.password.trim() : (x.password || "123"),
+          totalSalary: (userForm.basicSalary || 0) + (userForm.allowances || 0) + (userForm.overtime || 0),
+          allowedFeatures: userForm.allowedFeatures && userForm.allowedFeatures.length > 0 ? userForm.allowedFeatures : x.allowedFeatures
+        } : x));
       } else {
         toast.success("Record updated successfully.");
       }
@@ -934,7 +945,7 @@ export default function MasterConsoleView({
     } else if (effectiveSubPage === "master-inventory-godowns" || effectiveSubPage === "master-godowns") {
       setGodowns(prev => prev.filter(x => x.id !== selectedId));
       toast.success("Godown removed from Masters registry.");
-    } else if (effectiveSubPage === "master-users-status" || effectiveSubPage === "master-users-creation") {
+    } else if (effectiveSubPage.startsWith("master-users")) {
       setUsers(prev => prev.filter(x => x.id !== selectedId));
       toast.success("Employee record deleted.");
     } else {
@@ -2676,10 +2687,9 @@ export default function MasterConsoleView({
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Supplier Contact Phone *</label>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">Supplier Contact Phone</label>
                       <input
                         type="text"
-                        required
                         placeholder="+91-XXXXX-XXXXX"
                         value={supplierForm.phone}
                         onChange={e => setSupplierForm(prev => ({ ...prev, phone: e.target.value }))}
@@ -2687,10 +2697,9 @@ export default function MasterConsoleView({
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">GST / Tax Registration (GSTIN) *</label>
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase mb-1">GST / Tax Registration (GSTIN)</label>
                       <input
                         type="text"
-                        required
                         placeholder="15-digit GSTIN"
                         value={supplierForm.gstNo}
                         onChange={e => setSupplierForm(prev => ({ ...prev, gstNo: e.target.value }))}

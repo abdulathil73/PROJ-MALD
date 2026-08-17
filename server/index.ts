@@ -20,6 +20,7 @@ app.use((req, res, next) => {
   next();
 });
 
+
 // ─── Nodemailer Transporter ────────────────────────────────────────────────
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -367,6 +368,44 @@ cron.schedule("0 9 1 * *", async () => {
 });
 console.log("[CRON] Monthly credit email scheduler started — will fire on 1st of every month at 09:00 AM.");
 
+// Root route - API status page
+app.get("/", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Spice Route Trading Co. - API Server</title>
+        <style>
+          body { font-family: sans-serif; background: #0b1912; color: #f4f1de; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+          .card { background: #14281d; border: 1px solid rgba(82,183,136,0.3); border-radius: 16px; padding: 40px; max-width: 480px; text-align: center; }
+          h1 { color: #52b788; margin-top: 0; }
+          p { color: #b7e4c7; }
+          a { color: #52b788; }
+          .badge { display: inline-block; background: rgba(82,183,136,0.15); border: 1px solid rgba(82,183,136,0.4); border-radius: 8px; padding: 6px 14px; font-size: 13px; color: #52b788; margin: 4px; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h1>🌿 Spice Route Trading Co.</h1>
+          <p>Backend API Server is running successfully.</p>
+          <p><strong>Frontend app:</strong> <a href="http://localhost:5173" target="_blank">http://localhost:5173</a></p>
+          <br/>
+          <div>
+            <span class="badge">✅ Status: Online</span>
+            <span class="badge">⚙️ Port: ${PORT}</span>
+          </div>
+        </div>
+      </body>
+    </html>
+  `);
+});
+
+// Health check
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+
 // PRODUCTS
 app.get("/api/products", (req, res) => {
   try {
@@ -437,15 +476,15 @@ app.get("/api/customers", (req, res) => {
 app.post("/api/customers", (req, res) => {
   try {
     const { name, address, phone, gstNo, email, creditLimitDays, creditLimitAmount } = req.body;
-    if (!name || !address || !phone || !gstNo) {
-      return res.status(400).json({ error: "Missing customer fields. Address, Phone, and GST are required." });
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: "Customer Name is required." });
     }
 
     const newCustomer = Database.addCustomer({
-      name,
-      address,
-      phone,
-      gstNo,
+      name: name.trim(),
+      address: (address && address.trim()) ? address.trim() : "N/A",
+      phone: (phone && phone.trim()) ? phone.trim() : "N/A",
+      gstNo: (gstNo && gstNo.trim()) ? gstNo.trim() : "URP",
       email: email || "",
       creditLimitDays: Number(creditLimitDays || 0),
       creditLimitAmount: Number(creditLimitAmount || 0),
@@ -487,11 +526,17 @@ app.get("/api/suppliers", (req, res) => {
 app.post("/api/suppliers", (req, res) => {
   try {
     const { name, address, phone, gstNo, email } = req.body;
-    if (!name || !address || !phone || !gstNo) {
-      return res.status(400).json({ error: "Missing supplier fields. Address, Phone, and GST are required." });
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: "Supplier Name is required." });
     }
 
-    const newSupplier = Database.addSupplier({ name, address, phone, gstNo, email: email || "" });
+    const newSupplier = Database.addSupplier({
+      name: name.trim(),
+      address: (address && address.trim()) ? address.trim() : "N/A",
+      phone: (phone && phone.trim()) ? phone.trim() : "N/A",
+      gstNo: (gstNo && gstNo.trim()) ? gstNo.trim() : "URP",
+      email: email || ""
+    });
     res.status(201).json(newSupplier);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
@@ -721,6 +766,8 @@ app.post("/api/ai/parse-invoice", async (req, res) => {
   }
 });
 
+
+
 // ─── CREDIT RECOVERY EMAIL ENDPOINTS ─────────────────────────────────────────
 
 /**
@@ -761,6 +808,7 @@ app.post("/api/credit-recovery/send-monthly-all", async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
 
 app.listen(PORT, () => {
   console.log(`Backend server running on http://localhost:${PORT}`);
