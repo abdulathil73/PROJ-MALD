@@ -90,7 +90,7 @@
     "puppeteer": "^25.4.0",
     "tailwindcss": "4.1.12",
     "tsx": "^4.22.4",
-    "vite": "6.3.5"
+    "vite": "^6.3.5"
   },
   "peerDependencies": {
     "react": "18.3.1",
