@@ -665,8 +665,75 @@ export default function MasterConsoleView({
     }
   };
 
-  const handleActionSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleActionSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e && typeof e.preventDefault === "function") {
+      e.preventDefault();
+    }
+
+    if (effectiveSubPage.startsWith("master-users")) {
+      const name = userForm.employeeName.trim();
+      if (!name) {
+        toast.error("Please enter Employee Name.");
+        return;
+      }
+
+      if (!selectedId) {
+        // CREATE NEW EMPLOYEE
+        const autoEmpId = userForm.employeeId.trim() || `EMP-${String(users.length + 1).padStart(3, '0')}`;
+        const autoUsername = userForm.username.trim().toLowerCase() || name.toLowerCase().replace(/\s+/g, "");
+        const autoPassword = userForm.password ? userForm.password.trim() : "123";
+
+        const newUser: UserItem = {
+          ...userForm,
+          id: "usr_" + Date.now(),
+          employeeId: autoEmpId,
+          employeeName: name,
+          username: autoUsername,
+          password: autoPassword,
+          role: userForm.role || "Staff",
+          totalSalary: (userForm.basicSalary || 0) + (userForm.allowances || 0) + (userForm.overtime || 0),
+          allowedFeatures: userForm.allowedFeatures && userForm.allowedFeatures.length > 0 ? userForm.allowedFeatures : ALL_WEBSITE_FEATURES.map(f => f.id)
+        };
+
+        setUsers(prev => {
+          const nextList = [...prev, newUser];
+          localStorage.setItem("master_users", JSON.stringify(nextList));
+          return nextList;
+        });
+
+        toast.success(`Employee "${name}" registered! User ID: "${autoUsername}" | Password: "${autoPassword}"`);
+
+        setUserForm({
+          employeeId: "", employeeName: "", passportNumber: "", passportIssue: "", passportExpiry: "", workPermitNumber: "",
+          workPermitIssue: "", workPermitExpiry: "", visaNumber: "", visaIssue: "", visaExpiry: "", insuranceNumber: "",
+          insuranceIssue: "", insuranceExpiry: "", healthMedicalNumber: "", healthMedicalIssue: "", healthMedicalExpiry: "",
+          dateOfBirth: "", dateOfJoin: "", dateOfRejoin: "", basicSalary: 0, allowances: 0, overtime: 0, totalSalary: 0,
+          role: "Staff", responsibility: "", username: "", password: "", allowedFeatures: ALL_WEBSITE_FEATURES.map(f => f.id)
+        });
+        setSelectedId("");
+        return;
+      } else {
+        // UPDATE EXISTING EMPLOYEE
+        setUsers(prev => {
+          const nextList = prev.map(x => x.id === selectedId ? {
+            ...x,
+            ...userForm,
+            employeeName: name,
+            username: userForm.username ? userForm.username.trim().toLowerCase() : x.username,
+            password: userForm.password ? userForm.password.trim() : (x.password || "123"),
+            totalSalary: (userForm.basicSalary || 0) + (userForm.allowances || 0) + (userForm.overtime || 0),
+            allowedFeatures: userForm.allowedFeatures && userForm.allowedFeatures.length > 0 ? userForm.allowedFeatures : x.allowedFeatures
+          } : x);
+          localStorage.setItem("master_users", JSON.stringify(nextList));
+          return nextList;
+        });
+
+        toast.success(`Employee "${name}" details updated successfully!`);
+        setSelectedId("");
+        return;
+      }
+    }
+
     if (activeAction === "create") {
       if (effectiveSubPage === "master-accounts-groups") {
         const newGroup = { ...groupForm, id: "g_" + Date.now() };
@@ -789,37 +856,6 @@ export default function MasterConsoleView({
         const newGdn = { ...godownForm, id: "gdn_" + Date.now() };
         setGodowns(prev => [...prev, newGdn]);
         toast.success(`Warehouse Godown "${godownForm.name} (${godownForm.code})" registered in Masters!`);
-      } else if (effectiveSubPage.startsWith("master-users")) {
-        const name = userForm.employeeName.trim();
-        if (!name) {
-          toast.error("Please enter Employee Name.");
-          return;
-        }
-
-        const autoEmpId = userForm.employeeId.trim() || `EMP-${String(users.length + 1).padStart(3, '0')}`;
-        const autoUsername = userForm.username.trim().toLowerCase() || name.toLowerCase().replace(/\s+/g, "");
-        const autoPassword = userForm.password ? userForm.password.trim() : "123";
-
-        const newUser = {
-          ...userForm,
-          id: "usr_" + Date.now(),
-          employeeId: autoEmpId,
-          employeeName: name,
-          username: autoUsername,
-          password: autoPassword,
-          role: userForm.role || "Staff",
-          totalSalary: (userForm.basicSalary || 0) + (userForm.allowances || 0) + (userForm.overtime || 0),
-          allowedFeatures: userForm.allowedFeatures && userForm.allowedFeatures.length > 0 ? userForm.allowedFeatures : ALL_WEBSITE_FEATURES.map(f => f.id)
-        };
-        setUsers(prev => [...prev, newUser]);
-        toast.success(`Employee "${name}" registered! User ID: "${autoUsername}" | Password: "${autoPassword}"`);
-        setUserForm({
-          employeeId: "", employeeName: "", passportNumber: "", passportIssue: "", passportExpiry: "", workPermitNumber: "",
-          workPermitIssue: "", workPermitExpiry: "", visaNumber: "", visaIssue: "", visaExpiry: "", insuranceNumber: "",
-          insuranceIssue: "", insuranceExpiry: "", healthMedicalNumber: "", healthMedicalIssue: "", healthMedicalExpiry: "",
-          dateOfBirth: "", dateOfJoin: "", dateOfRejoin: "", basicSalary: 0, allowances: 0, overtime: 0, totalSalary: 0,
-          role: "Staff", responsibility: "", username: "", password: "", allowedFeatures: ALL_WEBSITE_FEATURES.map(f => f.id)
-        });
       }
     } else if (activeAction === "edit") {
       if (!selectedId) {
@@ -851,44 +887,44 @@ export default function MasterConsoleView({
           ? packingsList[0].price
           : itemForm.sellPrice;
 
-        const payload = {
-          id: selectedId,
-          name: itemForm.name,
-          category: itemForm.category,
-          unit: itemForm.unit,
-          packingType: validTypes.join(", "),
-          packingTypes: validTypes,
-          packingPrices: packingPricesMap,
-          packing1: itemForm.packing1,
-          price1: itemForm.price1,
-          packing2: itemForm.packing2,
-          price2: itemForm.price2,
-          packing3: itemForm.packing3,
-          price3: itemForm.price3,
-          buyPrice: itemForm.buyPrice,
-          sellPrice: defaultSellPrice,
-        };
-        const ok = await onAddProduct(payload as any);
-        if (ok) {
-          toast.success(`Product "${itemForm.name}" updated with 3 packing types & selling prices!`);
+        if (selectedId) {
+          const found = products.find(x => x.id === selectedId);
+          if (found) {
+            const payload = {
+              name: itemForm.name,
+              category: itemForm.category,
+              unit: itemForm.unit,
+              packingType: itemForm.packingType || "Standard",
+              packingTypes: validTypes.length > 0 ? validTypes : ["Standard"],
+              packingPrices: packingPricesMap,
+              packing1: itemForm.packing1,
+              price1: itemForm.price1,
+              packing2: itemForm.packing2,
+              price2: itemForm.price2,
+              packing3: itemForm.packing3,
+              price3: itemForm.price3,
+              buyPrice: itemForm.buyPrice || 0,
+              sellPrice: defaultSellPrice
+            };
+            if (onAddProduct) {
+              await onAddProduct({ ...found, ...payload } as any);
+              toast.success(`Product "${itemForm.name}" updated!`);
+            }
+          }
         }
       } else if (effectiveSubPage === "master-accounts-customer") {
-        if (onUpdateCustomer) {
+        if (onUpdateCustomer && selectedId) {
           const ok = await onUpdateCustomer(selectedId, customerForm);
           if (ok) {
-            toast.success(`Customer "${customerForm.name}" updated successfully!`);
+            toast.success(`Customer "${customerForm.name}" updated!`);
           }
-        } else {
-          toast.success("Customer details updated.");
         }
       } else if (effectiveSubPage === "master-accounts-supplier") {
-        if (onUpdateSupplier) {
+        if (onUpdateSupplier && selectedId) {
           const ok = await onUpdateSupplier(selectedId, supplierForm);
           if (ok) {
-            toast.success(`Supplier "${supplierForm.name}" updated successfully!`);
+            toast.success(`Supplier "${supplierForm.name}" updated!`);
           }
-        } else {
-          toast.success("Supplier details updated.");
         }
       } else if (effectiveSubPage === "master-inventory-categories") {
         setCategories(prev => prev.map(x => x.id === selectedId ? { ...x, ...categoryForm } : x));
@@ -902,15 +938,6 @@ export default function MasterConsoleView({
       } else if (effectiveSubPage === "master-inventory-godowns" || effectiveSubPage === "master-godowns") {
         setGodowns(prev => prev.map(x => x.id === selectedId ? { ...x, ...godownForm } : x));
         toast.success(`Godown "${godownForm.name}" details updated.`);
-      } else if (effectiveSubPage.startsWith("master-users")) {
-        setUsers(prev => prev.map(x => x.id === selectedId ? {
-          ...x,
-          ...userForm,
-          username: userForm.username ? userForm.username.trim().toLowerCase() : x.username,
-          password: userForm.password ? userForm.password.trim() : (x.password || "123"),
-          totalSalary: (userForm.basicSalary || 0) + (userForm.allowances || 0) + (userForm.overtime || 0),
-          allowedFeatures: userForm.allowedFeatures && userForm.allowedFeatures.length > 0 ? userForm.allowedFeatures : x.allowedFeatures
-        } : x));
       } else {
         toast.success("Record updated successfully.");
       }
@@ -1442,9 +1469,10 @@ export default function MasterConsoleView({
             <div className="flex justify-end gap-2 pt-2 border-t border-border/30">
               <button
                 type="submit"
-                className="px-6 py-1.5 bg-primary hover:bg-primary/95 text-white rounded text-xs font-mono font-bold transition-all shadow hover:scale-[1.01] active:scale-95 duration-200"
+                onClick={(e) => handleActionSubmit(e)}
+                className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-mono font-bold transition-all shadow hover:scale-[1.01] active:scale-95 duration-200 cursor-pointer flex items-center gap-1.5"
               >
-                Create Employee
+                <span>Create & Register Employee</span>
               </button>
             </div>
           </form>
@@ -2144,11 +2172,12 @@ export default function MasterConsoleView({
                     <div className="flex justify-end gap-2 pt-2 border-t border-border/30 mt-3">
                       <button
                         type="submit"
-                        className={`px-6 py-1.5 text-white rounded-lg text-xs font-mono font-bold transition-all shadow-sm ${
-                          activeAction === "edit" ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"
+                        onClick={(e) => handleActionSubmit(e)}
+                        className={`px-6 py-2 text-white rounded-lg text-xs font-mono font-bold transition-all shadow-sm cursor-pointer flex items-center gap-1.5 ${
+                          selectedId ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"
                         }`}
                       >
-                        {activeAction === "edit" ? "Save Employee Changes" : "Create & Register Employee"}
+                        <span>{selectedId ? "Save Employee Changes" : "Create & Register Employee"}</span>
                       </button>
                     </div>
                   </>
