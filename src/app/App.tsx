@@ -15011,27 +15011,33 @@ function CreditRecoveryPage({
   // 1-Click Multi-Channel (WhatsApp + Viber + Gmail) Automated Reminder Sender
   const handleSendMail = async (p: typeof partnerSummaries[0]) => {
     const customerId = p.customer?.id;
-    if (!customerId) {
-      toast.error(`Customer record not linked for ${p.partner}. Cannot send email.`);
+    const email = (p.customer as any)?.email?.trim();
+
+    if (!email && !customerId) {
+      handleOpenGmail(p);
       return;
     }
-    const email = (p.customer as any)?.email;
+
     if (!email) {
       toast.error(`No email address on file for ${p.partner}. Please add email in Masters > Customer.`);
       return;
     }
-    setSendingMail(customerId);
-    toast.loading(`Sending overdue notice to ${email} via SMTP...`, { id: `mail-${customerId}` });
+
+    const keyId = customerId || p.partner;
+    setSendingMail(keyId);
+    toast.loading(`Processing email notice for ${email}...`, { id: `mail-${keyId}` });
     try {
       const res = await fetch(`/api/credit-recovery/send-mail/${customerId}`, { method: "POST" });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        toast.success(`Overdue notice email successfully sent to ${data.email || email}!`, { id: `mail-${customerId}` });
+      const data = await safeJsonParse(res);
+      if (res.ok && data?.success) {
+        toast.success(`Overdue notice email successfully sent to ${data.email || email}!`, { id: `mail-${keyId}` });
       } else {
-        toast.error(data.message || "Failed to send email.", { id: `mail-${customerId}` });
+        handleOpenGmail(p);
+        toast.success(`Opened Gmail Web Compose for ${p.partner} (${email})!`, { id: `mail-${keyId}` });
       }
     } catch (err: any) {
-      toast.error(`Network error: ${err.message}`, { id: `mail-${customerId}` });
+      handleOpenGmail(p);
+      toast.success(`Opened Gmail Web Compose for ${p.partner} (${email})!`, { id: `mail-${keyId}` });
     } finally {
       setSendingMail(null);
     }

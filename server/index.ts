@@ -293,15 +293,32 @@ async function sendOverdueMailToCustomer(
     isMonthly: false,
   });
 
-  await transporter.sendMail({
-    from: `"Spice Route Trading Co." <${process.env.GMAIL_USER || "adhilabdul49@gmail.com"}>`,
-    to: email,
-    subject: `⚠️ Overdue Payment Notice — ${customer.name} | Spice Route Trading Co.`,
-    html,
-  });
+  if (!process.env.GMAIL_APP_PASSWORD) {
+    return {
+      success: false,
+      message: "SMTP GMAIL_APP_PASSWORD not set in .env. Falling back to Web Gmail Compose.",
+      email,
+    };
+  }
 
-  console.log(`[MAIL] Overdue notice sent to ${customer.name} <${email}>`);
-  return { success: true, message: `Overdue notice sent to ${email}`, email };
+  try {
+    await transporter.sendMail({
+      from: `"Spice Route Trading Co." <${process.env.GMAIL_USER || "adhilabdul49@gmail.com"}>`,
+      to: email,
+      subject: `⚠️ Overdue Payment Notice — ${customer.name} | Spice Route Trading Co.`,
+      html,
+    });
+
+    console.log(`[MAIL] Overdue notice sent to ${customer.name} <${email}>`);
+    return { success: true, message: `Overdue notice sent to ${email}`, email };
+  } catch (err: any) {
+    console.error(`[MAIL] SMTP Send Error:`, err.message);
+    return {
+      success: false,
+      message: err.message,
+      email,
+    };
+  }
 }
 
 /** Monthly auto-send: send due + overdue list to ALL customers with email */
