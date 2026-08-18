@@ -14611,6 +14611,17 @@ export default function App() {
     }
   }
 
+  // Safe helper to read json from response without throwing SyntaxError: Unexpected end of JSON input
+  async function safeJsonParse(res: Response) {
+    try {
+      const text = await res.text();
+      if (!text) return null;
+      return JSON.parse(text);
+    } catch (e) {
+      return null;
+    }
+  }
+
   // Add Customer
   async function handleAddCustomer(customerData: Omit<Customer, "id">): Promise<Customer | null> {
     try {
@@ -14628,17 +14639,17 @@ export default function App() {
         body: JSON.stringify(sanitized),
       });
 
+      const body = await safeJsonParse(res);
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to add customer");
+        throw new Error(body?.error || body?.message || `Failed to add customer (HTTP ${res.status})`);
       }
 
-      const newCustomer = await res.json();
+      const newCustomer = body || { ...sanitized, id: "cust_" + Date.now() };
       toast.success("Customer registered successfully!");
       await loadData();
       return newCustomer;
     } catch (e: any) {
-      toast.error(e.message);
+      toast.error(e.message || "Failed to add customer");
       return null;
     }
   }
@@ -14660,17 +14671,17 @@ export default function App() {
         body: JSON.stringify(sanitized),
       });
 
+      const body = await safeJsonParse(res);
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to add supplier");
+        throw new Error(body?.error || body?.message || `Failed to add supplier (HTTP ${res.status})`);
       }
 
-      const newSupplier = await res.json();
+      const newSupplier = body || { ...sanitized, id: "sup_" + Date.now() };
       toast.success("Supplier registered successfully!");
       await loadData();
       return newSupplier;
     } catch (e: any) {
-      toast.error(e.message);
+      toast.error(e.message || "Failed to add supplier");
       return null;
     }
   }
@@ -14678,7 +14689,7 @@ export default function App() {
   async function handleDeleteSupplier(id: string): Promise<boolean> {
     try {
       const res = await fetch(`/api/suppliers/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete supplier");
+      if (!res.ok) throw new Error(`Failed to delete supplier (HTTP ${res.status})`);
       toast.success("Supplier removed from accounts!");
       await loadData();
       return true;
@@ -14695,9 +14706,9 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(supplierData),
       });
+      const body = await safeJsonParse(res);
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to update supplier");
+        throw new Error(body?.error || body?.message || `Failed to update supplier (HTTP ${res.status})`);
       }
       toast.success("Supplier profile updated!");
       await loadData();
@@ -14717,16 +14728,16 @@ export default function App() {
         body: JSON.stringify(productData),
       });
 
+      const body = await safeJsonParse(res);
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to add product");
+        throw new Error(body?.error || body?.message || `Failed to add product (HTTP ${res.status})`);
       }
 
       toast.success("Product registered in inventory!");
       await loadData();
       return true;
     } catch (e: any) {
-      toast.error(e.message);
+      toast.error(e.message || "Failed to register product");
       return false;
     }
   }
@@ -14734,7 +14745,7 @@ export default function App() {
   async function handleDeleteProduct(id: string): Promise<boolean> {
     try {
       const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete product");
+      if (!res.ok) throw new Error(`Failed to delete product (HTTP ${res.status})`);
       toast.success("Product deleted from catalog!");
       await loadData();
       return true;
@@ -14747,7 +14758,7 @@ export default function App() {
   async function handleDeleteCustomer(id: string): Promise<boolean> {
     try {
       const res = await fetch(`/api/customers/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete customer");
+      if (!res.ok) throw new Error(`Failed to delete customer (HTTP ${res.status})`);
       toast.success("Customer removed from accounts!");
       await loadData();
       return true;
@@ -14764,9 +14775,9 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(customerData),
       });
+      const body = await safeJsonParse(res);
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to update customer");
+        throw new Error(body?.error || body?.message || `Failed to update customer (HTTP ${res.status})`);
       }
       toast.success("Customer profile updated!");
       await loadData();
