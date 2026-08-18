@@ -570,43 +570,43 @@ export default function MasterConsoleView({
     } else if (effectiveSubPage === "master-inventory-godowns" || effectiveSubPage === "master-godowns") {
       const found = godowns.find(x => x.id === selectedId);
       if (found) setGodownForm({ code: found.code, name: found.name, location: found.location, temperature: found.temperature, capacityKg: found.capacityKg, managerName: found.managerName, status: found.status, notes: found.notes || "" });
-    } else if (effectiveSubPage === "master-users") {
+    } else if (effectiveSubPage.startsWith("master-users")) {
       const found = users.find(x => x.id === selectedId);
       if (found) {
         setUserForm({
-          employeeId: found.employeeId,
-          employeeName: found.employeeName,
-          passportNumber: found.passportNumber,
-          passportIssue: found.passportIssue,
-          passportExpiry: found.passportExpiry,
-          workPermitNumber: found.workPermitNumber,
-          workPermitIssue: found.workPermitIssue,
-          workPermitExpiry: found.workPermitExpiry,
-          visaNumber: found.visaNumber,
-          visaIssue: found.visaIssue,
-          visaExpiry: found.visaExpiry,
-          insuranceNumber: found.insuranceNumber,
-          insuranceIssue: found.insuranceIssue,
-          insuranceExpiry: found.insuranceExpiry,
-          healthMedicalNumber: found.healthMedicalNumber,
-          healthMedicalIssue: found.healthMedicalIssue,
-          healthMedicalExpiry: found.healthMedicalExpiry,
-          dateOfBirth: found.dateOfBirth,
-          dateOfJoin: found.dateOfJoin,
-          dateOfRejoin: found.dateOfRejoin,
-          basicSalary: found.basicSalary,
-          allowances: found.allowances,
-          overtime: found.overtime,
-          totalSalary: found.totalSalary,
-          role: found.role,
-          responsibility: found.responsibility,
-          username: found.username,
+          employeeId: found.employeeId || "",
+          employeeName: found.employeeName || "",
+          passportNumber: found.passportNumber || "",
+          passportIssue: found.passportIssue || "",
+          passportExpiry: found.passportExpiry || "",
+          workPermitNumber: found.workPermitNumber || "",
+          workPermitIssue: found.workPermitIssue || "",
+          workPermitExpiry: found.workPermitExpiry || "",
+          visaNumber: found.visaNumber || "",
+          visaIssue: found.visaIssue || "",
+          visaExpiry: found.visaExpiry || "",
+          insuranceNumber: found.insuranceNumber || "",
+          insuranceIssue: found.insuranceIssue || "",
+          insuranceExpiry: found.insuranceExpiry || "",
+          healthMedicalNumber: found.healthMedicalNumber || "",
+          healthMedicalIssue: found.healthMedicalIssue || "",
+          healthMedicalExpiry: found.healthMedicalExpiry || "",
+          dateOfBirth: found.dateOfBirth || "",
+          dateOfJoin: found.dateOfJoin || "",
+          dateOfRejoin: found.dateOfRejoin || "",
+          basicSalary: found.basicSalary || 0,
+          allowances: found.allowances || 0,
+          overtime: found.overtime || 0,
+          totalSalary: found.totalSalary || 0,
+          role: found.role || "Staff",
+          responsibility: found.responsibility || "",
+          username: found.username || "",
           password: found.password || "",
           allowedFeatures: found.allowedFeatures && found.allowedFeatures.length > 0 ? found.allowedFeatures : ALL_WEBSITE_FEATURES.map(f => f.id)
         });
       }
     }
-  }, [selectedId, effectiveSubPage]);
+  }, [selectedId, effectiveSubPage, users]);
 
   // Metadata mappings
   let title = "";
