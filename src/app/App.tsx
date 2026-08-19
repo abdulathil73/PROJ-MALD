@@ -327,17 +327,38 @@ function DDMMYYYYDateInput({
   inputRef?: any;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }) {
-  const displayValue = useMemo(() => formatDDMMYYYY(value), [value]);
+  const [localText, setLocalText] = useState(() => formatDDMMYYYY(value));
   const hiddenDateInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setLocalText(formatDDMMYYYY(value));
+  }, [value]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
-    const match = raw.match(/^(\d{2})[-/.](\d{2})[-/.](\d{4})$/);
-    if (match) {
-      const [_, dd, mm, yyyy] = match;
+    setLocalText(raw);
+
+    const ddmmyyyyMatch = raw.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+    const yyyymmddMatch = raw.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+    const raw8Match = raw.match(/^(\d{2})(\d{2})(\d{4})$/);
+
+    if (ddmmyyyyMatch) {
+      const [_, dd, mm, yyyy] = ddmmyyyyMatch;
+      const sDD = dd.padStart(2, "0");
+      const sMM = mm.padStart(2, "0");
+      onChange(`${yyyy}-${sMM}-${sDD}`);
+    } else if (yyyymmddMatch) {
+      const [_, yyyy, mm, dd] = yyyymmddMatch;
+      const sDD = dd.padStart(2, "0");
+      const sMM = mm.padStart(2, "0");
+      onChange(`${yyyy}-${sMM}-${sDD}`);
+    } else if (raw8Match) {
+      const [_, dd, mm, yyyy] = raw8Match;
       onChange(`${yyyy}-${mm}-${dd}`);
     } else if (raw === "") {
       onChange("");
+    } else {
+      onChange(raw);
     }
   };
 
@@ -363,7 +384,7 @@ function DDMMYYYYDateInput({
       <input
         ref={inputRef}
         type="text"
-        value={displayValue}
+        value={localText}
         onChange={handleTextChange}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
@@ -4364,6 +4385,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
   const dueDateInputRef = useRef<HTMLInputElement>(null);
   const productSearchRef = useRef<HTMLInputElement>(null);
   const godownInputRef = useRef<HTMLInputElement>(null);
+  const packingTypeInputRef = useRef<any>(null);
   const quantityInputRef = useRef<HTMLInputElement>(null);
   const rateInputRef = useRef<HTMLInputElement>(null);
   const gstPercentInputRef = useRef<HTMLSelectElement>(null);
@@ -4462,6 +4484,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
         setRate(String(ptPrice));
       }
     }
+    quantityInputRef.current?.focus();
   };
 
   const handleGodownKeyDown = (e: React.KeyboardEvent) => {
@@ -4487,7 +4510,9 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
         const selected = availableGodowns[godownSuggestionIdx];
         setGodown(selected);
         setShowGodownSuggestions(false);
-        quantityInputRef.current?.focus();
+      }
+      if (packingTypeInputRef.current) {
+        packingTypeInputRef.current.focus();
       } else {
         quantityInputRef.current?.focus();
       }
@@ -4539,7 +4564,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
           handleSelectCustomer(selected);
         }
       } else {
-        dateInputRef.current?.focus();
+        productSearchRef.current?.focus();
       }
     } else if (e.key === "Escape") {
       setShowCustomerSuggestions(false);
@@ -4550,7 +4575,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
     setSelectedCustomerId(cust.id);
     setCustomerSearch(cust.name);
     setShowCustomerSuggestions(false);
-    dateInputRef.current?.focus();
+    productSearchRef.current?.focus();
   };
 
   const availableGodowns = useMemo(() => {
@@ -5390,6 +5415,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                 <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">1. Select / Search Product</label>
                 {products.length > 0 ? (
                   <select
+                    ref={productSearchRef as any}
                     value={productId}
                     onChange={e => {
                       const selId = e.target.value;
@@ -5398,6 +5424,13 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                       if (prod) {
                         setProductSearch(prod.name);
                         setRate(String(prod.sellPrice));
+                      }
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (godownInputRef.current) godownInputRef.current.focus();
+                        else if (quantityInputRef.current) quantityInputRef.current.focus();
                       }
                     }}
                     className="w-full px-3 py-2.5 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
@@ -5462,7 +5495,8 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                         onClick={() => {
                           setGodown(g);
                           setShowGodownSuggestions(false);
-                          quantityInputRef.current?.focus();
+                          if (packingTypeInputRef.current) packingTypeInputRef.current.focus();
+                          else quantityInputRef.current?.focus();
                         }}
                         className={`w-full text-left px-3.5 py-2.5 hover:bg-secondary/60 flex items-center justify-between gap-3 transition-colors ${idx === godownSuggestionIdx ? 'bg-primary/15 font-bold text-primary border-l-4 border-l-primary' : ''}`}
                         data-active={idx === godownSuggestionIdx}
@@ -5484,8 +5518,15 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                 </label>
                 {availablePackingTypes.length > 0 ? (
                   <select
+                    ref={packingTypeInputRef}
                     value={packingType}
                     onChange={e => handleSelectPackingType(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        quantityInputRef.current?.focus();
+                      }
+                    }}
                     className="w-full px-3 py-2.5 border border-blue-500/40 rounded-xl bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                   >
                     <option value="">-- Select Master Packing --</option>
@@ -5504,9 +5545,16 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                   </select>
                 ) : (
                   <input
+                    ref={packingTypeInputRef}
                     type="text"
                     value={packingType}
                     onChange={e => setPackingType(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        quantityInputRef.current?.focus();
+                      }
+                    }}
                     placeholder="Enter packing..."
                     className="w-full px-3 py-2.5 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-ring"
                   />
@@ -6176,7 +6224,7 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
           handleSelectSupplier(selected);
         }
       } else {
-        dateInputRef.current?.focus();
+        productSearchRef.current?.focus();
       }
     } else if (e.key === "Escape") {
       setShowSupplierSuggestions(false);
@@ -6187,7 +6235,7 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
     setSelectedSupplierId(supp.id);
     setSupplierSearch(supp.name);
     setShowSupplierSuggestions(false);
-    dateInputRef.current?.focus();
+    productSearchRef.current?.focus();
   };
 
   // Details
@@ -6740,6 +6788,7 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
                 <label className="block text-[9px] font-mono text-muted-foreground mb-1 uppercase">Product Search</label>
                 {products.length > 0 ? (
                   <select
+                    ref={productSearchRef as any}
                     value={productId}
                     onChange={e => {
                       const selId = e.target.value;
@@ -6748,6 +6797,13 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
                       if (prod) {
                         setProductSearch(prod.name);
                         setRate(String(prod.buyPrice));
+                      }
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (godownInputRef.current) godownInputRef.current.focus();
+                        else if (quantityInputRef.current) quantityInputRef.current.focus();
                       }
                     }}
                     className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer font-semibold"
