@@ -16418,12 +16418,15 @@ function IntroSplashScreen({ onFinish }: { onFinish: () => void }) {
         <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-emerald-300 to-teal-400 blur opacity-30 animate-pulse" />
       </div>
 
-      <h1 className="text-3xl font-extrabold tracking-[0.2em] text-emerald-800 font-serif mb-2 select-none">
-        SPICE ROUTE
+      <h1 className="text-3xl font-extrabold tracking-[0.15em] text-emerald-800 dark:text-emerald-300 font-serif mb-1 select-none text-center">
+        RJ GROUP OF COMPANIES
       </h1>
-      <p className="text-[10px] text-emerald-600/80 font-mono tracking-[0.3em] uppercase mb-12 select-none">
-        Nuts, Spices & Fresh Produce Ledger
+      <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono tracking-[0.2em] uppercase mb-1 font-bold select-none text-center">
+        Holding Company & Subsidiary Branch Suite
       </p>
+      <div className="flex items-center justify-center gap-2 text-[9px] font-mono text-amber-800 dark:text-amber-300 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 mb-8 max-w-lg text-center flex-wrap">
+        <span>F&B Evening Store</span> • <span>F&B Evening Store Fihara</span> • <span>Annlee</span> • <span>City Sales</span>
+      </div>
 
       {/* Progress loader */}
       <div className="w-64 max-w-xs space-y-2 relative z-10">
@@ -16620,10 +16623,16 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
         <div className="flex-shrink-0 w-full lg:w-[360px] bg-white/95 border-2 border-[#52b788] rounded-3xl shadow-2xl p-8 space-y-6 backdrop-blur-2xl relative overflow-hidden text-foreground">
           <div className="text-center space-y-2 relative z-10">
             <div className="w-16 h-16 bg-[#d8f3dc] border-2 border-[#52b788] text-[#2d6a4f] rounded-full flex items-center justify-center mx-auto shadow-md text-3xl">
-              🎋
+              🏛️
             </div>
-            <h2 className="text-2xl font-black text-[#14281d] font-serif">Spice Route Trading Co.</h2>
-            <p className="text-xs font-mono text-[#2d6a4f] font-bold">Japanese Zen Bamboo & Matcha Portal</p>
+            <h2 className="text-2xl font-black text-[#14281d] font-serif">RJ Group of Companies</h2>
+            <p className="text-xs font-mono text-[#2d6a4f] font-bold">Main Holding Company & Branch Operations Suite</p>
+            <div className="text-[9px] font-mono text-[#2d6a4f] font-semibold flex items-center justify-center gap-1.5 flex-wrap pt-1">
+              <span className="bg-[#d8f3dc] px-1.5 py-0.5 rounded border border-[#52b788]/40">F&B Evening Store</span>
+              <span className="bg-[#d8f3dc] px-1.5 py-0.5 rounded border border-[#52b788]/40">F&B Evening Store Fihara</span>
+              <span className="bg-[#d8f3dc] px-1.5 py-0.5 rounded border border-[#52b788]/40">Annlee</span>
+              <span className="bg-[#d8f3dc] px-1.5 py-0.5 rounded border border-[#52b788]/40">City Sales</span>
+            </div>
           </div>
 
           <form onSubmit={handleLoginSubmit} className="space-y-4 font-mono text-xs relative z-10">
@@ -16971,14 +16980,14 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
         lg:static lg:translate-x-0 no-print
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
-        <div className="px-5 py-5 border-b border-sidebar-border">
+        <div className="px-5 py-4 border-b border-sidebar-border">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow">
-              <Package size={15} className="text-primary-foreground" />
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 via-emerald-600 to-teal-700 flex items-center justify-center text-white shadow font-bold text-xs">
+              RJ
             </div>
             <div>
-              <div className="text-sm font-bold text-foreground font-serif leading-tight">Spice Route</div>
-              <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">Trading Co.</div>
+              <div className="text-xs font-extrabold text-foreground font-serif leading-tight tracking-tight">RJ GROUP</div>
+              <div className="text-[9px] text-emerald-600 dark:text-emerald-400 font-mono font-bold uppercase tracking-wider">4 Branches Suite</div>
             </div>
           </div>
         </div>
