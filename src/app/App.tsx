@@ -1266,10 +1266,9 @@ function InvoiceModal({
           {/* Header */}
           <div className="flex justify-between items-start border-b border-gray-200 pb-5">
             <div>
-              <h2 className="text-xl font-bold font-serif text-green-900">Spice Route Trading Co.</h2>
-              <p className="text-[10px] text-gray-500 font-mono mt-1">Export · Import · Wholesale Logistics</p>
-              <p className="text-[10px] text-gray-500 font-mono">GSTIN: 27AAAAA5555A1Z5</p>
-              <p className="text-[10px] text-gray-500 font-mono">Mumbai Harbor Warehouse, Area A-C</p>
+              <h2 className="text-xl font-bold font-serif text-green-900">RJ Group of Companies</h2>
+              <p className="text-[10px] text-gray-500 font-mono mt-1">F&B Evening Store · F&B Evening Store Fihara · Annlee · City Sales</p>
+              <p className="text-[10px] text-gray-500 font-mono">Central Trade Logistics Hub</p>
             </div>
             <div className="text-right">
               <span className={`inline-block px-2.5 py-1 rounded text-xs font-bold font-mono uppercase mb-2 ${isDeliveryNoteDoc ? "bg-blue-100 text-blue-800" : isSale ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}`}>
@@ -1309,7 +1308,7 @@ function InvoiceModal({
           <div className="grid grid-cols-2 gap-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
             <div>
               <span className="text-[9px] font-mono uppercase text-gray-500 block mb-1">Company (Billed By)</span>
-              <div className="font-bold text-gray-900 text-sm">Spice Route Trading Co.</div>
+              <div className="font-bold text-gray-900 text-sm">RJ Group of Companies</div>
               <div className="text-[11px] text-gray-600 mt-1 leading-relaxed">
                 Terminal 3, Port Authority Logistics Yard,<br />
                 Mumbai, Maharashtra - 400001
@@ -1431,13 +1430,12 @@ function InvoiceModal({
 // ─── Dashboard Page ──────────────────────────────────────────────────────────
 
 function DashboardPage({ products, entries, analytics, onRefresh }: { products: Product[]; entries: StockEntry[]; analytics: Analytics | null; onRefresh: () => void }) {
-  // 5 Companies List (Flagship + 4 Additional Subsidiary Companies)
+  // 4 Branch Companies List
   const COMPANIES = useMemo(() => [
-    { id: "c1", name: "Spice Route Trading Co. (Main Flagship)", code: "SRT-MLE", currency: "MVR / INR", region: "Maldives & Global Hub", multiplier: 1.0, godownsCount: 18 },
-    { id: "c2", name: "Maldives Cargo Logistics Pvt Ltd", code: "MCL-MLE", currency: "MVR", region: "Male & Hulhumale (Maldives)", multiplier: 0.82, godownsCount: 12 },
-    { id: "c3", name: "Gulf Spice Distributors LLC", code: "GSD-DXB", currency: "AED / USD", region: "Dubai Trade Zone (UAE)", multiplier: 1.25, godownsCount: 15 },
-    { id: "c4", name: "Ceylon Cinnamon Exporters", code: "CCE-CMB", currency: "LKR / USD", region: "Colombo Export Yard (Sri Lanka)", multiplier: 0.68, godownsCount: 8 },
-    { id: "c5", name: "Royal Spice Wholesalers India", code: "RSW-IND", currency: "INR", region: "Kochi Port Terminal (India)", multiplier: 0.94, godownsCount: 14 },
+    { id: "c1", name: "F&B Evening Store", code: "FB-EVE", currency: "MVR", region: "Main Branch Operations", multiplier: 1.0, godownsCount: 5 },
+    { id: "c2", name: "F&B Evening Store Fihara", code: "FB-FIH", currency: "MVR", region: "Fihara Branch Operations", multiplier: 0.95, godownsCount: 4 },
+    { id: "c3", name: "Annlee", code: "ANN-LEE", currency: "MVR", region: "Annlee Branch Operations", multiplier: 0.90, godownsCount: 4 },
+    { id: "c4", name: "City Sales", code: "CTY-SLS", currency: "MVR", region: "City Sales Branch Operations", multiplier: 1.10, godownsCount: 5 },
   ], []);
 
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>(() => {
@@ -1509,7 +1507,7 @@ function DashboardPage({ products, entries, analytics, onRefresh }: { products: 
         <div className="w-full sm:w-auto flex items-center gap-2.5 bg-secondary/40 p-2 rounded-xl border border-border">
           <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-muted-foreground pl-1">
             <Building size={15} className="text-primary" />
-            <span className="hidden sm:inline">Select Company:</span>
+            <span className="hidden sm:inline">Select Branch Company:</span>
           </div>
           <select
             value={selectedCompanyId}
@@ -1522,15 +1520,11 @@ function DashboardPage({ products, entries, analytics, onRefresh }: { products: 
             }}
             className="w-full sm:w-72 px-3 py-2 bg-card border border-emerald-500/40 text-foreground text-xs font-mono font-bold rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm cursor-pointer"
           >
-            <optgroup label="🏢 Flagship Company">
-              <option value="c1">🏢 1. Spice Route Trading Co. (Main Flagship)</option>
-            </optgroup>
-            <optgroup label="🌐 4 Partner Subsidiaries & Global Operations">
-              <option value="c2">🇲🇻 2. Maldives Cargo Logistics Pvt Ltd (Male)</option>
-              <option value="c3">🇦🇪 3. Gulf Spice Distributors LLC (Dubai UAE)</option>
-              <option value="c4">🇱🇰 4. Ceylon Cinnamon Exporters (Colombo)</option>
-              <option value="c5">🇮🇳 5. Royal Spice Wholesalers India (Kochi)</option>
-            </optgroup>
+            {COMPANIES.map((comp, idx) => (
+              <option key={comp.id} value={comp.id}>
+                🏢 {idx + 1}. {comp.name}
+              </option>
+            ))}
           </select>
           <button
             onClick={onRefresh}
