@@ -294,29 +294,42 @@ function fmt(n: number) {
 function formatDDMMYYYY(dateInput?: string | Date | null): string {
   if (!dateInput) return "";
   if (typeof dateInput === "string") {
-    const match = dateInput.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (match) {
-      return `${match[3]}-${match[2]}-${match[1]}`;
+    const trimmed = dateInput.trim();
+    const isoMatch = trimmed.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+    if (isoMatch) {
+      const [_, yyyy, mm, dd] = isoMatch;
+      return `${dd.padStart(2, "0")}/${mm.padStart(2, "0")}/${yyyy}`;
     }
-    if (/^\d{2}-\d{2}-\d{4}$/.test(dateInput)) return dateInput;
+    const ddmmyyyyMatch = trimmed.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+    if (ddmmyyyyMatch) {
+      const [_, dd, mm, yyyy] = ddmmyyyyMatch;
+      return `${dd.padStart(2, "0")}/${mm.padStart(2, "0")}/${yyyy}`;
+    }
+    const raw8Match = trimmed.match(/^(\d{2})(\d{2})(\d{4})$/);
+    if (raw8Match) {
+      const [_, dd, mm, yyyy] = raw8Match;
+      return `${dd}/${mm}/${yyyy}`;
+    }
   }
   try {
     const d = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
-    if (isNaN(d.getTime())) return String(dateInput);
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
-    return `${day}-${month}-${year}`;
+    if (d && !isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
   } catch {
-    return String(dateInput);
+    // fallback
   }
+  return String(dateInput || "");
 }
 
 function DDMMYYYYDateInput({
   value,
   onChange,
   className,
-  placeholder = "DD-MM-YYYY",
+  placeholder = "DD/MM/YYYY",
   inputRef,
   onKeyDown
 }: {
@@ -328,19 +341,24 @@ function DDMMYYYYDateInput({
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }) {
   const [localText, setLocalText] = useState(() => formatDDMMYYYY(value));
+  const isEditingRef = useRef(false);
   const hiddenDateInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setLocalText(formatDDMMYYYY(value));
+    if (!isEditingRef.current) {
+      setLocalText(formatDDMMYYYY(value));
+    }
   }, [value]);
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    setLocalText(raw);
-
-    const ddmmyyyyMatch = raw.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
-    const yyyymmddMatch = raw.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
-    const raw8Match = raw.match(/^(\d{2})(\d{2})(\d{4})$/);
+  const parseAndNotify = (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) {
+      onChange("");
+      return;
+    }
+    const ddmmyyyyMatch = trimmed.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+    const yyyymmddMatch = trimmed.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+    const raw8Match = trimmed.match(/^(\d{2})(\d{2})(\d{4})$/);
 
     if (ddmmyyyyMatch) {
       const [_, dd, mm, yyyy] = ddmmyyyyMatch;
@@ -355,15 +373,42 @@ function DDMMYYYYDateInput({
     } else if (raw8Match) {
       const [_, dd, mm, yyyy] = raw8Match;
       onChange(`${yyyy}-${mm}-${dd}`);
-    } else if (raw === "") {
-      onChange("");
     } else {
-      onChange(raw);
+      onChange(trimmed);
     }
+  };
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let raw = e.target.value;
+
+    const digitsOnly = raw.replace(/\D/g, "");
+    if (digitsOnly.length > 0 && !raw.includes("/")) {
+      if (digitsOnly.length <= 2) {
+        raw = digitsOnly;
+      } else if (digitsOnly.length <= 4) {
+        raw = `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2)}`;
+      } else {
+        raw = `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2, 4)}/${digitsOnly.slice(4, 8)}`;
+      }
+    }
+
+    setLocalText(raw);
+    parseAndNotify(raw);
+  };
+
+  const handleFocus = () => {
+    isEditingRef.current = true;
+  };
+
+  const handleBlur = () => {
+    isEditingRef.current = false;
+    setLocalText(formatDDMMYYYY(value));
   };
 
   const handleHiddenDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.value) {
+      const formatted = formatDDMMYYYY(e.target.value);
+      setLocalText(formatted);
       onChange(e.target.value);
     }
   };
@@ -386,6 +431,8 @@ function DDMMYYYYDateInput({
         type="text"
         value={localText}
         onChange={handleTextChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
         className={`${className} pr-8 font-mono`}
@@ -401,7 +448,7 @@ function DDMMYYYYDateInput({
       <input
         ref={hiddenDateInputRef}
         type="date"
-        value={value}
+        value={value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : ""}
         onChange={handleHiddenDateChange}
         className="sr-only absolute pointer-events-none opacity-0 w-0 h-0"
         tabIndex={-1}
@@ -4484,7 +4531,6 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
         setRate(String(ptPrice));
       }
     }
-    quantityInputRef.current?.focus();
   };
 
   const handleGodownKeyDown = (e: React.KeyboardEvent) => {
