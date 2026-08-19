@@ -2055,118 +2055,7 @@ export default function MasterConsoleView({
                         />
                       </div>
 
-                      {/* FEATURE RESPONSIBILITIES CHECKBOX PERMISSIONS MATRIX */}
-                      <div className="lg:col-span-3 space-y-2 border-t border-border/40 pt-3 mt-1">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div>
-                            <label className="block text-[11px] font-mono font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                              <ShieldCheck className="text-primary" size={16} />
-                              System Responsibilities & Enabled Website Features *
-                            </label>
-                            <p className="text-[10px] text-muted-foreground">
-                              Check the website features to enable for this employee. Unchecked features will be disabled/hidden for their profile.
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => setUserForm(prev => ({
-                                ...prev,
-                                allowedFeatures: ALL_WEBSITE_FEATURES.map(f => f.id)
-                              }))}
-                              className="px-2 py-1 text-[10px] font-mono font-bold bg-primary/10 text-primary hover:bg-primary/20 rounded border border-primary/30 transition-all"
-                            >
-                              Select All ({ALL_WEBSITE_FEATURES.length})
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setUserForm(prev => ({ ...prev, allowedFeatures: [] }))}
-                              className="px-2 py-1 text-[10px] font-mono font-bold bg-secondary hover:bg-secondary/80 text-muted-foreground rounded border border-border transition-all"
-                            >
-                              Deselect All
-                            </button>
-                          </div>
-                        </div>
 
-                        {/* Categorized Checkboxes Matrix */}
-                        <div className="space-y-3 bg-card p-3 rounded-xl border border-border/80 shadow-inner max-h-[420px] overflow-y-auto">
-                          {Array.from(new Set(ALL_WEBSITE_FEATURES.map(f => f.category))).map(cat => {
-                            const catFeatures = ALL_WEBSITE_FEATURES.filter(f => f.category === cat);
-                            const allCatChecked = catFeatures.every(f => (userForm.allowedFeatures || []).includes(f.id));
-                            return (
-                              <div key={cat} className="space-y-1.5 border-b border-border/40 pb-2.5 last:border-b-0">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-primary flex items-center gap-1">
-                                    <span>📁</span> {cat} ({catFeatures.filter(f => (userForm.allowedFeatures || []).includes(f.id)).length}/{catFeatures.length})
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const current = userForm.allowedFeatures || [];
-                                      const catIds = catFeatures.map(f => f.id);
-                                      if (allCatChecked) {
-                                        setUserForm(prev => ({
-                                          ...prev,
-                                          allowedFeatures: current.filter(id => !catIds.includes(id))
-                                        }));
-                                      } else {
-                                        const merged = Array.from(new Set([...current, ...catIds]));
-                                        setUserForm(prev => ({ ...prev, allowedFeatures: merged }));
-                                      }
-                                    }}
-                                    className="text-[9px] font-mono text-muted-foreground hover:text-foreground font-semibold underline"
-                                  >
-                                    {allCatChecked ? "Deselect Section" : "Select Section"}
-                                  </button>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                                  {catFeatures.map(feat => {
-                                    const isChecked = (userForm.allowedFeatures || []).includes(feat.id);
-                                    return (
-                                      <label
-                                        key={feat.id}
-                                        className={`flex items-start gap-2 p-2 rounded-lg border transition-all cursor-pointer ${
-                                          isChecked
-                                            ? "bg-primary/10 border-primary/50 text-foreground shadow-sm"
-                                            : "bg-secondary/20 border-border/50 text-muted-foreground opacity-60 hover:opacity-100"
-                                        }`}
-                                      >
-                                        <input
-                                          type="checkbox"
-                                          checked={isChecked}
-                                          onChange={e => {
-                                            const current = userForm.allowedFeatures || [];
-                                            if (e.target.checked) {
-                                              setUserForm(prev => ({
-                                                ...prev,
-                                                allowedFeatures: [...current, feat.id]
-                                              }));
-                                            } else {
-                                              setUserForm(prev => ({
-                                                ...prev,
-                                                allowedFeatures: current.filter(id => id !== feat.id)
-                                              }));
-                                            }
-                                          }}
-                                          className="mt-0.5 rounded border-border text-primary focus:ring-primary h-3.5 w-3.5"
-                                        />
-                                        <div className="space-y-0.5 select-none">
-                                          <div className="flex items-center gap-1 text-[11px] font-mono font-bold">
-                                            <span>{feat.icon}</span>
-                                            <span className={isChecked ? "text-primary font-bold" : ""}>{feat.name}</span>
-                                          </div>
-                                          <p className="text-[9px] text-muted-foreground leading-tight">{feat.description}</p>
-                                        </div>
-                                      </label>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
 
                     </div>
                     <div className="flex justify-end gap-2 pt-2 border-t border-border/30 mt-3">
@@ -2381,16 +2270,7 @@ export default function MasterConsoleView({
                           <div><span className="text-muted-foreground">GROSS SALARY:</span> <span className="text-emerald-500 font-bold font-mono">₹{(item.totalSalary || 0).toLocaleString("en-IN")}</span></div>
                           <div><span className="text-muted-foreground">VISA EXPIRY:</span> <span className="text-foreground font-mono">{item.visaExpiry || "N/A"}</span></div>
                           <div><span className="text-muted-foreground">PASSPORT EXPIRY:</span> <span className="text-foreground font-mono">{item.passportExpiry || "N/A"}</span></div>
-                          <div className="pt-2 border-t border-border">
-                            <span className="text-muted-foreground block mb-1">ENABLED FEATURE PERMISSIONS ({item.allowedFeatures ? item.allowedFeatures.length : ALL_WEBSITE_FEATURES.length} / {ALL_WEBSITE_FEATURES.length}):</span>
-                            <div className="flex flex-wrap gap-1">
-                              {ALL_WEBSITE_FEATURES.filter(f => (item.allowedFeatures || ALL_WEBSITE_FEATURES.map(x => x.id)).includes(f.id)).map(f => (
-                                <span key={f.id} className="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold">
-                                  {f.icon} {f.name}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
+
                         </>
                       ) : null;
                     })()}
@@ -3522,7 +3402,6 @@ export default function MasterConsoleView({
                   <th className="py-2.5 px-3">Employee Name</th>
                   <th className="py-2.5 px-3">System Role</th>
                   <th className="py-2.5 px-3">Responsibilities Scope</th>
-                  <th className="py-2.5 px-3">Allowed Features</th>
                   <th className="py-2.5 px-3 text-right">Total Salary</th>
                   <th className="py-2.5 px-3 text-center">Visa Expiry</th>
                 </tr>
@@ -3530,28 +3409,16 @@ export default function MasterConsoleView({
               <tbody className="divide-y divide-border/40 text-foreground">
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-4 text-center text-muted-foreground italic">No employees registered yet. Please create one below!</td>
+                    <td colSpan={6} className="py-4 text-center text-muted-foreground italic">No employees registered yet. Please create one below!</td>
                   </tr>
                 ) : (
                   users.map(u => {
-                    const count = u.allowedFeatures ? u.allowedFeatures.length : ALL_WEBSITE_FEATURES.length;
                     return (
                       <tr key={u.id} className="hover:bg-secondary/20">
                         <td className="py-2.5 px-3 font-bold text-primary font-mono">{u.employeeId}</td>
                         <td className="py-2.5 px-3 font-semibold text-foreground">{u.employeeName}</td>
                         <td className="py-2.5 px-3 text-muted-foreground"><span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-bold text-[10px]">{u.role}</span></td>
                         <td className="py-2.5 px-3 text-foreground text-[11px] truncate max-w-[180px]">{u.responsibility || "General Responsibilities"}</td>
-                        <td className="py-2.5 px-3">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border ${
-                            count === ALL_WEBSITE_FEATURES.length
-                              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
-                              : count > 0
-                              ? "bg-blue-500/10 text-blue-600 border-blue-500/30"
-                              : "bg-red-500/10 text-red-600 border-red-500/30"
-                          }`}>
-                            {count} / {ALL_WEBSITE_FEATURES.length} Features Enabled
-                          </span>
-                        </td>
                         <td className="py-2.5 px-3 text-right font-bold text-emerald-500 font-mono">₹{u.totalSalary ? u.totalSalary.toLocaleString("en-IN") : "0"}</td>
                         <td className="py-2.5 px-3 text-center text-muted-foreground font-mono">{u.visaExpiry || "N/A"}</td>
                       </tr>
