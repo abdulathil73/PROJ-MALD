@@ -16612,9 +16612,9 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
       <div className="absolute -top-28 -right-28 w-96 h-96 bg-[#2d6a4f]/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-28 -left-28 w-96 h-96 bg-[#e76f51]/15 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-2xl flex flex-col lg:flex-row gap-5 items-stretch z-10">
-        {/* ── Left: Login Card ── */}
-        <div className="flex-shrink-0 w-full lg:w-[360px] bg-white/95 border-2 border-[#52b788] rounded-3xl shadow-2xl p-8 space-y-6 backdrop-blur-2xl relative overflow-hidden text-foreground">
+      <div className="w-full max-w-md flex flex-col items-center justify-center z-10">
+        {/* ── Login Card ── */}
+        <div className="w-full bg-white/95 border-2 border-[#52b788] rounded-3xl shadow-2xl p-8 space-y-6 backdrop-blur-2xl relative overflow-hidden text-foreground">
           <div className="text-center space-y-2 relative z-10">
             <div className="w-16 h-16 bg-[#d8f3dc] border-2 border-[#52b788] text-[#2d6a4f] rounded-full flex items-center justify-center mx-auto shadow-md text-3xl">
               🏛️
@@ -16721,79 +16721,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
           </p>
         </div>
 
-        {/* ── Right: Feature Access Preview Panel ── */}
-        <div className={`flex-1 bg-white/90 border-2 rounded-3xl shadow-xl p-6 backdrop-blur-xl transition-all duration-500 ${
-          previewUser
-            ? "border-[#52b788] opacity-100 translate-y-0"
-            : "border-[#b7e4c7]/50 opacity-60"
-        }`}>
-          {previewUser ? (
-            <>
-              <div className="flex items-center gap-3 mb-4">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-md border-2 ${
-                  isAdminRole(previewUser) ? "bg-emerald-100 border-emerald-400" : "bg-orange-100 border-orange-400"
-                }`}>
-                  {isAdminRole(previewUser) ? "👑" : "🔒"}
-                </div>
-                <div>
-                  <div className="font-black text-[#14281d] text-sm font-serif">{previewUser.employeeName}</div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded-full border ${
-                      isAdminRole(previewUser)
-                        ? "bg-emerald-100 text-emerald-800 border-emerald-300"
-                        : "bg-orange-100 text-orange-800 border-orange-300"
-                    }`}>{previewUser.role}</span>
-                    <span className="text-[9px] font-mono text-[#2d6a4f]">
-                      {isAdminRole(previewUser) ? "Full System Access" : `${getFeatureChips(previewUser).length} of ${Object.keys(FEATURE_LABELS).length} features enabled`}
-                    </span>
-                  </div>
-                </div>
-              </div>
 
-              <div className="text-[10px] font-mono font-bold text-[#2d6a4f] uppercase tracking-wider mb-3">
-                ✅ Accessible Modules for this Account:
-              </div>
-
-              <div className="flex flex-wrap gap-1.5 max-h-[380px] overflow-y-auto pr-1">
-                {getFeatureChips(previewUser).map((key: string) => {
-                  const feat = FEATURE_LABELS[key];
-                  if (!feat) return null;
-                  return (
-                    <span
-                      key={key}
-                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-mono font-bold ${feat.color}`}
-                    >
-                      <span>{feat.icon}</span>
-                      <span>{feat.label}</span>
-                    </span>
-                  );
-                })}
-              </div>
-
-              {!isAdminRole(previewUser) && (
-                <div className="mt-4 pt-3 border-t border-[#b7e4c7] text-[9px] font-mono text-[#40916c]/80 flex items-center gap-1.5">
-                  <span>🔐</span>
-                  <span>Other modules are hidden from the sidebar for this account. Contact an Admin to enable more features.</span>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="h-full flex flex-col items-center justify-center text-center gap-4 text-[#2d6a4f]/60 py-8">
-              <div className="text-5xl">🔍</div>
-              <div>
-                <div className="font-bold text-sm font-serif text-[#14281d]/70">Role Access Preview</div>
-                <div className="text-[11px] font-mono mt-1.5 max-w-[200px]">
-                  Hover over a quick account or log in to see which modules are accessible for that role.
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2 justify-center mt-2">
-                {["📊 Dashboard", "🧾 Billing", "📦 Inventory", "📈 Reports", "🗂️ Master"].map(f => (
-                  <span key={f} className="px-2.5 py-1 bg-[#d8f3dc] border border-[#52b788]/40 rounded-lg text-[10px] font-mono text-[#2d6a4f] font-bold opacity-50">{f}</span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
