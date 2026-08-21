@@ -288,7 +288,8 @@ function getBestGodownForProduct(product?: Product | null, preferredGodown?: God
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function fmt(n: number) {
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
+  const num = typeof n === "number" && !isNaN(n) ? n : 0;
+  return `MVR ${num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatDDMMYYYY(dateInput?: string | Date | null): string {
@@ -5493,7 +5494,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
               <div className="text-2xl md:text-3xl font-mono font-extrabold text-right tracking-tight select-all">
                 {transactionType === "delivery_note"
                   ? `${cartItems.reduce((sum, item) => sum + item.quantity, 0)} Units`
-                  : new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(invoiceTotals.grandTotal)
+                  : fmt(invoiceTotals.grandTotal)
                 }
               </div>
               <div className="text-[9px] font-mono text-green-600 text-right uppercase">
@@ -5892,19 +5893,19 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                 <div>
                   <span className="text-muted-foreground block text-[9px] font-mono uppercase tracking-wider mb-0.5">Subtotal</span>
                   <span className="font-mono font-semibold text-foreground text-sm">
-                    {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(invoiceTotals.subTotal)}
+                    {fmt(invoiceTotals.subTotal)}
                   </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-[9px] font-mono uppercase tracking-wider mb-0.5">Tax (GST)</span>
                   <span className="font-mono font-semibold text-foreground text-sm">
-                    {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(invoiceTotals.tax)}
+                    {fmt(invoiceTotals.tax)}
                   </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-[9px] font-mono uppercase tracking-wider mb-0.5">Grand Total</span>
                   <span className="font-mono font-bold text-emerald-800 text-sm">
-                    {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(invoiceTotals.grandTotal)}
+                    {fmt(invoiceTotals.grandTotal)}
                   </span>
                 </div>
               </div>
@@ -6863,7 +6864,7 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
             <div className="bg-black/95 text-green-400 rounded-xl p-4 flex flex-col justify-between shadow-inner border border-gray-800 h-full min-h-[110px]">
               <div className="text-[10px] font-mono tracking-widest text-green-500 uppercase font-bold">TOTAL ACQUISITION</div>
               <div className="text-2xl md:text-3xl font-mono font-extrabold text-right tracking-tight select-all">
-                {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(invoiceTotals.grandTotal)}
+                {fmt(invoiceTotals.grandTotal)}
               </div>
               <div className="text-[9px] font-mono text-green-600 text-right uppercase">
                 {cartItems.length} lines added
@@ -11542,7 +11543,7 @@ function AIDraftInvoiceCard({ invoice, onRefresh }: { invoice: any; onRefresh: (
     }
   };
 
-  const fmtMoney = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
+  const fmtMoney = (n: number) => `MVR ${(typeof n === "number" && !isNaN(n) ? n : 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
     <div className="mt-2 p-4 bg-white border border-emerald-100 rounded-2xl shadow-sm text-gray-800 font-sans max-w-sm relative overflow-hidden">
