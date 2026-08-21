@@ -5512,7 +5512,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
             
             <form onSubmit={handleAddItem} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end w-full text-xs font-mono">
               {/* Product Search Input */}
-              <div className="col-span-12 sm:col-span-3 relative">
+              <div className="col-span-12 sm:col-span-4 relative">
                 <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold truncate">1. Search Product</label>
                 <input
                   ref={productSearchRef}
@@ -5722,15 +5722,8 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                 />
               </div>
 
-              {/* Add Item Button */}
-              <div className="col-span-6 sm:col-span-1">
-                <button
-                  type="submit"
-                  className="w-full py-2 px-2 bg-primary hover:bg-primary/90 text-primary-foreground font-mono font-bold text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-1 uppercase tracking-wider"
-                >
-                  <Plus size={14} /> Add
-                </button>
-              </div>
+              {/* Hidden submit button so pressing Enter still submits form */}
+              <button type="submit" className="hidden" />
             </form>
           </div>
 
@@ -7035,15 +7028,8 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
                 />
               </div>
 
-              {/* Add Item Button */}
-              <div className="min-w-[75px] flex-shrink-0">
-                <button
-                  type="submit"
-                  className="w-full py-2 px-3 bg-primary hover:bg-primary/90 text-primary-foreground font-mono font-bold text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-1 uppercase tracking-wider"
-                >
-                  <Plus size={14} /> Add
-                </button>
-              </div>
+              {/* Hidden submit button so pressing Enter still submits form */}
+              <button type="submit" className="hidden" />
             </form>
           </div>
 
