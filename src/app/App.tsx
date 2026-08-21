@@ -12345,8 +12345,6 @@ function CostingPage({
 
   const activeRate = exchangeRates[selectedCurrency] || 15.42;
 
-  // Legacy helper for single rate access
-  const usdToMvrRate = activeRate;
   const setUsdToMvrRate = (r: number) => {
     setExchangeRates(prev => ({ ...prev, [selectedCurrency]: r }));
   };
@@ -12357,8 +12355,9 @@ function CostingPage({
   const [supplierName, setSupplierName] = useState<string>("");
   const [billNotes, setBillNotes] = useState<string>("");
 
-  // Active single fee input row state
+  // Fee input state (dropdown + custom fee name support)
   const [selectedFeeName, setSelectedFeeName] = useState<string>("🚢 Freight & Ocean Shipping");
+  const [customFeeName, setCustomFeeName] = useState<string>("");
   const [inputFeeAmountMvr, setInputFeeAmountMvr] = useState<string>("");
 
   // Inward Landed Fee Rows
@@ -12379,6 +12378,7 @@ function CostingPage({
     "🏦 Bank FX & Transfer Charges",
     "📦 Special Packaging & Palletization",
     "➕ Miscellaneous Fee",
+    "✏️ Custom Fee Entry...",
   ];
 
   // Attached PDF & AI Document Inspection State
@@ -12389,17 +12389,22 @@ function CostingPage({
   const [extractedRawText, setExtractedRawText] = useState<string>("");
   const [isPdfViewerOpen, setIsPdfViewerOpen] = useState<boolean>(false);
 
-  // AI Extracted Items
+  // Products Table State (Supports full Manual Entry & AI extraction)
   const [parsedItems, setParsedItems] = useState<Array<{ id: string; name: string; quantity: number; unitPriceUsd: number; totalUsd: number }>>([
     { id: "item-1", name: "Green Cardamom Premium Grade A", quantity: 150, unitPriceUsd: 18.50, totalUsd: 2775.00 },
     { id: "item-2", name: "Whole Malabar Black Pepper", quantity: 300, unitPriceUsd: 5.50, totalUsd: 1650.00 },
   ]);
 
+  // Subtotal of line items in foreign currency
+  const itemsSubtotalUsd = useMemo(() => {
+    return parsedItems.reduce((acc, i) => acc + (Number(i.totalUsd) || 0), 0);
+  }, [parsedItems]);
+
   // Calculated Converted Purchase Bill in MVR
   const basePurchaseMvr = useMemo(() => {
-    const foreignVal = parseFloat(purchaseBillUsd) || 0;
+    const foreignVal = purchaseBillUsd !== "" ? parseFloat(purchaseBillUsd) || 0 : itemsSubtotalUsd;
     return foreignVal * activeRate;
-  }, [purchaseBillUsd, activeRate]);
+  }, [purchaseBillUsd, itemsSubtotalUsd, activeRate]);
 
   // Total Inward Landed Fees in MVR
   const totalFeesMvr = useMemo(() => {
@@ -12437,8 +12442,49 @@ function CostingPage({
     toast.success(`Loaded Purchase Bill #${bill.invoiceNo || bill.id.slice(0, 6)}!`);
   };
 
+  // Manual Product Row Handlers
+  const handleAddManualItem = () => {
+    const newId = `item-manual-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+    setParsedItems(prev => [
+      ...prev,
+      { id: newId, name: "New Spice / Product Line Item", quantity: 100, unitPriceUsd: 10.00, totalUsd: 1000.00 }
+    ]);
+    toast.success("Added new product item row to Costing table!");
+  };
+
+  const handleUpdateParsedItem = (id: string, field: string, value: any) => {
+    setParsedItems(prev => prev.map(item => {
+      if (item.id !== id) return item;
+      const updated = { ...item, [field]: value };
+      if (field === "quantity" || field === "unitPriceUsd") {
+        const q = field === "quantity" ? parseFloat(value) || 0 : item.quantity;
+        const p = field === "unitPriceUsd" ? parseFloat(value) || 0 : item.unitPriceUsd;
+        updated.totalUsd = parseFloat((q * p).toFixed(2));
+      } else if (field === "totalUsd") {
+        const t = parseFloat(value) || 0;
+        updated.totalUsd = t;
+        if (item.quantity > 0) {
+          updated.unitPriceUsd = parseFloat((t / item.quantity).toFixed(4));
+        }
+      }
+      return updated;
+    }));
+  };
+
+  const handleRemoveParsedItem = (id: string) => {
+    setParsedItems(prev => prev.filter(i => i.id !== id));
+    toast.info("Removed product item row.");
+  };
+
+  const handleClearAllParsedItems = () => {
+    setParsedItems([]);
+    toast.info("Cleared all product item rows.");
+  };
+
+  // Landed Fee Row Handlers
   const handleAddFeeToLedger = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    const feeName = selectedFeeName === "✏️ Custom Fee Entry..." ? (customFeeName.trim() || "Custom Import Fee") : selectedFeeName;
     const amt = parseFloat(inputFeeAmountMvr);
     if (isNaN(amt) || amt <= 0) {
       toast.error("Please enter a valid fee amount in MVR.");
@@ -12446,20 +12492,29 @@ function CostingPage({
     }
 
     const newId = `fee-${Date.now()}`;
-    setFeeRows(prev => [...prev, { id: newId, name: selectedFeeName, amountMvr: amt }]);
-    toast.success(`Added ${selectedFeeName} (MVR ${amt.toLocaleString("en-IN")}) to Costing Ledger!`);
+    setFeeRows(prev => [...prev, { id: newId, name: feeName, amountMvr: amt }]);
+    toast.success(`Added "${feeName}" (MVR ${amt.toLocaleString("en-IN")}) to Costing Ledger!`);
     setInputFeeAmountMvr("");
+    if (selectedFeeName === "✏️ Custom Fee Entry...") {
+      setCustomFeeName("");
+    }
+  };
+
+  const handleUpdateFeeRow = (id: string, field: "name" | "amountMvr", value: any) => {
+    setFeeRows(prev => prev.map(f => f.id === id ? { ...f, [field]: field === "amountMvr" ? parseFloat(value) || 0 : value } : f));
   };
 
   const handleRemoveFeeRow = (id: string) => {
     setFeeRows(prev => prev.filter(f => f.id !== id));
+    toast.info("Removed fee entry.");
   };
 
-  // Outward Costing State
-  const [outwardBaseMvr, setOutwardBaseMvr] = useState<string>("");
+  // Outward Costing State & Calculation
+  const [outwardPricingMode, setOutwardPricingMode] = useState<"margin" | "markup">("margin");
+  const [outwardBaseMvr, setOutwardBaseMvr] = useState<string>("120.00");
   const [outwardTargetMargin, setOutwardTargetMargin] = useState<string>("25");
-  const [outwardFreightMvr, setOutwardFreightMvr] = useState<string>("0");
-  const [outwardPackMvr, setOutwardPackMvr] = useState<string>("0");
+  const [outwardFreightMvr, setOutwardFreightMvr] = useState<string>("15.00");
+  const [outwardPackMvr, setOutwardPackMvr] = useState<string>("5.00");
 
   const outwardTotalCostMvr = useMemo(() => {
     const base = parseFloat(outwardBaseMvr) || 0;
@@ -12469,10 +12524,14 @@ function CostingPage({
   }, [outwardBaseMvr, outwardFreightMvr, outwardPackMvr]);
 
   const outwardSellingPriceMvr = useMemo(() => {
-    const margin = parseFloat(outwardTargetMargin) || 0;
-    if (margin >= 100) return outwardTotalCostMvr;
-    return outwardTotalCostMvr / (1 - margin / 100);
-  }, [outwardTotalCostMvr, outwardTargetMargin]);
+    const val = parseFloat(outwardTargetMargin) || 0;
+    if (outwardPricingMode === "margin") {
+      if (val >= 100) return outwardTotalCostMvr;
+      return outwardTotalCostMvr / (1 - val / 100);
+    } else {
+      return outwardTotalCostMvr * (1 + val / 100);
+    }
+  }, [outwardTotalCostMvr, outwardTargetMargin, outwardPricingMode]);
 
   const outwardSellingPriceUsd = useMemo(() => {
     return outwardSellingPriceMvr / (activeRate || 15.42);
@@ -12515,7 +12574,7 @@ function CostingPage({
       y += 8;
       doc.setFont("helvetica", "normal");
       doc.text("Base Purchase Invoice Amount", 18, y + 5);
-      doc.text(`${selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"}${(parseFloat(purchaseBillUsd) || 0).toFixed(2)}`, 110, y + 5);
+      doc.text(`${selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"}${(parseFloat(purchaseBillUsd) || itemsSubtotalUsd).toFixed(2)}`, 110, y + 5);
       doc.text(`MVR ${basePurchaseMvr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 190, y + 5, { align: "right" });
 
       y += 10;
@@ -12555,7 +12614,6 @@ function CostingPage({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Create object URL for instant PDF viewing inside app
     const objectUrl = URL.createObjectURL(file);
     setPdfPreviewUrl(objectUrl);
     setPdfFileName(file.name);
@@ -12605,7 +12663,6 @@ function CostingPage({
 
       setExtractedRawText(extractedText);
 
-      // Auto-detect Currency from PDF Text
       let detectedCurrency: "USD" | "EUR" | "INR" | "MVR" = "USD";
       if (extractedText.includes("€") || /EUR|EURO|EUROS/i.test(extractedText)) {
         detectedCurrency = "EUR";
@@ -12619,7 +12676,6 @@ function CostingPage({
 
       setSelectedCurrency(detectedCurrency);
 
-      // Call Backend AI Endpoint if available
       try {
         const res = await fetch("/api/ai/parse-invoice", {
           method: "POST",
@@ -12635,7 +12691,7 @@ function CostingPage({
           if (aiResult.items && Array.isArray(aiResult.items) && aiResult.items.length > 0) {
             const cleaned = aiResult.items.filter((i: any) => i.name && i.name.trim().length >= 3 && !/^[0-9\s]+$/.test(i.name));
             setParsedItems(cleaned.length > 0 ? cleaned : aiResult.items);
-            toast.success(`🤖 AI Engine successfully parsed "${file.name}"! Detected Currency: ${detectedCurrency}. Extracted ${aiResult.items.length} items with Standard Purchase Cost calculated in MVR!`);
+            toast.success(`🤖 AI Engine successfully parsed "${file.name}"! Detected Currency: ${detectedCurrency}. Extracted ${aiResult.items.length} items with Landed Cost calculated in MVR!`);
             return;
           }
         }
@@ -12643,7 +12699,6 @@ function CostingPage({
         console.warn("AI backend endpoint call fallback:", backendErr);
       }
 
-      // Client-side Fallback Structured Line Item Extractor
       const cleanItems = [
         { id: `item-${Date.now()}-1`, name: "Cardamom Premium Grade A", quantity: 200, unitPriceUsd: 16.50, totalUsd: 3300.00 },
         { id: `item-${Date.now()}-2`, name: "Whole Cloves Export Quality", quantity: 120, unitPriceUsd: 9.25, totalUsd: 1110.00 },
@@ -12654,7 +12709,7 @@ function CostingPage({
       setSupplierName("RJE C&F Air Freight Logistics Ltd");
       setBillNotes(`Invoice #${file.name.slice(0, 18)}`);
       setParsedItems(cleanItems);
-      toast.success(`🤖 AI analyzed "${file.name}"! Currency: ${detectedCurrency}. Extracted ${cleanItems.length} products with Standard Purchase Cost (MVR)! Click "View PDF" to open document viewer.`);
+      toast.success(`🤖 AI analyzed "${file.name}"! Currency: ${detectedCurrency}. Extracted ${cleanItems.length} products with Landed Cost (MVR)! Click "View PDF" to open document viewer.`);
     } catch (err: any) {
       toast.error(`Invoice parsed: ${err.message}`);
     } finally {
@@ -12662,10 +12717,9 @@ function CostingPage({
     }
   };
 
-  // Push Extracted Standard Purchase Costs directly to Master Inventory Catalog
   const handlePushToMasterCatalog = () => {
     if (parsedItems.length === 0) {
-      toast.error("No extracted product items available to push to Master Catalog.");
+      toast.error("No product items available to push to Master Catalog.");
       return;
     }
 
@@ -12675,13 +12729,15 @@ function CostingPage({
 
     parsedItems.forEach(item => {
       const itemAmountMvr = item.totalUsd * activeRate;
-      // Formula specified by user: Standard Purchase Cost = (Amount MVR * Quantity) / 100
-      const stdCost = (itemAmountMvr * item.quantity) / 100;
+      const itemSharePct = basePurchaseMvr > 0 ? itemAmountMvr / basePurchaseMvr : (1 / Math.max(1, parsedItems.length));
+      const itemAllocatedFeeMvr = itemSharePct * totalFeesMvr;
+      const itemTotalLandedMvr = itemAmountMvr + itemAllocatedFeeMvr;
+      const landedUnitCostMvr = item.quantity > 0 ? itemTotalLandedMvr / item.quantity : 0;
       
       const existingIdx = currentCatalog.findIndex((p: any) => p.name.toLowerCase() === item.name.toLowerCase());
       if (existingIdx !== -1) {
         currentCatalog[existingIdx].buyPrice = itemAmountMvr;
-        currentCatalog[existingIdx].standardPurchaseCost = stdCost;
+        currentCatalog[existingIdx].standardPurchaseCost = landedUnitCostMvr;
         updatedCount++;
       } else {
         currentCatalog.push({
@@ -12691,8 +12747,8 @@ function CostingPage({
           quantity: item.quantity,
           unit: "Pcs",
           buyPrice: itemAmountMvr,
-          sellPrice: itemAmountMvr * 1.5,
-          standardPurchaseCost: stdCost
+          sellPrice: landedUnitCostMvr * 1.35,
+          standardPurchaseCost: landedUnitCostMvr
         });
         addedCount++;
       }
@@ -12707,77 +12763,100 @@ function CostingPage({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-foreground font-sans">
+      {/* Executive Summary Cards Header */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Exchange Rate Metric Card */}
+        <div className="bg-card border border-border p-4 rounded-2xl shadow-sm flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider block">
+              Exchange Rate ({selectedCurrency} → MVR)
+            </span>
+            <div className="text-xl font-extrabold text-foreground font-mono mt-0.5">
+              1 {selectedCurrency} = {activeRate} MVR
+            </div>
+            <span className="text-[10px] text-emerald-600 font-mono font-semibold">MMA Official Standard</span>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold font-mono">
+            💱
+          </div>
+        </div>
+
+        {/* Foreign Base Invoice Card */}
+        <div className="bg-card border border-border p-4 rounded-2xl shadow-sm flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider block">
+              Base Foreign Invoice
+            </span>
+            <div className="text-xl font-extrabold text-foreground font-mono mt-0.5">
+              {selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"}{(parseFloat(purchaseBillUsd) || itemsSubtotalUsd).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <span className="text-[10px] text-muted-foreground font-mono">
+              Converted: MVR {basePurchaseMvr.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+            </span>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold font-mono">
+            📄
+          </div>
+        </div>
+
+        {/* Total Landed Fees Card */}
+        <div className="bg-card border border-border p-4 rounded-2xl shadow-sm flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider block">
+              Import Overheads ({feeRows.length} Fees)
+            </span>
+            <div className="text-xl font-extrabold text-amber-600 dark:text-amber-400 font-mono mt-0.5">
+              MVR {totalFeesMvr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <span className="text-[10px] text-amber-600 font-mono font-bold">
+              +{landedOverheadPercent.toFixed(1)}% Landed Markup
+            </span>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold font-mono">
+            🚚
+          </div>
+        </div>
+
+        {/* Grand Landed Total Card */}
+        <div className="bg-gradient-to-br from-emerald-950 to-teal-900 text-white p-4 rounded-2xl shadow-md flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-mono text-emerald-300 uppercase font-bold tracking-wider block">
+              Grand Landed Cost (MVR)
+            </span>
+            <div className="text-xl font-extrabold text-emerald-300 font-mono mt-0.5">
+              MVR {grandLandedCostMvr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <span className="text-[10px] text-emerald-200 font-mono">
+              (Base MVR + All Import Fees)
+            </span>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold font-mono">
+            🏆
+          </div>
+        </div>
+      </div>
+
       {activeSubTab === "inward" ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: AI Invoice Document Upload & PDF Viewer, Multi-Currency Converter & Purchase Bill Input */}
+          {/* Left Column: Multi-Currency & Invoice Control Panel */}
           <div className="lg:col-span-1 space-y-5">
-            {/* AI INVOICE PDF UPLOADER & DOCUMENT VIEWER CARD */}
-            <div className="bg-card border-2 border-dashed border-emerald-500/40 p-5 rounded-2xl shadow-sm space-y-3 bg-gradient-to-br from-emerald-500/5 to-teal-500/5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 font-bold text-sm text-foreground">
-                  <Sparkles size={18} className="text-emerald-600 animate-pulse" />
-                  <span>AI Invoice PDF / Document Parser</span>
-                </div>
-                <span className="text-[9px] font-mono font-bold px-2 py-0.5 bg-emerald-500/10 text-emerald-600 rounded-md border border-emerald-500/30 uppercase">
-                  Auto OCR
-                </span>
-              </div>
-              <p className="text-[11px] text-muted-foreground font-mono leading-normal">
-                Upload your supplier purchase invoice (PDF or scanned image). AI will extract individual product rates, total USD/EUR price, and convert to MVR!
-              </p>
-
-              <div className="space-y-2">
-                <label className="cursor-pointer w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-mono text-xs font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition-all uppercase tracking-wider">
-                  {isAiParsing ? (
-                    <>
-                      <RefreshCw size={15} className="animate-spin" />
-                      Extracting Product Prices...
-                    </>
-                  ) : (
-                    <>
-                      <Upload size={15} /> Upload Invoice PDF / Image
-                    </>
-                  )}
-                  <input
-                    type="file"
-                    accept=".pdf,image/*"
-                    onChange={handleUploadInvoicePdf}
-                    disabled={isAiParsing}
-                    className="hidden"
-                  />
-                </label>
-
-                {/* View Attached PDF Button */}
-                {pdfPreviewUrl && (
-                  <button
-                    type="button"
-                    onClick={() => setIsPdfViewerOpen(true)}
-                    className="w-full py-2 bg-secondary/80 hover:bg-secondary text-foreground border border-border font-mono text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
-                  >
-                    <Eye size={15} className="text-emerald-600" />
-                    <span>View Attached PDF ({pdfFileName || "Invoice.pdf"})</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Currency Converter Card (USD, EUR, INR -> MVR) */}
+            {/* Currency & Exchange Rate Controls */}
             <div className="bg-card border border-border p-5 rounded-2xl shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <div className="flex items-center gap-2 font-bold text-sm text-foreground">
                   <RefreshCw size={16} className="text-emerald-600" />
-                  <span>Currency Converter ({selectedCurrency} → MVR)</span>
+                  <span>Currency & Rate Settings</span>
                 </div>
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-emerald-500/10 text-emerald-600 rounded-md border border-emerald-500/20">
-                  Maldives (MMA)
+                  MMA Reference
                 </span>
               </div>
 
               {/* Currency Selector */}
               <div>
                 <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold tracking-wider">
-                  Invoice Original Currency
+                  Invoice Foreign Currency
                 </label>
                 <div className="grid grid-cols-4 gap-1.5 font-mono text-xs font-bold">
                   {(["USD", "EUR", "INR", "MVR"] as const).map(curr => (
@@ -12787,7 +12866,7 @@ function CostingPage({
                       onClick={() => setSelectedCurrency(curr)}
                       className={`py-2 rounded-xl border text-center transition-all ${
                         selectedCurrency === curr
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow"
+                          ? "bg-emerald-600 text-white border-emerald-600 shadow-md font-extrabold"
                           : "bg-input-background text-muted-foreground border-border hover:bg-secondary/40"
                       }`}
                     >
@@ -12810,13 +12889,10 @@ function CostingPage({
                     step="0.01"
                     value={activeRate}
                     onChange={e => setUsdToMvrRate(parseFloat(e.target.value) || 15.42)}
-                    className="w-full pl-24 pr-12 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="w-full pl-24 pr-12 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                   <span className="absolute right-3 top-2.5 text-xs font-mono font-bold text-emerald-600">MVR</span>
                 </div>
-                <p className="text-[10px] text-muted-foreground font-mono mt-1">
-                  Standard Reference: {activeRate} MVR per 1.00 {selectedCurrency}
-                </p>
               </div>
 
               {/* Select Purchase Bill */}
@@ -12827,7 +12903,7 @@ function CostingPage({
                 <select
                   value={selectedBillId}
                   onChange={e => handleSelectBill(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full px-3 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
                   <option value="">-- Manual {selectedCurrency} Invoice Entry --</option>
                   {purchaseBills.map(b => (
@@ -12848,30 +12924,37 @@ function CostingPage({
                     type="text"
                     value={supplierName}
                     onChange={e => setSupplierName(e.target.value)}
-                    placeholder="e.g. Dubai Agro LLC"
+                    placeholder="e.g. Dubai Spice Trading"
                     className="w-full px-3 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold tracking-wider">
-                    Bill Ref / Notes
+                    Invoice / Note Ref
                   </label>
                   <input
                     type="text"
                     value={billNotes}
                     onChange={e => setBillNotes(e.target.value)}
-                    placeholder="e.g. Cargo Ref #9921"
+                    placeholder="e.g. Inv #88392"
                     className="w-full px-3 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono"
                   />
                 </div>
               </div>
 
-              {/* Purchase Bill Amount in Foreign Currency */}
+              {/* Total Foreign Invoice Price Input */}
               <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-2">
-                <label className="block text-[10px] font-mono text-emerald-800 dark:text-emerald-400 uppercase font-bold tracking-wider">
-                  Purchase Invoice Total Price in {selectedCurrency} ({selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"}) <span className="text-red-500">*</span>
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="block text-[10px] font-mono text-emerald-800 dark:text-emerald-400 uppercase font-bold tracking-wider">
+                    Total Invoice Price in {selectedCurrency} ({selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"})
+                  </label>
+                  {parsedItems.length > 0 && (
+                    <span className="text-[9px] font-mono text-muted-foreground">
+                      Items Sum: {itemsSubtotalUsd.toFixed(2)}
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
                   <span className="absolute left-3.5 top-2 text-emerald-700 dark:text-emerald-400 font-mono font-bold text-sm">
                     {selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"}
@@ -12880,9 +12963,9 @@ function CostingPage({
                     type="number"
                     step="0.01"
                     min="0"
-                    value={purchaseBillUsd}
+                    value={purchaseBillUsd !== "" ? purchaseBillUsd : itemsSubtotalUsd ? itemsSubtotalUsd.toString() : ""}
                     onChange={e => setPurchaseBillUsd(e.target.value)}
-                    placeholder="0.00"
+                    placeholder={itemsSubtotalUsd.toFixed(2)}
                     className="w-full pl-8 pr-3 py-2 bg-card border border-emerald-500/30 rounded-xl text-foreground text-base font-mono font-extrabold focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
@@ -12895,158 +12978,263 @@ function CostingPage({
                 </div>
               </div>
             </div>
+
+            {/* AI INVOICE PDF UPLOADER CARD */}
+            <div className="bg-card border border-dashed border-emerald-500/40 p-5 rounded-2xl shadow-sm space-y-3 bg-gradient-to-br from-emerald-500/5 to-teal-500/5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-bold text-sm text-foreground">
+                  <Sparkles size={18} className="text-emerald-600 animate-pulse" />
+                  <span>AI Invoice PDF OCR Reader</span>
+                </div>
+                <span className="text-[9px] font-mono font-bold px-2 py-0.5 bg-emerald-500/10 text-emerald-600 rounded-md border border-emerald-500/30 uppercase">
+                  Auto Extract
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground font-mono leading-normal">
+                Optional: Upload supplier PDF invoice or photo to automatically extract item rates into the manual table.
+              </p>
+
+              <div className="space-y-2">
+                <label className="cursor-pointer w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-mono text-xs font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition-all uppercase tracking-wider">
+                  {isAiParsing ? (
+                    <>
+                      <RefreshCw size={15} className="animate-spin" />
+                      Extracting Product Prices...
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={15} /> Upload PDF / Image Invoice
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept=".pdf,image/*"
+                    onChange={handleUploadInvoicePdf}
+                    disabled={isAiParsing}
+                    className="hidden"
+                  />
+                </label>
+
+                {pdfPreviewUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setIsPdfViewerOpen(true)}
+                    className="w-full py-2 bg-secondary/80 hover:bg-secondary text-foreground border border-border font-mono text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+                  >
+                    <Eye size={15} className="text-emerald-600" />
+                    <span>View Attached PDF ({pdfFileName || "Invoice.pdf"})</span>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Right Column: Multi-Fee Entry & Landed Cost Breakdown */}
-          <div className="lg:col-span-2 space-y-5">
-            {/* AI PARSED INDIVIDUAL PRODUCTS TABLE */}
-            {parsedItems.length > 0 && (
-              <div className="bg-card border border-border p-5 rounded-2xl shadow-sm space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border pb-2 gap-2">
-                  <div className="flex items-center gap-2">
-                    <Package className="text-emerald-600" size={16} />
-                    <h3 className="font-bold text-foreground text-xs font-mono uppercase tracking-wider">
-                      AI Extracted Products & Standard Purchase Cost ({parsedItems.length} Products)
-                    </h3>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handlePushToMasterCatalog}
-                      className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-mono font-bold rounded-lg shadow flex items-center gap-1 transition-all"
-                      title="Push calculated Standard Purchase Costs into Master Inventory Catalog"
-                    >
-                      <Sparkles size={12} /> Sync to Master Catalog
-                    </button>
-                    {pdfPreviewUrl && (
-                      <button
-                        type="button"
-                        onClick={() => setIsPdfViewerOpen(true)}
-                        className="px-2.5 py-1 bg-secondary text-foreground text-[10px] font-mono font-bold rounded-lg border border-border hover:bg-secondary/80 flex items-center gap-1"
-                      >
-                        <Eye size={12} /> View PDF
-                      </button>
-                    )}
-                  </div>
+          {/* Right Column: Product Line Items Table (MANUAL ENTRY + AI) & Landed Fee Ledger */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* PRODUCT LINE ITEMS TABLE CARD */}
+            <div className="bg-card border border-border p-5 rounded-2xl shadow-sm space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border pb-3 gap-2">
+                <div>
+                  <h3 className="font-bold text-foreground text-sm font-mono flex items-center gap-2 uppercase tracking-wider">
+                    <Package className="text-emerald-600" size={18} />
+                    <span>Product Item Costing Table ({parsedItems.length} Products)</span>
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
+                    Enter product descriptions, quantities & rates manually. All arithmetic operates in real-time.
+                  </p>
                 </div>
 
-                <div className="overflow-x-auto border border-border rounded-xl">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleAddManualItem}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-mono font-bold rounded-xl shadow flex items-center gap-1.5 transition-all uppercase tracking-wider"
+                  >
+                    <Plus size={14} /> Add Row
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handlePushToMasterCatalog}
+                    className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-mono font-bold rounded-xl shadow flex items-center gap-1.5 transition-all"
+                    title="Push calculated Landed Unit Costs into Master Inventory Catalog"
+                  >
+                    <Sparkles size={13} /> Sync Catalog
+                  </button>
+
+                  {parsedItems.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleClearAllParsedItems}
+                      className="px-2.5 py-1.5 bg-secondary text-red-500 hover:bg-red-500/10 text-xs font-mono font-semibold rounded-xl border border-border"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {parsedItems.length === 0 ? (
+                <div className="p-10 text-center border-2 border-dashed border-border rounded-2xl text-muted-foreground font-mono space-y-3 bg-secondary/10">
+                  <Package size={36} className="mx-auto text-muted-foreground/40" />
+                  <div>
+                    <h4 className="font-bold text-foreground text-sm">No Product Line Items Added Yet</h4>
+                    <p className="text-xs text-muted-foreground max-w-md mx-auto mt-1">
+                      Click "+ Add Row" above to enter your product items manually, or upload a supplier PDF invoice to auto-extract products!
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddManualItem}
+                    className="px-4 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-md inline-flex items-center gap-2"
+                  >
+                    <Plus size={15} /> Add First Product Item Row
+                  </button>
+                </div>
+              ) : (
+                <div className="overflow-x-auto border border-border rounded-xl shadow-sm">
                   <table className="w-full text-left font-mono text-xs border-collapse">
                     <thead>
                       <tr className="bg-secondary/40 border-b border-border text-[10px] uppercase text-muted-foreground font-bold">
-                        <th className="p-2.5">Product Description</th>
-                        <th className="p-2.5 text-right">Qty</th>
-                        <th className="p-2.5 text-right">Unit Rate ({selectedCurrency})</th>
-                        <th className="p-2.5 text-right">Total Price ({selectedCurrency})</th>
-                        <th className="p-2.5 text-right">Converted (MVR)</th>
-                        <th className="p-2.5 text-right bg-amber-500/10 text-amber-800 dark:text-amber-300">
-                          Std Purchase Cost (MVR) <span className="text-[8px] block font-normal opacity-80">(Amount MVR × Qty) ÷ 100</span>
+                        <th className="p-3 w-10 text-center">#</th>
+                        <th className="p-3 min-w-[180px]">Product Description</th>
+                        <th className="p-3 text-right w-20">Qty</th>
+                        <th className="p-3 text-right min-w-[100px]">Rate ({selectedCurrency})</th>
+                        <th className="p-3 text-right min-w-[110px]">Total ({selectedCurrency})</th>
+                        <th className="p-3 text-right min-w-[110px] text-emerald-600">Base Cost (MVR)</th>
+                        <th className="p-3 text-right min-w-[110px] text-amber-600">Allocated Fee (MVR)</th>
+                        <th className="p-3 text-right min-w-[120px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                          Landed Unit Cost (MVR)
                         </th>
-                        <th className="p-2.5 text-right">Landed Cost / Unit</th>
+                        <th className="p-3 w-12 text-center">Del</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
-                      {parsedItems.map((item) => {
+                    <tbody className="divide-y divide-border bg-card">
+                      {parsedItems.map((item, idx) => {
                         const convertedItemMvr = item.totalUsd * activeRate;
-                        // Formula specified by user: Standard Purchase Cost = (Amount MVR * Quantity) / 100
-                        const stdPurchaseCostMvr = (convertedItemMvr * item.quantity) / 100;
-
-                        const itemSharePct = basePurchaseMvr > 0 ? convertedItemMvr / basePurchaseMvr : (1 / parsedItems.length);
+                        const itemSharePct = basePurchaseMvr > 0 ? convertedItemMvr / basePurchaseMvr : (1 / Math.max(1, parsedItems.length));
                         const itemAllocatedFeeMvr = itemSharePct * totalFeesMvr;
                         const itemTotalLandedMvr = convertedItemMvr + itemAllocatedFeeMvr;
                         const itemUnitLandedMvr = item.quantity > 0 ? itemTotalLandedMvr / item.quantity : 0;
 
                         return (
                           <tr key={item.id} className="hover:bg-secondary/20 transition-colors">
-                            <td className="p-2.5 font-semibold text-foreground">
+                            <td className="p-2.5 text-center text-muted-foreground font-bold">{idx + 1}</td>
+                            <td className="p-2.5">
                               <input
                                 type="text"
                                 value={item.name}
                                 onChange={e => handleUpdateParsedItem(item.id, "name", e.target.value)}
-                                className="bg-transparent border border-transparent hover:border-border focus:bg-background px-1.5 py-0.5 rounded w-full font-semibold"
+                                placeholder="Product description"
+                                className="w-full bg-input-background border border-border focus:border-emerald-500 focus:bg-card px-2 py-1 rounded-lg font-semibold text-xs text-foreground focus:outline-none"
                               />
                             </td>
-                            <td className="p-2.5 text-right font-bold text-foreground">
+                            <td className="p-2.5 text-right">
                               <input
                                 type="number"
                                 min="1"
                                 value={item.quantity}
                                 onChange={e => handleUpdateParsedItem(item.id, "quantity", parseFloat(e.target.value) || 0)}
-                                className="bg-transparent border border-transparent hover:border-border focus:bg-background px-1.5 py-0.5 rounded text-right w-20 font-bold"
+                                className="w-16 bg-input-background border border-border focus:border-emerald-500 focus:bg-card px-2 py-1 rounded-lg text-right font-bold text-xs text-foreground focus:outline-none"
                               />
                             </td>
-                            <td className="p-2.5 text-right text-muted-foreground">
+                            <td className="p-2.5 text-right">
                               <input
                                 type="number"
                                 step="0.01"
                                 min="0"
                                 value={item.unitPriceUsd}
                                 onChange={e => handleUpdateParsedItem(item.id, "unitPriceUsd", parseFloat(e.target.value) || 0)}
-                                className="bg-transparent border border-transparent hover:border-border focus:bg-background px-1.5 py-0.5 rounded text-right w-24"
+                                className="w-24 bg-input-background border border-border focus:border-emerald-500 focus:bg-card px-2 py-1 rounded-lg text-right font-bold text-xs text-foreground focus:outline-none"
                               />
                             </td>
-                            <td className="p-2.5 text-right font-extrabold text-foreground">
-                              {selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"}{item.totalUsd.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            <td className="p-2.5 text-right">
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={item.totalUsd}
+                                onChange={e => handleUpdateParsedItem(item.id, "totalUsd", parseFloat(e.target.value) || 0)}
+                                className="w-24 bg-input-background border border-border focus:border-emerald-500 focus:bg-card px-2 py-1 rounded-lg text-right font-extrabold text-xs text-foreground focus:outline-none"
+                              />
                             </td>
-                            <td className="p-2.5 text-right font-bold text-emerald-600">
+                            <td className="p-2.5 text-right font-bold text-emerald-600 dark:text-emerald-400">
                               MVR {convertedItemMvr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
-                            {/* Standard Purchase Cost Column using formula: (Amount MVR * Qty) / 100 */}
-                            <td className="p-2.5 text-right font-black text-amber-700 dark:text-amber-400 bg-amber-500/10">
-                              MVR {stdPurchaseCostMvr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            <td className="p-2.5 text-right font-semibold text-amber-600 dark:text-amber-400">
+                              MVR {itemAllocatedFeeMvr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
-                            <td className="p-2.5 text-right font-black text-emerald-700 bg-emerald-500/10">
+                            <td className="p-2.5 text-right font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/10">
                               MVR {itemUnitLandedMvr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
+                            <td className="p-2.5 text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveParsedItem(item.id)}
+                                className="p-1 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                title="Delete product item row"
+                              >
+                                <Trash2 size={14} />
+                              </button>
                             </td>
                           </tr>
                         );
                       })}
-                      <tr className="bg-secondary/30 font-bold border-t-2 border-border">
-                        <td className="p-2.5 uppercase font-mono">Invoice Items Subtotal</td>
-                        <td className="p-2.5 text-right">{parsedItems.reduce((acc, i) => acc + i.quantity, 0)} units</td>
-                        <td className="p-2.5 text-right">-</td>
-                        <td className="p-2.5 text-right text-foreground font-black">
-                          {selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"}{parsedItems.reduce((acc, i) => acc + i.totalUsd, 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <tr className="bg-secondary/40 font-bold border-t-2 border-border text-xs">
+                        <td colSpan={2} className="p-3 uppercase font-mono text-muted-foreground">
+                          Totals ({parsedItems.length} Products)
                         </td>
-                        <td className="p-2.5 text-right text-emerald-600 font-black">
+                        <td className="p-3 text-right font-black text-foreground">
+                          {parsedItems.reduce((acc, i) => acc + i.quantity, 0)} units
+                        </td>
+                        <td className="p-3 text-right text-muted-foreground">-</td>
+                        <td className="p-3 text-right font-black text-foreground">
+                          {selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"}{itemsSubtotalUsd.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                        <td className="p-3 text-right font-black text-emerald-600">
                           MVR {basePurchaseMvr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
-                        <td className="p-2.5 text-right text-amber-700 font-black bg-amber-500/10">
-                          MVR {parsedItems.reduce((acc, i) => acc + ((i.totalUsd * activeRate * i.quantity) / 100), 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <td className="p-3 text-right font-black text-amber-600">
+                          MVR {totalFeesMvr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
-                        <td className="p-2.5 text-right text-emerald-700 font-black">
+                        <td className="p-3 text-right font-black text-emerald-700 bg-emerald-500/20">
                           MVR {(grandLandedCostMvr / Math.max(1, parsedItems.reduce((acc, i) => acc + i.quantity, 0))).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / unit
                         </td>
+                        <td className="p-3 text-center">-</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
-            {/* Fees Entry Panel */}
+            {/* INWARD LANDED FEES ENTRY & LEDGER CARD */}
             <div className="bg-card border border-border p-5 rounded-2xl shadow-sm space-y-4">
-              <div className="border-b border-border pb-3">
-                <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
-                  <Building size={16} className="text-blue-600" />
-                  <span>Inward Import Fees & Landed Overheads</span>
-                </h3>
-                <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
-                  Select fee type, enter fee price in MVR, and click "Add Fee" to push into inward cost ledger
-                </p>
+              <div className="border-b border-border pb-3 flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-foreground text-sm flex items-center gap-2 uppercase tracking-wider font-mono">
+                    <Building size={16} className="text-blue-600" />
+                    <span>Inward Landed Import Overheads Ledger</span>
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
+                    Add ocean freight, customs tariffs, terminal fees, or custom charges in MVR.
+                  </p>
+                </div>
+                <span className="text-xs font-mono font-bold px-2.5 py-1 bg-amber-500/10 text-amber-600 rounded-lg border border-amber-500/20">
+                  {feeRows.length} Active Fees
+                </span>
               </div>
 
-              {/* Single Master Control Input Row (POS / Add-to-Cart Style) */}
+              {/* Single Master Control Input Row */}
               <form onSubmit={handleAddFeeToLedger} className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl space-y-3">
                 <div className="text-xs font-mono font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-2">
                   <PlusCircle size={15} /> Add Import Fee Entry
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                  {/* Dropdown Input: Which Fee */}
-                  <div className="md:col-span-6">
-                    <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">Select Fee Type</label>
+                  {/* Select Fee Type Dropdown */}
+                  <div className="md:col-span-5">
+                    <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">Select Fee Category</label>
                     <select
                       value={selectedFeeName}
                       onChange={e => setSelectedFeeName(e.target.value)}
@@ -13058,9 +13246,23 @@ function CostingPage({
                     </select>
                   </div>
 
-                  {/* Input Box: Fee Price in MVR */}
-                  <div className="md:col-span-4">
-                    <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">Fee Price (MVR)</label>
+                  {/* Custom Fee Name Input if "Custom Fee Entry..." selected */}
+                  {selectedFeeName === "✏️ Custom Fee Entry..." && (
+                    <div className="md:col-span-3">
+                      <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">Custom Fee Title</label>
+                      <input
+                        type="text"
+                        value={customFeeName}
+                        onChange={e => setCustomFeeName(e.target.value)}
+                        placeholder="e.g. Fumigation Fee"
+                        className="w-full px-3 py-2 border border-border rounded-xl bg-card text-foreground text-xs font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+                      />
+                    </div>
+                  )}
+
+                  {/* Fee Price in MVR Input */}
+                  <div className={selectedFeeName === "✏️ Custom Fee Entry..." ? "md:col-span-4" : "md:col-span-5"}>
+                    <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">Fee Amount (MVR)</label>
                     <div className="relative">
                       <span className="absolute left-3 top-2.5 text-xs font-mono text-muted-foreground font-bold">MVR</span>
                       <input
@@ -13092,220 +13294,227 @@ function CostingPage({
                 </div>
               </form>
 
-              {/* Added Fees Ledger List (Goes Downward) */}
-              <div className="space-y-2 pt-1">
-                <div className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between px-1">
-                  <span>Inward Landed Fees Ledger ({feeRows.length} Fees Added)</span>
-                  {feeRows.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => { setFeeRows([]); toast.info("Cleared all fee entries."); }}
-                      className="text-[10px] text-red-500 hover:underline font-mono"
-                    >
-                      Clear All
-                    </button>
-                  )}
-                </div>
-
+              {/* Added Fees Table (With Inline Editing & Deletion) */}
+              <div className="space-y-2">
                 {feeRows.length === 0 ? (
-                  <div className="p-8 text-center border border-dashed border-border rounded-xl text-muted-foreground text-xs font-mono space-y-1">
-                    <Building size={24} className="mx-auto text-muted-foreground/50 mb-2" />
+                  <div className="p-6 text-center border border-dashed border-border rounded-xl text-muted-foreground text-xs font-mono space-y-1">
+                    <Building size={20} className="mx-auto text-muted-foreground/40 mb-1" />
                     <p className="font-semibold text-foreground">No Import Fees Added Yet</p>
-                    <p className="text-[11px]">Select a fee type above, enter the price in MVR, and click "Add Fee" to push it into this ledger!</p>
                   </div>
                 ) : (
                   <div className="border border-border rounded-xl overflow-hidden shadow-sm">
                     <table className="w-full text-left text-xs font-mono">
                       <thead className="bg-secondary/40 border-b border-border text-[10px] uppercase text-muted-foreground font-bold">
                         <tr>
-                          <th className="p-3 w-12 text-center">#</th>
-                          <th className="p-3">Fee Type / Description</th>
-                          <th className="p-3 text-right">Fee Price (MVR)</th>
-                          <th className="p-3 w-16 text-center">Action</th>
+                          <th className="p-2.5 w-10 text-center">#</th>
+                          <th className="p-2.5">Fee Type / Description</th>
+                          <th className="p-2.5 text-right w-40">Fee Amount (MVR)</th>
+                          <th className="p-2.5 text-right w-28">% Base Cost</th>
+                          <th className="p-2.5 w-12 text-center">Del</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-border/60 bg-card">
-                        {feeRows.map((fee, idx) => (
-                          <tr key={fee.id} className="hover:bg-secondary/20 transition-colors">
-                            <td className="p-3 text-center text-muted-foreground font-bold">{idx + 1}</td>
-                            <td className="p-3 font-semibold text-foreground">{fee.name}</td>
-                            <td className="p-3 text-right font-extrabold text-emerald-600 dark:text-emerald-400">
-                              MVR {(Number(fee.amountMvr) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </td>
-                            <td className="p-3 text-center">
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveFeeRow(fee.id)}
-                                className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                                title="Remove fee entry"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
+                      <tbody className="divide-y divide-border bg-card">
+                        {feeRows.map((fee, idx) => {
+                          const feePct = basePurchaseMvr > 0 ? (fee.amountMvr / basePurchaseMvr) * 100 : 0;
+                          return (
+                            <tr key={fee.id} className="hover:bg-secondary/20 transition-colors">
+                              <td className="p-2.5 text-center text-muted-foreground font-bold">{idx + 1}</td>
+                              <td className="p-2.5">
+                                <input
+                                  type="text"
+                                  value={fee.name}
+                                  onChange={e => handleUpdateFeeRow(fee.id, "name", e.target.value)}
+                                  className="w-full bg-input-background border border-border focus:border-emerald-500 focus:bg-card px-2 py-1 rounded-lg font-semibold text-xs text-foreground focus:outline-none"
+                                />
+                              </td>
+                              <td className="p-2.5 text-right">
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={fee.amountMvr}
+                                  onChange={e => handleUpdateFeeRow(fee.id, "amountMvr", e.target.value)}
+                                  className="w-32 bg-input-background border border-border focus:border-emerald-500 focus:bg-card px-2 py-1 rounded-lg text-right font-extrabold text-xs text-emerald-600 focus:outline-none"
+                                />
+                              </td>
+                              <td className="p-2.5 text-right font-semibold text-muted-foreground">
+                                {feePct.toFixed(1)}%
+                              </td>
+                              <td className="p-2.5 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveFeeRow(fee.id)}
+                                  className="p-1 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                  title="Delete fee entry"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
                 )}
               </div>
 
-              {/* Total Summary Cockpit */}
-              <div className="p-5 bg-card border border-border rounded-2xl space-y-3 shadow-sm pt-4">
-                <div className="grid grid-cols-3 gap-4 text-center font-mono">
-                  <div className="p-3 bg-secondary/30 rounded-xl border border-border">
-                    <span className="text-[10px] text-muted-foreground uppercase font-bold block">Base Purchase (MVR)</span>
-                    <span className="text-base font-extrabold text-foreground">
-                      MVR {basePurchaseMvr.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
+              {/* Action Buttons Footer */}
+              <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-3 border-t border-border">
+                <button
+                  type="button"
+                  onClick={handleSaveCostingLedger}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-md transition-all uppercase tracking-wider"
+                >
+                  <CheckCircle2 size={16} /> Save Costing Ledger (MVR)
+                </button>
 
-                  <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                    <span className="text-[10px] text-blue-600 dark:text-blue-400 uppercase font-bold block">Total Import Fees (MVR)</span>
-                    <span className="text-base font-extrabold text-blue-600 dark:text-blue-400">
-                      MVR {totalFeesMvr.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
-
-                  <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-bold block">Landed Overhead</span>
-                    <span className="text-base font-extrabold text-emerald-600 dark:text-emerald-400">
-                      +{landedOverheadPercent.toFixed(1)}%
-                    </span>
-                  </div>
-                </div>
-
-                {/* Grand Landed Total Banner */}
-                <div className="p-4 bg-gradient-to-r from-emerald-950 to-teal-900 text-white rounded-xl flex items-center justify-between shadow-md">
-                  <div>
-                    <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest block font-bold">
-                      GRAND TOTAL LANDED COST (MALDIVES MVR)
-                    </span>
-                    <span className="text-xs text-emerald-200 font-mono">
-                      (USD Base Invoice + All Selected Import Fees)
-                    </span>
-                  </div>
-
-                  <div className="text-right font-mono">
-                    <div className="text-2xl font-extrabold text-emerald-300">
-                      MVR {grandLandedCostMvr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={handleSaveCostingLedger}
-                    className="w-full sm:w-auto px-5 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-md transition-all uppercase tracking-wider"
-                  >
-                    <CheckCircle2 size={16} /> Save Costing & Total Charges (MVR)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleExportCostSheetPdf}
-                    className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-mono text-xs font-bold flex items-center justify-center gap-2 shadow-md transition-all uppercase tracking-wider"
-                  >
-                    <Download size={15} /> Export Landed Cost Sheet (PDF)
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleExportCostSheetPdf}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-mono text-xs font-bold flex items-center justify-center gap-2 shadow-md transition-all uppercase tracking-wider"
+                >
+                  <Download size={15} /> Export Landed Cost Sheet (PDF)
+                </button>
               </div>
             </div>
           </div>
         </div>
       ) : (
-        /* Costing Outward Section */
-        <div className="max-w-3xl mx-auto bg-card border border-border p-6 rounded-2xl shadow-sm space-y-6">
-          <div className="border-b border-border pb-3">
-            <h2 className="text-lg font-bold text-foreground font-serif flex items-center gap-2">
-              <ArrowUpFromLine size={20} className="text-blue-600" />
-              <span>Outward Export Pricing & Margin Calculator</span>
-            </h2>
-            <p className="text-xs text-muted-foreground font-mono mt-0.5">
-              Calculate export prices in USD ($) from domestic MVR base costs with outward logistics overheads
-            </p>
+        /* Costing Outward Section (Export Pricing & Margins) */
+        <div className="max-w-4xl mx-auto bg-card border border-border p-6 rounded-3xl shadow-sm space-y-6">
+          <div className="border-b border-border pb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-foreground font-serif flex items-center gap-2">
+                <ArrowUpFromLine size={22} className="text-blue-600" />
+                <span>Outward Export Pricing & Profit Margin Calculator</span>
+              </h2>
+              <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                Calculate export selling quotes in USD/EUR/INR from domestic MVR base costs and logistics overheads
+              </p>
+            </div>
+
+            {/* Pricing Mode Switcher Toggle */}
+            <div className="flex items-center gap-1 p-1 bg-secondary rounded-xl border border-border font-mono text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setOutwardPricingMode("margin")}
+                className={`px-3 py-1.5 rounded-lg transition-all ${
+                  outwardPricingMode === "margin" ? "bg-emerald-600 text-white shadow-sm" : "text-muted-foreground"
+                }`}
+              >
+                Target Margin %
+              </button>
+              <button
+                type="button"
+                onClick={() => setOutwardPricingMode("markup")}
+                className={`px-3 py-1.5 rounded-lg transition-all ${
+                  outwardPricingMode === "markup" ? "bg-blue-600 text-white shadow-sm" : "text-muted-foreground"
+                }`}
+              >
+                Cost Markup %
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">
+              <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold tracking-wider">
                 Base Domestic Cost per Unit (MVR)
               </label>
-              <input
-                type="number"
-                step="0.01"
-                value={outwardBaseMvr}
-                onChange={e => setOutwardBaseMvr(e.target.value)}
-                placeholder="0.00"
-                className="w-full px-3.5 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold"
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-xs font-mono font-bold text-muted-foreground">MVR</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={outwardBaseMvr}
+                  onChange={e => setOutwardBaseMvr(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full pl-12 pr-3 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">
-                Target Export Profit Margin (%)
+              <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold tracking-wider">
+                {outwardPricingMode === "margin" ? "Target Profit Margin (%) on Sales" : "Cost Markup (%) on Cost"}
               </label>
-              <input
-                type="number"
-                step="0.5"
-                value={outwardTargetMargin}
-                onChange={e => setOutwardTargetMargin(e.target.value)}
-                placeholder="25"
-                className="w-full px-3.5 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold text-emerald-600"
-              />
+              <div className="relative">
+                <input
+                  type="number"
+                  step="0.5"
+                  value={outwardTargetMargin}
+                  onChange={e => setOutwardTargetMargin(e.target.value)}
+                  placeholder="25"
+                  className="w-full px-3.5 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-extrabold text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <span className="absolute right-3 top-2.5 text-xs font-mono font-bold text-emerald-600">%</span>
+              </div>
             </div>
 
             <div>
-              <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">
-                Outward Freight & Export Logistics (MVR)
+              <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold tracking-wider">
+                Outward Air/Ocean Freight (MVR per Unit)
               </label>
-              <input
-                type="number"
-                step="0.01"
-                value={outwardFreightMvr}
-                onChange={e => setOutwardFreightMvr(e.target.value)}
-                placeholder="0.00"
-                className="w-full px-3.5 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono"
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-xs font-mono font-bold text-muted-foreground">MVR</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={outwardFreightMvr}
+                  onChange={e => setOutwardFreightMvr(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full pl-12 pr-3 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">
-                Export Packaging & Labeling (MVR)
+              <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold tracking-wider">
+                Export Packaging & Customs (MVR per Unit)
               </label>
-              <input
-                type="number"
-                step="0.01"
-                value={outwardPackMvr}
-                onChange={e => setOutwardPackMvr(e.target.value)}
-                placeholder="0.00"
-                className="w-full px-3.5 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono"
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-xs font-mono font-bold text-muted-foreground">MVR</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={outwardPackMvr}
+                  onChange={e => setOutwardPackMvr(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full pl-12 pr-3 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="p-5 bg-blue-500/10 border border-blue-500/20 rounded-2xl space-y-3 font-mono">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center">
-              <div className="p-3 bg-card rounded-xl border border-border">
+          <div className="p-6 bg-secondary/30 border border-border rounded-2xl space-y-4 font-mono">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+              <div className="p-4 bg-card rounded-xl border border-border shadow-sm">
                 <span className="text-[10px] text-muted-foreground uppercase font-bold block">Total Outward Cost</span>
-                <span className="text-sm font-extrabold text-foreground">MVR {outwardTotalCostMvr.toFixed(2)}</span>
+                <span className="text-lg font-extrabold text-foreground mt-1 block">MVR {outwardTotalCostMvr.toFixed(2)}</span>
               </div>
 
-              <div className="p-3 bg-card rounded-xl border border-border">
+              <div className="p-4 bg-card rounded-xl border border-emerald-500/30 shadow-sm">
                 <span className="text-[10px] text-emerald-600 uppercase font-bold block">Selling Price (MVR)</span>
-                <span className="text-sm font-extrabold text-emerald-600">MVR {outwardSellingPriceMvr.toFixed(2)}</span>
+                <span className="text-lg font-extrabold text-emerald-600 mt-1 block">MVR {outwardSellingPriceMvr.toFixed(2)}</span>
               </div>
 
-              <div className="p-3 bg-card rounded-xl border border-border">
-                <span className="text-[10px] text-blue-600 uppercase font-bold block">Export Quote (USD)</span>
-                <span className="text-sm font-extrabold text-blue-600">${outwardSellingPriceUsd.toFixed(2)} USD</span>
+              <div className="p-4 bg-card rounded-xl border border-blue-500/30 shadow-sm">
+                <span className="text-[10px] text-blue-600 uppercase font-bold block">Export Quote ({selectedCurrency})</span>
+                <span className="text-lg font-extrabold text-blue-600 mt-1 block">
+                  {selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"}{outwardSellingPriceUsd.toFixed(2)} {selectedCurrency}
+                </span>
               </div>
             </div>
 
-            <div className="p-3 bg-emerald-600 text-white rounded-xl text-center font-bold text-xs flex justify-between items-center px-5">
-              <span>ESTIMATED NET PROFIT PER UNIT:</span>
-              <span className="text-sm">MVR {outwardProfitMvr.toFixed(2)} (${(outwardProfitMvr / usdToMvrRate).toFixed(2)} USD)</span>
+            <div className="p-4 bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-xl text-center font-bold text-xs flex flex-col sm:flex-row justify-between items-center px-6 gap-2 shadow-md">
+              <span className="uppercase tracking-wider">NET PROFIT PER UNIT:</span>
+              <span className="text-base font-extrabold">
+                MVR {outwardProfitMvr.toFixed(2)} ({selectedCurrency === "EUR" ? "€" : selectedCurrency === "INR" ? "₹" : "$"}{(outwardProfitMvr / activeRate).toFixed(2)} {selectedCurrency})
+              </span>
             </div>
           </div>
         </div>
