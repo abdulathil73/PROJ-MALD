@@ -14357,21 +14357,21 @@ function OffersPage({ products = [], entries = [], onRefresh }: { products?: any
 // ─── Main App ────────────────────────────────────────────────────────────────
 
 const NAV_ITEMS = [
-  { id: "dashboard", label: "Dashboard Overview", icon: LayoutDashboard },
-  { id: "sales", label: "Sales Cockpit", icon: TrendingUp },
-  { id: "purchase", label: "Purchase Management", icon: TrendingDown },
-  { id: "inventory", label: "Stock Inventory", icon: BoxIcon },
-  { id: "godowns", label: "Godown Hub", icon: Warehouse },
-  { id: "costing", label: "Costing & Margins", icon: Calculator },
-  { id: "currency-convert", label: "Currency Converter", icon: Coins },
-  { id: "expiry", label: "Expiry Tracker", icon: Clock },
-  { id: "offers", label: "Offers & Discounts", icon: Tag },
-  { id: "vouchers", label: "Accounts Vouchers", icon: Receipt },
-  { id: "credit-recovery", label: "Credit Recovery", icon: ShieldAlert },
-  { id: "perishables", label: "Perishable Monitor", icon: Sparkles },
-  { id: "reports", label: "Financial Reports", icon: BarChart2 },
-  { id: "master-console", label: "Masters Setup", icon: DbIcon },
-  { id: "ai", label: "AI Operations Insights", icon: Bot }
+  { id: "dashboard", label: "Dashboard Overview", shortcut: "Alt + D", icon: LayoutDashboard },
+  { id: "sales", label: "Sales Cockpit", shortcut: "Alt + S", icon: TrendingUp },
+  { id: "purchase", label: "Purchase Management", shortcut: "Alt + P", icon: TrendingDown },
+  { id: "inventory", label: "Stock Inventory", shortcut: "Alt + I", icon: BoxIcon },
+  { id: "godowns", label: "Godown Hub", shortcut: "Alt + G", icon: Warehouse },
+  { id: "costing", label: "Costing & Margins", shortcut: "Alt + C", icon: Calculator },
+  { id: "currency-convert", label: "Currency Converter", shortcut: "Alt + X", icon: Coins },
+  { id: "expiry", label: "Expiry Tracker", shortcut: "Alt + E", icon: Clock },
+  { id: "offers", label: "Offers & Discounts", shortcut: "Alt + O", icon: Tag },
+  { id: "vouchers", label: "Accounts Vouchers", shortcut: "Alt + V", icon: Receipt },
+  { id: "credit-recovery", label: "Credit Recovery", shortcut: "Alt + R", icon: ShieldAlert },
+  { id: "perishables", label: "Perishable Monitor", shortcut: "Alt + M", icon: Sparkles },
+  { id: "reports", label: "Financial Reports", shortcut: "Alt + F", icon: BarChart2 },
+  { id: "master-console", label: "Masters Setup", shortcut: "Alt + K", icon: DbIcon },
+  { id: "ai", label: "AI Operations Insights", shortcut: "Alt + A", icon: Bot }
 ];
 
 export default function App() {
@@ -14644,6 +14644,154 @@ export default function App() {
           toast.success("Navigated to Sales (Billing) Cash [F8]");
         }
         return;
+      }
+
+      // ── FIRST-LETTER BASED NAVIGATION SHORTCUT ENGINE ──
+      if (e.altKey && !isTyping) {
+        const code = e.code || "";
+        const k = keyName;
+
+        // --- MASTER CONSOLE COMBINATIONS (Ctrl + Alt + [First Letter]) ---
+        if (isCtrlOrCmd) {
+          if (code === "KeyG" || k === "g") {
+            e.preventDefault(); e.stopPropagation(); setPage("master-accounts-groups"); setMasterOpen(true); setMasterAccountsOpen(true); toast.success("Navigated to Accounts Groups Master [Ctrl+Alt+G]"); return;
+          }
+          if (code === "KeyL" || k === "l") {
+            e.preventDefault(); e.stopPropagation(); setPage("master-accounts-ledger"); setMasterOpen(true); setMasterAccountsOpen(true); toast.success("Navigated to Accounts Ledger Master [Ctrl+Alt+L]"); return;
+          }
+          if (code === "KeyC" || k === "c") {
+            e.preventDefault(); e.stopPropagation(); setPage("master-accounts-customer"); setMasterOpen(true); setMasterAccountsOpen(true); toast.success("Navigated to Customer Master [Ctrl+Alt+C]"); return;
+          }
+          if (code === "KeyS" || k === "s") {
+            e.preventDefault(); e.stopPropagation(); setPage("master-accounts-supplier"); setMasterOpen(true); setMasterAccountsOpen(true); toast.success("Navigated to Supplier Master [Ctrl+Alt+S]"); return;
+          }
+          if (code === "KeyI" || k === "i") {
+            e.preventDefault(); e.stopPropagation(); setPage("master-inventory-categories"); setMasterOpen(true); setMasterInventoryOpen(true); toast.success("Navigated to Item Categories Master [Ctrl+Alt+I]"); return;
+          }
+          if (code === "KeyU" || k === "u") {
+            e.preventDefault(); e.stopPropagation(); setPage("master-inventory-unit"); setMasterOpen(true); setMasterInventoryOpen(true); toast.success("Navigated to Units of Measure Master [Ctrl+Alt+U]"); return;
+          }
+          if (code === "KeyP" || k === "p") {
+            e.preventDefault(); e.stopPropagation(); setPage("master-inventory-packing"); setMasterOpen(true); setMasterInventoryOpen(true); toast.success("Navigated to Packing Types Master [Ctrl+Alt+P]"); return;
+          }
+          if (code === "KeyW" || k === "w") {
+            e.preventDefault(); e.stopPropagation(); setPage("master-godowns"); setMasterOpen(true); toast.success("Navigated to Godown Master [Ctrl+Alt+W]"); return;
+          }
+          if (code === "KeyE" || k === "e") {
+            e.preventDefault(); e.stopPropagation(); setPage("master-users"); setMasterOpen(true); toast.success("Navigated to User & Employee Master [Ctrl+Alt+E]"); return;
+          }
+        }
+
+        // --- SUB-MENU COMBINATIONS (Alt + Shift + [First Letter]) ---
+        if (e.shiftKey) {
+          // Sales Sub-menu
+          if (code === "KeyQ" || k === "q") {
+            e.preventDefault(); e.stopPropagation(); setPage("sales-quotation"); setSalesOpen(true); toast.success("Navigated to Sales Quotation [Alt+Shift+Q]"); return;
+          }
+          if (code === "KeyB" || k === "b") {
+            e.preventDefault(); e.stopPropagation(); setPage("sales-billing"); setSalesOpen(true); toast.success("Navigated to Sales Billing [Alt+Shift+B]"); return;
+          }
+          if (code === "KeyD" || k === "d") {
+            e.preventDefault(); e.stopPropagation(); setPage("sales-delivery"); setSalesOpen(true); toast.success("Navigated to Delivery Note [Alt+Shift+D]"); return;
+          }
+          if (code === "KeyC" || k === "c") {
+            e.preventDefault(); e.stopPropagation(); setPage("sales-credit"); setSalesOpen(true); toast.success("Navigated to Sales Credit Note [Alt+Shift+C]"); return;
+          }
+
+          // Purchase Sub-menu
+          if (code === "KeyO" || k === "o") {
+            e.preventDefault(); e.stopPropagation(); setPage("purchase-order"); setPurchaseSubOpen(true); toast.success("Navigated to Purchase Order [Alt+Shift+O]"); return;
+          }
+          if (code === "KeyG" || k === "g") {
+            e.preventDefault(); e.stopPropagation(); setPage("purchase-grn"); setPurchaseSubOpen(true); toast.success("Navigated to Goods Receive Note GRN [Alt+Shift+G]"); return;
+          }
+          if (code === "KeyP" || k === "p") {
+            e.preventDefault(); e.stopPropagation(); setPage("purchase-billing"); setPurchaseSubOpen(true); toast.success("Navigated to Purchase Billing [Alt+Shift+P]"); return;
+          }
+          if (code === "KeyN" || k === "n") {
+            e.preventDefault(); e.stopPropagation(); setPage("purchase-debit"); setPurchaseSubOpen(true); toast.success("Navigated to Supplier Debit Note [Alt+Shift+N]"); return;
+          }
+          if (code === "KeyS" || k === "s") {
+            e.preventDefault(); e.stopPropagation(); setPage("purchase-spoilage"); setPurchaseSubOpen(true); toast.success("Navigated to Spoilage Write-off Entry [Alt+Shift+S]"); return;
+          }
+
+          // Vouchers Sub-menu
+          if (code === "KeyK" || k === "k") {
+            e.preventDefault(); e.stopPropagation(); setPage("vouchers-contra"); setVouchersOpen(true); toast.success("Navigated to Contra Voucher [Alt+Shift+K]"); return;
+          }
+          if (code === "KeyJ" || k === "j") {
+            e.preventDefault(); e.stopPropagation(); setPage("vouchers-journal"); setVouchersOpen(true); toast.success("Navigated to Journal Voucher [Alt+Shift+J]"); return;
+          }
+          if (code === "KeyR" || k === "r") {
+            e.preventDefault(); e.stopPropagation(); setPage("vouchers-receipt"); setVouchersOpen(true); toast.success("Navigated to Receipt Voucher [Alt+Shift+R]"); return;
+          }
+          if (code === "KeyV" || k === "v") {
+            e.preventDefault(); e.stopPropagation(); setPage("vouchers-all"); setVouchersOpen(true); toast.success("Navigated to All Vouchers Register [Alt+Shift+V]"); return;
+          }
+
+          // Reports Sub-menu
+          if (code === "Digit1" || k === "1") {
+            e.preventDefault(); e.stopPropagation(); setPage("reports-pl"); setReportsOpen(true); toast.success("Navigated to Profit & Loss Report [Alt+Shift+1]"); return;
+          }
+          if (code === "Digit2" || k === "2") {
+            e.preventDefault(); e.stopPropagation(); setPage("reports-bs"); setReportsOpen(true); toast.success("Navigated to Balance Sheet [Alt+Shift+2]"); return;
+          }
+          if (code === "Digit3" || k === "3") {
+            e.preventDefault(); e.stopPropagation(); setPage("reports-trial"); setReportsOpen(true); toast.success("Navigated to Trial Balance [Alt+Shift+3]"); return;
+          }
+          if (code === "Digit4" || k === "4") {
+            e.preventDefault(); e.stopPropagation(); setPage("reports-ledger"); setReportsOpen(true); toast.success("Navigated to Ledger Accounts [Alt+Shift+4]"); return;
+          }
+          if (code === "Digit5" || k === "5") {
+            e.preventDefault(); e.stopPropagation(); setPage("reports-daybook"); setReportsOpen(true); toast.success("Navigated to Daybook & Cash Flow [Alt+Shift+5]"); return;
+          }
+        }
+
+        // --- TOP-LEVEL MAIN NAVIGATION (Alt + First Letter) ---
+        if (!isCtrlOrCmd && !e.shiftKey) {
+          if (code === "KeyA" || k === "a") {
+            e.preventDefault(); e.stopPropagation(); setPage("ai"); toast.success("Navigated to AI Operations Insights [Alt + A]"); return;
+          }
+          if (code === "KeyC" || k === "c") {
+            e.preventDefault(); e.stopPropagation(); setPage("costing"); toast.success("Navigated to Costing & Margins [Alt + C]"); return;
+          }
+          if (code === "KeyD" || k === "d") {
+            e.preventDefault(); e.stopPropagation(); setPage("dashboard"); toast.success("Navigated to Dashboard Overview [Alt + D]"); return;
+          }
+          if (code === "KeyE" || k === "e") {
+            e.preventDefault(); e.stopPropagation(); setPage("expiry"); toast.success("Navigated to Expiry & Shelf Life Tracker [Alt + E]"); return;
+          }
+          if (code === "KeyF" || k === "f") {
+            e.preventDefault(); e.stopPropagation(); setPage("reports"); setReportsOpen(true); toast.success("Navigated to Financial Reports [Alt + F]"); return;
+          }
+          if (code === "KeyG" || k === "g") {
+            e.preventDefault(); e.stopPropagation(); setPage("godowns"); toast.success("Navigated to Godown Hub [Alt + G]"); return;
+          }
+          if (code === "KeyI" || k === "i") {
+            e.preventDefault(); e.stopPropagation(); setPage("inventory"); toast.success("Navigated to Stock Inventory [Alt + I]"); return;
+          }
+          if (code === "KeyK" || k === "k" || code === "KeyM" || k === "m") {
+            e.preventDefault(); e.stopPropagation(); setPage("master-console"); setMasterOpen(true); toast.success("Navigated to Masters Setup [Alt + K]"); return;
+          }
+          if (code === "KeyO" || k === "o") {
+            e.preventDefault(); e.stopPropagation(); setPage("offers"); toast.success("Navigated to Offers & Discounts [Alt + O]"); return;
+          }
+          if (code === "KeyP" || k === "p") {
+            e.preventDefault(); e.stopPropagation(); setPage("purchase-billing"); setPurchaseSubOpen(true); toast.success("Navigated to Purchase Management [Alt + P]"); return;
+          }
+          if (code === "KeyR" || k === "r") {
+            e.preventDefault(); e.stopPropagation(); setPage("credit-recovery"); toast.success("Navigated to Credit Recovery [Alt + R]"); return;
+          }
+          if (code === "KeyS" || k === "s") {
+            e.preventDefault(); e.stopPropagation(); setPage("sales-billing"); setSalesOpen(true); toast.success("Navigated to Sales Cockpit [Alt + S]"); return;
+          }
+          if (code === "KeyV" || k === "v") {
+            e.preventDefault(); e.stopPropagation(); setPage("vouchers-all"); setVouchersOpen(true); toast.success("Navigated to Accounts Vouchers [Alt + V]"); return;
+          }
+          if (code === "KeyX" || k === "x") {
+            e.preventDefault(); e.stopPropagation(); setPage("currency-convert"); toast.success("Navigated to Currency Converter [Alt + X]"); return;
+          }
+        }
       }
 
       // 9. F9 shortcuts:
@@ -17276,7 +17424,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
               <button
                 key={item.id}
                 onClick={() => { setPage(item.id); setSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-mono transition-all ${
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-mono transition-all group ${
                   active
                     ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow"
                     : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -17284,7 +17432,15 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
               >
                 <Icon size={14} />
                 <span>{item.label}</span>
-                {active && <ChevronRight size={12} className="ml-auto opacity-60" />}
+                {item.shortcut ? (
+                  <span className={`ml-auto text-[9px] px-1.5 py-0.5 rounded font-mono font-bold border transition-opacity ${
+                    active ? "bg-white/20 border-white/30 text-white" : "bg-muted/40 border-border/50 text-muted-foreground group-hover:text-foreground opacity-80"
+                  }`}>
+                    {item.shortcut}
+                  </span>
+                ) : active ? (
+                  <ChevronRight size={12} className="ml-auto opacity-60" />
+                ) : null}
               </button>
             );
 
@@ -17322,6 +17478,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                           }`}
                         >
                           <span>Sales Quotation</span>
+                          <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Alt+Q</span>
                         </button>}
                         {isFeaturePermitted("sales-billing") && <button
                           onClick={() => { setPage("sales-billing"); setSidebarOpen(false); }}
@@ -17330,6 +17487,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                           }`}
                         >
                           <span>Billing</span>
+                          <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Alt+S</span>
                         </button>}
                         {isFeaturePermitted("sales-delivery") && <button
                           onClick={() => { setPage("sales-delivery"); setSidebarOpen(false); }}
@@ -17338,6 +17496,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                           }`}
                         >
                           <span>Delivery Note</span>
+                          <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Alt+N</span>
                         </button>}
                         {isFeaturePermitted("sales-credit") && <button
                           onClick={() => { setPage("sales-credit"); setSidebarOpen(false); }}
@@ -17346,6 +17505,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                           }`}
                         >
                           <span>Credit Note</span>
+                          <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Alt+K</span>
                         </button>}
                       </div>
                     )}
@@ -17388,6 +17548,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                           }`}
                         >
                           <span>Purchase Order</span>
+                          <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Alt+V</span>
                         </button>}
                         {isFeaturePermitted("purchase-bill") && <button
                           onClick={() => { setPage("purchase-grn"); setSidebarOpen(false); }}
@@ -17396,6 +17557,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                           }`}
                         >
                           <span>GRN (Goods Receive Note)</span>
+                          <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Alt+G</span>
                         </button>}
                         {isFeaturePermitted("purchase-billing") && <button
                           onClick={() => { setPage("purchase-billing"); setSidebarOpen(false); }}
@@ -17404,6 +17566,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                           }`}
                         >
                           <span>Billing</span>
+                          <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Alt+P</span>
                         </button>}
                         {isFeaturePermitted("sales-debit-note") && <button
                           onClick={() => { setPage("purchase-debit"); setSidebarOpen(false); }}
@@ -17412,6 +17575,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                           }`}
                         >
                           <span>Debit Note</span>
+                          <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Alt+B</span>
                         </button>}
                         {isFeaturePermitted("purchase-spoilage") && <button
                           onClick={() => { setPage("purchase-spoilage"); setSidebarOpen(false); }}
@@ -17420,7 +17584,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                           }`}
                         >
                           <span>Spoilage Entry</span>
-                          <span className="text-[9px] text-red-500 font-bold">SPL</span>
+                          <span className="text-[8px] px-1 bg-red-500/20 text-red-500 rounded font-mono font-semibold">Alt+Y</span>
                         </button>}
                       </div>
                     )}
@@ -17458,35 +17622,39 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                             <div className="pl-3 space-y-0.5 border-l border-sidebar-border/30 ml-2 py-0.5">
                               <button
                                 onClick={() => { setPage("master-accounts-groups"); setSidebarOpen(false); }}
-                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all ${
+                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                                   page === "master-accounts-groups" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                                 }`}
                               >
-                                Groups
+                                <span>Groups</span>
+                                <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Ctrl+G</span>
                               </button>
                               <button
                                 onClick={() => { setPage("master-accounts-ledger"); setSidebarOpen(false); }}
-                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all ${
+                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                                   page === "master-accounts-ledger" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                                 }`}
                               >
-                                Ledger
+                                <span>Ledger</span>
+                                <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Ctrl+L</span>
                               </button>
                               <button
                                 onClick={() => { setPage("master-accounts-customer"); setSidebarOpen(false); }}
-                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all ${
+                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                                   page === "master-accounts-customer" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                                 }`}
                               >
-                                Customer
+                                <span>Customer</span>
+                                <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Ctrl+U</span>
                               </button>
                               <button
                                 onClick={() => { setPage("master-accounts-supplier"); setSidebarOpen(false); }}
-                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all ${
+                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                                   page === "master-accounts-supplier" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                                 }`}
                               >
-                                Supplier
+                                <span>Supplier</span>
+                                <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Ctrl+S</span>
                               </button>
                             </div>
                           )}
@@ -17511,43 +17679,48 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                             <div className="pl-3 space-y-0.5 border-l border-sidebar-border/30 ml-2 py-0.5">
                               <button
                                 onClick={() => { setPage("master-inventory-items"); setSidebarOpen(false); }}
-                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all ${
+                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                                   page === "master-inventory-items" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                                 }`}
                               >
-                                Items
+                                <span>Items</span>
+                                <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground font-mono">Alt+I</span>
                               </button>
                               <button
                                 onClick={() => { setPage("master-inventory-categories"); setSidebarOpen(false); }}
-                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all ${
+                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                                   page === "master-inventory-categories" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                                 }`}
                               >
-                                Categories
+                                <span>Categories</span>
+                                <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground font-mono">Ctrl+T</span>
                               </button>
                               <button
                                 onClick={() => { setPage("master-inventory-unit"); setSidebarOpen(false); }}
-                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all ${
+                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                                   page === "master-inventory-unit" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                                 }`}
                               >
-                                Unit
+                                <span>Unit</span>
+                                <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground font-mono">Ctrl+M</span>
                               </button>
                               <button
                                 onClick={() => { setPage("master-inventory-packing"); setSidebarOpen(false); }}
-                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all ${
+                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                                   page === "master-inventory-packing" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                                 }`}
                               >
-                                Packing Type
+                                <span>Packing Type</span>
+                                <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground font-mono">Ctrl+P</span>
                               </button>
                               <button
                                 onClick={() => { setPage("master-inventory-godowns"); setSidebarOpen(false); }}
-                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all ${
+                                className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                                   page === "master-inventory-godowns" || page === "master-godowns" ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                                 }`}
                               >
-                                Godown Master
+                                <span>Godown Master</span>
+                                <span className="text-[8px] px-1 bg-emerald-500/20 text-emerald-600 rounded font-mono font-semibold">Ctrl+W</span>
                               </button>
                             </div>
                           )}
@@ -17563,6 +17736,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                             }`}
                           >
                             <span className="font-semibold">Godown Master</span>
+                            <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Ctrl+W</span>
                           </button>
                         </div>
 
@@ -17575,7 +17749,8 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                               page === "master-users" ? "bg-primary/20 text-foreground font-bold" : "text-sidebar-foreground/85 hover:bg-sidebar-accent/50"
                             }`}
                           >
-                            <span className="font-semibold">Users</span>
+                            <span className="font-semibold font-mono">Users</span>
+                            <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Ctrl+E</span>
                           </button>
                         </div>
                       </div>
@@ -17614,7 +17789,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                           }`}
                         >
                           <span>Payment Voucher</span>
-                          <span className="text-[9px] text-red-500 font-bold">PAY</span>
+                          <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Ctrl+1</span>
                         </button>}
                         {isFeaturePermitted("vouchers-receipt") && <button
                           onClick={() => { setPage("vouchers-receipt"); setSidebarOpen(false); }}
@@ -17623,7 +17798,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                           }`}
                         >
                           <span>Receipt Voucher</span>
-                          <span className="text-[9px] text-emerald-500 font-bold">REC</span>
+                          <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Ctrl+2</span>
                         </button>}
                         {isFeaturePermitted("vouchers-contra") && <button
                           onClick={() => { setPage("vouchers-contra"); setSidebarOpen(false); }}
@@ -17632,7 +17807,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                           }`}
                         >
                           <span>Contra Voucher</span>
-                          <span className="text-[9px] text-blue-500 font-bold">CNT</span>
+                          <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Ctrl+3</span>
                         </button>}
                         {isFeaturePermitted("vouchers-journal") && <button
                           onClick={() => { setPage("vouchers-journal"); setSidebarOpen(false); }}
@@ -17641,15 +17816,16 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                           }`}
                         >
                           <span>Journal Voucher</span>
-                          <span className="text-[9px] text-purple-500 font-bold">JRN</span>
+                          <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Ctrl+4</span>
                         </button>}
                         {hasAnyFeature("vouchers-receipt", "vouchers-payment", "vouchers-journal", "vouchers-contra") && <button
                           onClick={() => { setPage("vouchers-all"); setSidebarOpen(false); }}
-                          className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all ${
+                          className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
                             page === "vouchers-all" || page === "vouchers" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
                           }`}
                         >
-                          All Vouchers Register
+                          <span>All Vouchers Register</span>
+                          <span className="text-[8px] px-1 bg-muted/50 rounded font-mono font-semibold text-muted-foreground">Ctrl+5</span>
                         </button>}
                       </div>
                     )}
