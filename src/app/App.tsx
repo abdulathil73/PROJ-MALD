@@ -2212,6 +2212,7 @@ function VoiceBillingAssistant({
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [muteVoice, setMuteVoice] = useState(false);
+  const [textInput, setTextInput] = useState("");
   const [logs, setLogs] = useState<{ text: string; success: boolean }[]>([]);
 
   const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -2971,69 +2972,128 @@ function VoiceBillingAssistant({
   };
 
   return (
-    <div className="bg-card border border-border p-5 rounded-xl flex flex-col justify-between shadow-sm min-h-[460px] h-[calc(100vh-140px)]">
-      <div className="space-y-4 flex-1 flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-border pb-3">
+    <div className="bg-card border border-border/80 p-4 rounded-2xl flex flex-col justify-between shadow-sm min-h-[460px] h-[calc(100vh-140px)] relative overflow-hidden">
+      <div className="space-y-4 flex-1 flex flex-col z-10">
+        {/* Sleek Minimal Header */}
+        <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
           <div className="flex items-center gap-2">
-            <Bot className="text-primary animate-pulse" size={20} />
+            <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+              <Sparkles size={15} className="animate-pulse" />
+            </div>
             <div>
-              <h3 className="text-xs font-bold text-foreground">AI voice billing assistant</h3>
-              <p className="text-[9px] font-mono text-muted-foreground uppercase tracking-wider">Mage-AI V2.0 (English IN)</p>
+              <h3 className="text-xs font-bold text-foreground font-mono uppercase tracking-wider">AI Assistant</h3>
+              <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                <span className="text-emerald-500 font-semibold">Active</span> · EN-IN
+              </div>
             </div>
           </div>
+
           <button
             type="button"
             onClick={() => setMuteVoice(prev => !prev)}
-            className="p-1.5 bg-secondary border border-border rounded-lg text-muted-foreground hover:text-foreground text-xs"
+            className="p-1.5 text-muted-foreground hover:text-foreground bg-secondary/40 hover:bg-secondary border border-border/60 rounded-lg transition-colors text-xs"
             title={muteVoice ? "Unmute AI Voice Feedback" : "Mute AI Voice Feedback"}
           >
             {muteVoice ? <VolumeX size={14} /> : <Volume2 size={14} />}
           </button>
         </div>
 
-        {/* Pulse Mic Container */}
-        <div className="flex flex-col items-center justify-center py-6 bg-secondary/15 rounded-xl border border-border/50 relative overflow-hidden flex-1 min-h-[140px]">
+        {/* Hero Mic Visualizer */}
+        <div className="flex flex-col items-center justify-center py-5 bg-secondary/10 rounded-2xl border border-border/40 relative overflow-hidden flex-1 min-h-[150px] gap-3">
+          {/* Subtle Listening Wave Animations */}
           {isListening && (
             <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-20 pointer-events-none">
-              <div className="w-1.5 h-12 bg-primary rounded-full animate-bounce delay-75"></div>
+              <div className="w-1 h-12 bg-primary rounded-full animate-bounce delay-75"></div>
               <div className="w-1.5 h-16 bg-primary rounded-full animate-bounce delay-150"></div>
-              <div className="w-1.5 h-8 bg-primary rounded-full animate-bounce delay-300"></div>
+              <div className="w-1 h-10 bg-primary rounded-full animate-bounce delay-300"></div>
               <div className="w-1.5 h-20 bg-primary rounded-full animate-bounce delay-200"></div>
-              <div className="w-1.5 h-10 bg-primary rounded-full animate-bounce delay-100"></div>
+              <div className="w-1 h-12 bg-primary rounded-full animate-bounce delay-100"></div>
             </div>
           )}
-          
+
+          {/* Minimal Mic Button */}
           <button
             type="button"
             onClick={startListening}
-            className={`w-16 h-16 rounded-full flex items-center justify-center border shadow-lg transition-all duration-300 ${
+            className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 transform active:scale-95 shadow-md ${
               isListening
-                ? "bg-red-500 border-red-400 text-white scale-110 animate-pulse"
-                : "bg-primary border-primary/50 text-white hover:bg-primary/95 hover:scale-105"
+                ? "bg-red-500 text-white scale-110 animate-pulse ring-4 ring-red-500/20"
+                : "bg-primary text-primary-foreground hover:scale-105 hover:shadow-lg"
             }`}
           >
-            {isListening ? <MicOff size={28} /> : <Mic size={28} />}
+            {isListening ? <MicOff size={26} /> : <Mic size={26} />}
           </button>
-          
-          <p className="text-xs font-semibold mt-3 text-foreground">
-            {isListening ? "Listening..." : "Click to Speak Command"}
-          </p>
-          <p className="text-[10px] text-muted-foreground mt-1 px-4 text-center truncate w-full max-w-[240px]">
-            {transcript ? `"${transcript}"` : 'Try: "Add 10 Cardamom from Godown A"'}
-          </p>
+
+          <div className="text-center px-3 z-10 space-y-1">
+            <p className="text-xs font-semibold text-foreground">
+              {isListening ? "Listening..." : "Speak or Type Command"}
+            </p>
+            <p className="text-[10px] text-muted-foreground font-mono truncate max-w-[200px]">
+              {transcript ? `"${transcript}"` : 'e.g. "Add 10 Sugar Godown A"'}
+            </p>
+          </div>
         </div>
 
-        {/* AI Action Logs */}
-        <div className="space-y-2">
-          <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest font-bold">Execution Logs</div>
-          <div className="bg-input-background border border-border rounded-lg p-3 min-h-[100px] max-h-[100px] overflow-y-auto space-y-1.5 font-mono text-[10px] leading-relaxed">
+        {/* Clean Integrated Input Bar */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (textInput.trim()) {
+              handleVoiceCommand(textInput);
+              setTextInput("");
+            }
+          }}
+          className="flex items-center gap-1.5 bg-secondary/20 border border-border/70 rounded-xl p-1 focus-within:border-primary/60 transition-colors"
+        >
+          <input
+            type="text"
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            placeholder="Type AI command..."
+            className="flex-1 px-2.5 py-1 bg-transparent text-xs font-mono text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+          />
+          <button
+            type="submit"
+            className="p-1.5 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"
+          >
+            <Send size={12} />
+          </button>
+        </form>
+
+        {/* Minimal Quick Action Pills */}
+        <div className="space-y-1.5">
+          <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider font-semibold">Quick Actions</div>
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { label: "+ Add 10 Sugar", cmd: "Add 10 Sugar" },
+              { label: "📦 Godown A", cmd: "from Godown A" },
+              { label: "⚡ Clear Cart", cmd: "Clear cart" },
+              { label: "🚀 Post Bill", cmd: "Post bill" },
+            ].map((chip, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleVoiceCommand(chip.cmd)}
+                className="px-2.5 py-1 bg-secondary/30 hover:bg-secondary text-foreground border border-border/50 rounded-lg text-[10px] font-mono transition-colors"
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Clean Minimal Execution Feed */}
+        <div className="space-y-1.5">
+          <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider font-semibold">Recent Activity</div>
+          <div className="bg-secondary/10 border border-border/40 rounded-xl p-2.5 min-h-[70px] max-h-[70px] overflow-y-auto space-y-1 font-mono text-[10px]">
             {logs.length === 0 ? (
-              <div className="text-muted-foreground italic">Waiting for voice triggers...</div>
+              <div className="text-muted-foreground/60 italic">Ready for commands...</div>
             ) : (
-              logs.map((log, idx) => (
-                <div key={idx} className={log.success ? "text-green-500" : "text-red-400"}>
-                  &gt; {log.text}
+              logs.slice(0, 3).map((log, idx) => (
+                <div key={idx} className={`flex items-center gap-1.5 ${log.success ? "text-emerald-500" : "text-red-400"}`}>
+                  <span>{log.success ? "✓" : "✗"}</span>
+                  <span className="truncate">{log.text}</span>
                 </div>
               ))
             )}
@@ -3041,33 +3101,17 @@ function VoiceBillingAssistant({
         </div>
       </div>
 
-      {/* Helper Voice Commands Cheatsheet */}
-      <div className="border-t border-border pt-3 mt-2 space-y-1.5">
-        <div className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground uppercase tracking-widest font-bold">
-          <HelpCircle size={12} />
-          <span>Quick Commands List</span>
+      {/* Neat Cheatsheet Footer */}
+      <div className="border-t border-border/40 pt-2.5 mt-2 space-y-1">
+        <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground font-semibold uppercase tracking-wider">
+          <HelpCircle size={11} />
+          <span>Cheatsheet</span>
         </div>
-        <div className="grid grid-cols-2 gap-2 text-[9px] font-mono text-muted-foreground leading-tight">
-          <div className="p-1.5 bg-secondary/10 border border-border/30 rounded-lg">
-            <span className="text-foreground font-semibold">Add Item:</span>
-            <br />
-            "Add 10 Cardamom"
-          </div>
-          <div className="p-1.5 bg-secondary/10 border border-border/30 rounded-lg">
-            <span className="text-foreground font-semibold">Choose Ware:</span>
-            <br />
-            "... from Godown A"
-          </div>
-          <div className="p-1.5 bg-secondary/10 border border-border/30 rounded-lg">
-            <span className="text-foreground font-semibold">Set Customer:</span>
-            <br />
-            "Select customer John"
-          </div>
-          <div className="p-1.5 bg-secondary/10 border border-border/30 rounded-lg">
-            <span className="text-foreground font-semibold">Voucher Control:</span>
-            <br />
-            "Clear cart" / "Post bill"
-          </div>
+        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[9px] font-mono text-muted-foreground">
+          <div><span className="text-foreground font-medium">Add:</span> "Add 10 Sugar"</div>
+          <div><span className="text-foreground font-medium">Godown:</span> "...from Godown A"</div>
+          <div><span className="text-foreground font-medium">Customer:</span> "Select John"</div>
+          <div><span className="text-foreground font-medium">Post:</span> "Post bill"</div>
         </div>
       </div>
     </div>
@@ -4643,12 +4687,22 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
     }
   }, [productId]);
 
-  // Suggestions for autocomplete product (Only shows when user types in product search)
+  // Suggestions for autocomplete product (Shows all products sorted alphabetically on focus/blank, or matches starting/containing string)
   const suggestions = useMemo(() => {
-    if (!productSearch.trim()) return [];
-    return products
-      .filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()))
-      .sort((a, b) => a.stock - b.stock);
+    const list = products || [];
+    if (!productSearch.trim()) {
+      return [...list].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    }
+    const q = productSearch.toLowerCase().trim();
+    const startsWith = list.filter(p => p && p.name && p.name.toLowerCase().startsWith(q))
+                           .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    const includes = list.filter(p => p && p.name && !p.name.toLowerCase().startsWith(q) && (
+      p.name.toLowerCase().includes(q) ||
+      (p.category && p.category.toLowerCase().includes(q)) ||
+      (p.itemCode && p.itemCode.toLowerCase().includes(q)) ||
+      (p.unit && p.unit.toLowerCase().includes(q))
+    )).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    return [...startsWith, ...includes];
   }, [productSearch, products]);
 
   // Available stock in selected godown
@@ -4699,29 +4753,21 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
   const handleProductSearchKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      if (!showSuggestions && productSearch.trim()) {
+      if (!showSuggestions) {
         setShowSuggestions(true);
         setSuggestionIdx(0);
       } else if (suggestions.length > 0) {
         const nextIdx = Math.min(suggestions.length - 1, suggestionIdx + 1);
         setSuggestionIdx(nextIdx);
-        if (suggestions[nextIdx]) {
-          setProductId(suggestions[nextIdx].id);
-          setRate(String(suggestions[nextIdx].sellPrice));
-        }
       }
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      if (!showSuggestions && productSearch.trim()) {
+      if (!showSuggestions) {
         setShowSuggestions(true);
         setSuggestionIdx(suggestions.length - 1);
       } else if (suggestions.length > 0) {
         const nextIdx = Math.max(0, suggestionIdx - 1);
         setSuggestionIdx(nextIdx);
-        if (suggestions[nextIdx]) {
-          setProductId(suggestions[nextIdx].id);
-          setRate(String(suggestions[nextIdx].sellPrice));
-        }
       }
     } else if (e.key === "Enter") {
       e.preventDefault();
@@ -4729,7 +4775,9 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
         const selected = suggestions[suggestionIdx] || suggestions[0];
         handleSelectSuggestion(selected);
       } else {
-        godownInputRef.current?.focus();
+        if (godownInputRef.current) godownInputRef.current.focus();
+        else if (packingTypeInputRef.current) packingTypeInputRef.current.focus();
+        else if (quantityInputRef.current) quantityInputRef.current.focus();
       }
     } else if (e.key === "Escape") {
       setShowSuggestions(false);
@@ -4747,7 +4795,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
     setItemExpiryDate(defaultExp);
 
     setGodown(getBestGodownForProduct(prod));
-    
+
     // Auto-select first packing type if available
     const pts = (prod.packingTypes && prod.packingTypes.length > 0)
       ? prod.packingTypes.filter(Boolean)
@@ -4765,8 +4813,11 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
       setPackingType("");
     }
 
-    // Focus godown selector next
-    godownInputRef.current?.focus();
+    setTimeout(() => {
+      if (godownInputRef.current) godownInputRef.current.focus();
+      else if (packingTypeInputRef.current) packingTypeInputRef.current.focus();
+      else if (quantityInputRef.current) quantityInputRef.current.focus();
+    }, 50);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, nextRef: React.RefObject<any>) => {
@@ -5244,10 +5295,10 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
         
-        {/* Left Side: Table & inputs */}
-        <div className="lg:col-span-3 space-y-4 min-h-[500px] flex flex-col">
+        {/* Left Side: Table & inputs - Expanded Big Space */}
+        <div className="xl:col-span-10 space-y-4 min-h-[500px] flex flex-col">
           
           {/* Top Row: Invoice Header (left) & Total Panel (right) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-card border border-border p-4 rounded-xl shadow-sm">
@@ -5451,105 +5502,48 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
             </div>
           </div>
 
-          {/* Product Quick-Add Row */}
+          {/* Product Quick-Add Row - NO SCROLLBAR, BIG SPACE */}
           <div className="bg-card border border-border p-4 rounded-xl shadow-sm space-y-3">
-            <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest font-bold border-b border-border/50 pb-1.5">Add Line Item</div>
+            <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest font-bold border-b border-border/50 pb-1.5 flex justify-between items-center">
+              <span>Add Line Item</span>
+              <span className="text-[9px] text-muted-foreground font-normal">Use [Arrow Keys] + [Enter] to select & jump</span>
+            </div>
             
-            <form onSubmit={handleAddItem} className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-              {/* Product Search / Dropdown */}
-              <div className={`${transactionType === "delivery_note" ? "sm:col-span-4" : "sm:col-span-3"} relative`}>
-                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">1. Select / Search Product</label>
-                {products.length > 0 ? (
-                  <select
-                    ref={productSearchRef as any}
-                    value={productId}
-                    onChange={e => {
-                      const selId = e.target.value;
-                      setProductId(selId);
-                      const prod = products.find(p => p.id === selId);
-                      if (prod) {
-                        setProductSearch(prod.name);
-                        setRate(String(prod.sellPrice));
-                      }
-                    }}
-                    onKeyDown={e => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        if (godownInputRef.current) godownInputRef.current.focus();
-                        else if (quantityInputRef.current) quantityInputRef.current.focus();
-                      }
-                    }}
-                    className="w-full px-3 py-2.5 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
-                  >
-                    <option value="">-- Select Product --</option>
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({p.unit}) - ₹{p.sellPrice}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    ref={productSearchRef}
-                    value={productSearch}
-                    onChange={e => {
-                      const val = e.target.value;
-                      setProductSearch(val);
-                      setSuggestionIdx(0);
-                    }}
-                    placeholder="Type product name (e.g. Cardamom)..."
-                    className="w-full px-3.5 py-2.5 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                )}
+            <form onSubmit={handleAddItem} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end w-full text-xs font-mono">
+              {/* Product Search Input */}
+              <div className="col-span-12 sm:col-span-3 relative">
+                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold truncate">1. Search Product</label>
+                <input
+                  ref={productSearchRef}
+                  type="text"
+                  value={productSearch}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  onChange={e => {
+                    setProductSearch(e.target.value);
+                    setShowSuggestions(true);
+                    setSuggestionIdx(0);
+                  }}
+                  onKeyDown={handleProductSearchKeyDown}
+                  placeholder="Type product name (e.g. A)..."
+                  className="w-full px-3 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-ring shadow-sm"
+                />
                 {showSuggestions && suggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 mt-1 max-h-72 overflow-y-auto bg-card border border-border rounded-xl shadow-2xl z-40 font-sans text-sm divide-y divide-border/40">
+                  <div className="absolute left-0 right-0 mt-1 max-h-64 overflow-y-auto bg-card border border-border rounded-xl shadow-2xl z-50 font-sans text-xs divide-y divide-border/40 min-w-[220px]">
                     {suggestions.map((p, idx) => (
                       <button
                         key={p.id}
                         type="button"
+                        onMouseDown={e => e.preventDefault()}
                         onClick={() => handleSelectSuggestion(p)}
-                        className={`w-full text-left px-4 py-3 hover:bg-secondary/70 transition-colors font-extrabold text-sm text-foreground whitespace-nowrap ${
-                          idx === suggestionIdx ? 'bg-primary/15 font-extrabold text-primary border-l-4 border-l-primary' : ''
+                        className={`w-full text-left px-3.5 py-2.5 hover:bg-secondary/70 transition-colors flex items-center justify-between gap-2 font-bold ${
+                          idx === suggestionIdx ? 'bg-primary/20 font-extrabold text-primary border-l-4 border-l-primary' : 'text-foreground'
                         }`}
                         data-active={idx === suggestionIdx}
                       >
-                        {p.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Increased size for Godown */}
-              <div className={`${transactionType === "delivery_note" ? "sm:col-span-3" : "sm:col-span-2"} relative`}>
-                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">2. Godown</label>
-                <input
-                  ref={godownInputRef}
-                  value={godown ? `Godown ${godown} (${(activeProduct?.godownStocks?.[godown] || 0)} ${activeProduct?.unit || "units"})` : ""}
-                  onFocus={() => setShowGodownSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowGodownSuggestions(false), 200)}
-                  onKeyDown={handleGodownKeyDown}
-                  onChange={() => {}}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-xl bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer font-semibold"
-                />
-                {showGodownSuggestions && availableGodowns.length > 0 && (
-                  <div className="absolute left-0 mt-1 min-w-[220px] max-w-[280px] max-h-56 overflow-y-auto bg-card border border-border rounded-xl shadow-2xl z-30 font-sans text-xs divide-y divide-border/40">
-                    {availableGodowns.map((g, idx) => (
-                      <button
-                        key={g}
-                        type="button"
-                        onClick={() => {
-                          setGodown(g);
-                          setShowGodownSuggestions(false);
-                          if (packingTypeInputRef.current) packingTypeInputRef.current.focus();
-                          else quantityInputRef.current?.focus();
-                        }}
-                        className={`w-full text-left px-3.5 py-2.5 hover:bg-secondary/60 flex items-center justify-between gap-3 transition-colors ${idx === godownSuggestionIdx ? 'bg-primary/15 font-bold text-primary border-l-4 border-l-primary' : ''}`}
-                        data-active={idx === godownSuggestionIdx}
-                      >
-                        <span className="font-semibold text-foreground whitespace-nowrap">Godown {g}</span>
-                        <span className="font-mono text-muted-foreground text-xs whitespace-nowrap bg-muted/50 px-2 py-0.5 rounded border border-border/50">
-                          {(activeProduct?.godownStocks?.[g] || 0)} {activeProduct?.unit || "units"}
+                        <span className="truncate">{p.name} ({p.unit})</span>
+                        <span className="font-mono text-[10px] text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 flex-shrink-0">
+                          ₹{p.sellPrice || 0}
                         </span>
                       </button>
                     ))}
@@ -5557,10 +5551,48 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                 )}
               </div>
 
-              {/* Packing Type Input / Dropdown */}
-              <div className="sm:col-span-2">
-                <label className="block text-[10px] font-mono text-blue-600 dark:text-blue-400 mb-1 uppercase font-bold flex items-center gap-1">
-                  📦 Packing Type
+              {/* Godown */}
+              <div className="col-span-6 sm:col-span-2 relative">
+                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold truncate">2. Godown</label>
+                <input
+                  ref={godownInputRef}
+                  value={godown ? `Godown ${godown} (${(activeProduct?.godownStocks?.[godown] || 0)} ${activeProduct?.unit || "u"})` : ""}
+                  onFocus={() => setShowGodownSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowGodownSuggestions(false), 200)}
+                  onKeyDown={handleGodownKeyDown}
+                  onChange={() => {}}
+                  className="w-full px-2.5 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer font-semibold"
+                />
+                {showGodownSuggestions && availableGodowns.length > 0 && (
+                  <div className="absolute left-0 mt-1 min-w-[180px] max-h-56 overflow-y-auto bg-card border border-border rounded-xl shadow-2xl z-40 font-sans text-xs divide-y divide-border/40">
+                    {availableGodowns.map((g, idx) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => {
+                          setGodown(g);
+                          setShowGodownSuggestions(false);
+                          if (packingTypeInputRef.current) packingTypeInputRef.current.focus();
+                          else quantityInputRef.current?.focus();
+                        }}
+                        className={`w-full text-left px-3 py-2 hover:bg-secondary/60 flex items-center justify-between gap-2 transition-colors ${idx === godownSuggestionIdx ? 'bg-primary/15 font-bold text-primary border-l-4 border-l-primary' : ''}`}
+                        data-active={idx === godownSuggestionIdx}
+                      >
+                        <span className="font-semibold text-foreground whitespace-nowrap">Godown {g}</span>
+                        <span className="font-mono text-muted-foreground text-[10px] bg-muted/50 px-1.5 py-0.5 rounded border border-border/50">
+                          {(activeProduct?.godownStocks?.[g] || 0)} {activeProduct?.unit || "u"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Packing Type */}
+              <div className="col-span-6 sm:col-span-2">
+                <label className="block text-[10px] font-mono text-blue-600 dark:text-blue-400 mb-1 uppercase font-bold flex items-center gap-1 truncate">
+                  📦 Packing
                 </label>
                 {availablePackingTypes.length > 0 ? (
                   <select
@@ -5573,9 +5605,9 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                         quantityInputRef.current?.focus();
                       }
                     }}
-                    className="w-full px-3 py-2.5 border border-blue-500/40 rounded-xl bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                    className="w-full px-2 py-2 border border-blue-500/40 rounded-xl bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                   >
-                    <option value="">-- Select Master Packing --</option>
+                    <option value="">-- Select --</option>
                     {availablePackingTypes.map((pt, idx) => {
                       let pVal: number | string | undefined = undefined;
                       if (activeProduct) {
@@ -5601,15 +5633,15 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                         quantityInputRef.current?.focus();
                       }
                     }}
-                    placeholder="Enter packing..."
-                    className="w-full px-3 py-2.5 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Packing..."
+                    className="w-full px-2 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 )}
               </div>
 
-              {/* Increased size for Quantity */}
-              <div className="sm:col-span-2">
-                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">3. Quantity</label>
+              {/* Quantity */}
+              <div className="col-span-4 sm:col-span-1">
+                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold truncate">3. Qty</label>
                 <input
                   ref={quantityInputRef}
                   type="number"
@@ -5618,20 +5650,17 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                   onChange={e => setQuantity(e.target.value)}
                   onKeyDown={e => handleKeyDown(e, transactionType === "delivery_note" ? itemExpiryDateInputRef : rateInputRef)}
                   placeholder="Qty..."
-                  className="w-full px-3.5 py-2.5 border border-border rounded-xl bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-bold"
+                  className="w-full px-2 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-bold"
                 />
               </div>
 
               {/* Rate & GST % Hidden on Delivery Note */}
               {transactionType !== "delivery_note" && (
                 <>
-                  {/* Increased size for Rate */}
-                  <div className="sm:col-span-2">
+                  {/* Rate */}
+                  <div className="col-span-4 sm:col-span-1">
                     <div className="flex justify-between items-center mb-1">
-                      <label className="block text-[10px] font-mono text-muted-foreground uppercase font-bold">4. Rate (INR)</label>
-                      {activeProduct && (
-                        <span className="text-[9px] font-mono text-emerald-600 font-bold" title="Master default fixed rate">Std: ₹{activeProduct.sellPrice}</span>
-                      )}
+                      <label className="block text-[10px] font-mono text-muted-foreground uppercase font-bold truncate">4. Rate</label>
                     </div>
                     <input
                       ref={rateInputRef}
@@ -5645,14 +5674,14 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                           gstPercentInputRef.current?.focus();
                         }
                       }}
-                      placeholder={activeProduct ? `Rate: ${activeProduct.sellPrice}` : "Rate..."}
-                      className="w-full px-3.5 py-2.5 border border-border rounded-xl bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-bold"
+                      placeholder={activeProduct ? `₹${activeProduct.sellPrice}` : "Rate"}
+                      className="w-full px-2 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-bold"
                     />
                   </div>
 
-                  {/* Increased size for GST % */}
-                  <div className="sm:col-span-1">
-                    <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">GST %</label>
+                  {/* GST % */}
+                  <div className="col-span-4 sm:col-span-1">
+                    <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold truncate">GST%</label>
                     <select
                       ref={gstPercentInputRef}
                       value={gstPercent}
@@ -5663,7 +5692,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                           itemExpiryDateInputRef.current?.focus();
                         }
                       }}
-                      className="w-full px-2 py-2.5 border border-border rounded-xl bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-bold"
+                      className="w-full px-1 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-bold"
                     >
                       <option value="5">5%</option>
                       <option value="8">8%</option>
@@ -5675,9 +5704,9 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                 </>
               )}
 
-              {/* Expanded size for Expiry Date */}
-              <div className={`${transactionType === "delivery_note" ? "sm:col-span-3" : "sm:col-span-2"}`}>
-                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold">Expiry Date</label>
+              {/* Expiry Date */}
+              <div className="col-span-6 sm:col-span-1">
+                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold truncate">Expiry</label>
                 <DDMMYYYYDateInput
                   inputRef={itemExpiryDateInputRef}
                   value={itemExpiryDate}
@@ -5688,8 +5717,18 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                       handleAddItem();
                     }
                   }}
-                  className="w-full px-3 py-2.5 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold"
+                  className="w-full px-1.5 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold"
                 />
+              </div>
+
+              {/* Add Item Button */}
+              <div className="col-span-6 sm:col-span-1">
+                <button
+                  type="submit"
+                  className="w-full py-2 px-2 bg-primary hover:bg-primary/90 text-primary-foreground font-mono font-bold text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-1 uppercase tracking-wider"
+                >
+                  <Plus size={14} /> Add
+                </button>
               </div>
             </form>
           </div>
@@ -5913,8 +5952,8 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
           </div>
         </div>
 
-        {/* Right Side: Voice Billing Assistant */}
-        <div className="lg:col-span-2 no-print">
+        {/* Right Side: Voice Billing Assistant - Compact Decreased Size */}
+        <div className="xl:col-span-2 no-print">
           <VoiceBillingAssistant
             type="out"
             products={products}
@@ -6305,12 +6344,23 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
     return ["M", "N", "O", "P", "Q", "R"] as Godown[];
   }, [activeProduct]);
 
-  // Autocomplete suggestions (Only shows when user types in product search)
+  // Autocomplete suggestions (Shows all products on focus/blank, or matches starting/containing string)
+  // Suggestions for autocomplete product (Shows all products sorted alphabetically on focus/blank, or matches starting/containing string)
   const suggestions = useMemo(() => {
-    if (!productSearch.trim()) return [];
-    return products
-      .filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()))
-      .sort((a, b) => a.stock - b.stock);
+    const list = products || [];
+    if (!productSearch.trim()) {
+      return [...list].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    }
+    const q = productSearch.toLowerCase().trim();
+    const startsWith = list.filter(p => p && p.name && p.name.toLowerCase().startsWith(q))
+                           .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    const includes = list.filter(p => p && p.name && !p.name.toLowerCase().startsWith(q) && (
+      p.name.toLowerCase().includes(q) ||
+      (p.category && p.category.toLowerCase().includes(q)) ||
+      (p.itemCode && p.itemCode.toLowerCase().includes(q)) ||
+      (p.unit && p.unit.toLowerCase().includes(q))
+    )).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    return [...startsWith, ...includes];
   }, [productSearch, products]);
 
   // Autofill rate and godown on product change
@@ -6356,29 +6406,21 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
   const handleProductSearchKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      if (!showSuggestions && productSearch.trim()) {
+      if (!showSuggestions) {
         setShowSuggestions(true);
         setSuggestionIdx(0);
       } else if (suggestions.length > 0) {
         const nextIdx = Math.min(suggestions.length - 1, suggestionIdx + 1);
         setSuggestionIdx(nextIdx);
-        if (suggestions[nextIdx]) {
-          setProductId(suggestions[nextIdx].id);
-          setRate(String(suggestions[nextIdx].buyPrice));
-        }
       }
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      if (!showSuggestions && productSearch.trim()) {
+      if (!showSuggestions) {
         setShowSuggestions(true);
         setSuggestionIdx(suggestions.length - 1);
       } else if (suggestions.length > 0) {
         const nextIdx = Math.max(0, suggestionIdx - 1);
         setSuggestionIdx(nextIdx);
-        if (suggestions[nextIdx]) {
-          setProductId(suggestions[nextIdx].id);
-          setRate(String(suggestions[nextIdx].buyPrice));
-        }
       }
     } else if (e.key === "Enter") {
       e.preventDefault();
@@ -6386,7 +6428,8 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
         const selected = suggestions[suggestionIdx] || suggestions[0];
         handleSelectSuggestion(selected);
       } else {
-        godownInputRef.current?.focus();
+        if (godownInputRef.current) godownInputRef.current.focus();
+        else if (quantityInputRef.current) quantityInputRef.current.focus();
       }
     } else if (e.key === "Escape") {
       setShowSuggestions(false);
@@ -6406,7 +6449,10 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
     setGodown(getBestGodownForProduct(prod));
 
     // Focus godown selector next
-    godownInputRef.current?.focus();
+    setTimeout(() => {
+      if (godownInputRef.current) godownInputRef.current.focus();
+      else if (quantityInputRef.current) quantityInputRef.current.focus();
+    }, 50);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, nextRef: React.RefObject<any>) => {
@@ -6641,10 +6687,10 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
         
-        {/* Left Side: Table & inputs */}
-        <div className="lg:col-span-3 space-y-4 min-h-[500px] flex flex-col">
+        {/* Left Side: Table & inputs - Expanded Big Space */}
+        <div className="xl:col-span-10 space-y-4 min-h-[500px] flex flex-col">
           
           {/* Top Row: Invoice Header (left) & Total Panel (right) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-card border border-border p-4 rounded-xl shadow-sm">
@@ -6825,102 +6871,48 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
             </div>
           </div>
 
-          {/* Product Quick-Add Row */}
+          {/* Product Quick-Add Row - NO SCROLLBAR, BIG SPACE */}
           <div className="bg-card border border-border p-4 rounded-xl shadow-sm space-y-3">
-            <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest font-bold border-b border-border/50 pb-1.5">Add Acquisition Line</div>
+            <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest font-bold border-b border-border/50 pb-1.5 flex justify-between items-center">
+              <span>Add Acquisition Line</span>
+              <span className="text-[9px] text-muted-foreground font-normal">Use [Arrow Keys] + [Enter] to select & jump</span>
+            </div>
             
-            <form onSubmit={handleAddItem} className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-              <div className="sm:col-span-3 relative">
-                <label className="block text-[9px] font-mono text-muted-foreground mb-1 uppercase">Product Search</label>
-                {products.length > 0 ? (
-                  <select
-                    ref={productSearchRef as any}
-                    value={productId}
-                    onChange={e => {
-                      const selId = e.target.value;
-                      setProductId(selId);
-                      const prod = products.find(p => p.id === selId);
-                      if (prod) {
-                        setProductSearch(prod.name);
-                        setRate(String(prod.buyPrice));
-                      }
-                    }}
-                    onKeyDown={e => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        if (godownInputRef.current) godownInputRef.current.focus();
-                        else if (quantityInputRef.current) quantityInputRef.current.focus();
-                      }
-                    }}
-                    className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer font-semibold"
-                  >
-                    <option value="">-- Select Product --</option>
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({p.unit}) - ₹{p.buyPrice}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    ref={productSearchRef}
-                    value={productSearch}
-                    onChange={e => {
-                      const val = e.target.value;
-                      setProductSearch(val);
-                      setSuggestionIdx(0);
-                    }}
-                    placeholder="Type product name..."
-                    className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                )}
+            <form onSubmit={handleAddItem} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end w-full text-xs font-mono">
+              {/* Product Search Input */}
+              <div className="col-span-12 sm:col-span-4 relative">
+                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold truncate">1. Search Product</label>
+                <input
+                  ref={productSearchRef}
+                  type="text"
+                  value={productSearch}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  onChange={e => {
+                    setProductSearch(e.target.value);
+                    setShowSuggestions(true);
+                    setSuggestionIdx(0);
+                  }}
+                  onKeyDown={handleProductSearchKeyDown}
+                  placeholder="Type product name (e.g. A)..."
+                  className="w-full px-3 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-ring shadow-sm"
+                />
                 {showSuggestions && suggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 mt-1 max-h-72 overflow-y-auto bg-card border border-border rounded-xl shadow-2xl z-40 font-sans text-sm divide-y divide-border/40">
-                    {suggestions.map((p, idx) => (
+                  <div className="absolute left-0 right-0 mt-1 max-h-64 overflow-y-auto bg-card border border-border rounded-xl shadow-2xl z-50 font-sans text-xs divide-y divide-border/40 min-w-[220px]">
+                    {[...suggestions].sort((a,b) => a.name.localeCompare(b.name)).map((p, idx) => (
                       <button
                         key={p.id}
                         type="button"
+                        onMouseDown={e => e.preventDefault()}
                         onClick={() => handleSelectSuggestion(p)}
-                        className={`w-full text-left px-4 py-3 hover:bg-secondary/70 transition-colors font-extrabold text-sm text-foreground whitespace-nowrap ${
-                          idx === suggestionIdx ? 'bg-primary/15 font-extrabold text-primary border-l-4 border-l-primary' : ''
+                        className={`w-full text-left px-3.5 py-2.5 hover:bg-secondary/70 transition-colors flex items-center justify-between gap-2 font-bold ${
+                          idx === suggestionIdx ? 'bg-primary/20 font-extrabold text-primary border-l-4 border-l-primary' : 'text-foreground'
                         }`}
                         data-active={idx === suggestionIdx}
                       >
-                        {p.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="sm:col-span-2 relative">
-                <label className="block text-[9px] font-mono text-muted-foreground mb-1 uppercase">Godown</label>
-                <input
-                  ref={godownInputRef}
-                  value={godown ? `Godown ${godown} (${(activeProduct?.godownStocks?.[godown] || 0)} ${activeProduct?.unit || "units"})` : ""}
-                  onFocus={() => setShowGodownSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowGodownSuggestions(false), 200)}
-                  onKeyDown={handleGodownKeyDown}
-                  onChange={() => {}}
-                  className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer font-semibold"
-                />
-                {showGodownSuggestions && availableGodowns.length > 0 && (
-                  <div className="absolute left-0 mt-1 min-w-[220px] max-w-[280px] max-h-56 overflow-y-auto bg-card border border-border rounded-lg shadow-xl z-30 font-sans text-xs divide-y divide-border/40">
-                    {availableGodowns.map((g, idx) => (
-                      <button
-                        key={g}
-                        type="button"
-                        onClick={() => {
-                          setGodown(g);
-                          setShowGodownSuggestions(false);
-                          quantityInputRef.current?.focus();
-                        }}
-                        className={`w-full text-left px-3.5 py-2.5 hover:bg-secondary/60 flex items-center justify-between gap-3 transition-colors ${idx === godownSuggestionIdx ? 'bg-primary/10 font-bold text-primary' : ''}`}
-                        data-active={idx === godownSuggestionIdx}
-                      >
-                        <span className="font-semibold text-foreground whitespace-nowrap">Godown {g}</span>
-                        <span className="font-mono text-muted-foreground text-xs whitespace-nowrap bg-muted/50 px-2 py-0.5 rounded border border-border/50">
-                          {(activeProduct?.godownStocks?.[g] || 0)} {activeProduct?.unit || "units"}
+                        <span className="truncate">{p.name} ({p.unit})</span>
+                        <span className="font-mono text-[10px] text-blue-600 bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/20 flex-shrink-0">
+                          ₹{p.buyPrice || 0}
                         </span>
                       </button>
                     ))}
@@ -6928,10 +6920,46 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
                 )}
               </div>
 
-              <div className="sm:col-span-2">
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-[9px] font-mono text-muted-foreground uppercase font-semibold">Qty</label>
-                </div>
+              {/* Godown */}
+              <div className="col-span-6 sm:col-span-2 relative">
+                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold truncate">2. Godown</label>
+                <input
+                  ref={godownInputRef}
+                  value={godown ? `Godown ${godown} (${(activeProduct?.godownStocks?.[godown] || 0)} ${activeProduct?.unit || "u"})` : ""}
+                  onFocus={() => setShowGodownSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowGodownSuggestions(false), 200)}
+                  onKeyDown={handleGodownKeyDown}
+                  onChange={() => {}}
+                  className="w-full px-2.5 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer font-semibold"
+                />
+                {showGodownSuggestions && availableGodowns.length > 0 && (
+                  <div className="absolute left-0 mt-1 min-w-[180px] max-h-56 overflow-y-auto bg-card border border-border rounded-xl shadow-2xl z-40 font-sans text-xs divide-y divide-border/40">
+                    {availableGodowns.map((g, idx) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => {
+                          setGodown(g);
+                          setShowGodownSuggestions(false);
+                          quantityInputRef.current?.focus();
+                        }}
+                        className={`w-full text-left px-3 py-2 hover:bg-secondary/60 flex items-center justify-between gap-2 transition-colors ${idx === godownSuggestionIdx ? 'bg-primary/15 font-bold text-primary border-l-4 border-l-primary' : ''}`}
+                        data-active={idx === godownSuggestionIdx}
+                      >
+                        <span className="font-semibold text-foreground whitespace-nowrap">Godown {g}</span>
+                        <span className="font-mono text-muted-foreground text-[10px] bg-muted/50 px-1.5 py-0.5 rounded border border-border/50">
+                          {(activeProduct?.godownStocks?.[g] || 0)} {activeProduct?.unit || "u"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Quantity */}
+              <div className="col-span-4 sm:col-span-1">
+                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold truncate">3. Qty</label>
                 <input
                   ref={quantityInputRef}
                   type="number"
@@ -6939,17 +6967,15 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
                   value={quantity}
                   onChange={e => setQuantity(e.target.value)}
                   onKeyDown={e => handleKeyDown(e, rateInputRef)}
-                  placeholder="Enter Qty"
-                  className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-semibold"
+                  placeholder="Qty..."
+                  className="w-full px-2 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-bold"
                 />
               </div>
 
-              <div className="sm:col-span-2">
+              {/* Rate */}
+              <div className="col-span-4 sm:col-span-2">
                 <div className="flex justify-between items-center mb-1">
-                  <label className="block text-[9px] font-mono text-muted-foreground uppercase font-semibold">Rate (INR)</label>
-                  {activeProduct && (
-                    <span className="text-[9px] font-mono text-blue-600 font-bold" title="Master default fixed rate">Std: ₹{activeProduct.buyPrice}</span>
-                  )}
+                  <label className="block text-[10px] font-mono text-muted-foreground uppercase font-bold truncate">4. Rate (₹)</label>
                 </div>
                 <input
                   ref={rateInputRef}
@@ -6963,13 +6989,14 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
                       gstPercentInputRef.current?.focus();
                     }
                   }}
-                  placeholder={activeProduct ? `Fixed: ${activeProduct.buyPrice}` : "Price"}
-                  className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-semibold"
+                  placeholder={activeProduct ? `₹${activeProduct.buyPrice}` : "Rate"}
+                  className="w-full px-2 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-bold"
                 />
               </div>
 
-              <div className="sm:col-span-1">
-                <label className="block text-[9px] font-mono text-muted-foreground mb-1 uppercase font-semibold">GST %</label>
+              {/* GST % */}
+              <div className="col-span-4 sm:col-span-1">
+                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold truncate">GST %</label>
                 <select
                   ref={gstPercentInputRef}
                   value={gstPercent}
@@ -6980,7 +7007,7 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
                       itemExpiryDateInputRef.current?.focus();
                     }
                   }}
-                  className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-semibold"
+                  className="w-full px-1 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring font-mono font-bold"
                 >
                   <option value="5">5%</option>
                   <option value="8">8%</option>
@@ -6990,8 +7017,9 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
                 </select>
               </div>
 
-              <div className="sm:col-span-2">
-                <label className="block text-[9px] font-mono text-muted-foreground mb-1 uppercase font-semibold">Expiry Date</label>
+              {/* Expiry Date */}
+              <div className="min-w-[125px] flex-[1.5]">
+                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase font-bold truncate">Expiry Date</label>
                 <DDMMYYYYDateInput
                   inputRef={itemExpiryDateInputRef}
                   value={itemExpiryDate}
@@ -7002,8 +7030,18 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
                       handleAddItem();
                     }
                   }}
-                  className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs font-mono"
+                  className="w-full px-2.5 py-2 border border-border rounded-xl bg-input-background text-foreground text-xs font-mono font-bold"
                 />
+              </div>
+
+              {/* Add Item Button */}
+              <div className="min-w-[75px] flex-shrink-0">
+                <button
+                  type="submit"
+                  className="w-full py-2 px-3 bg-primary hover:bg-primary/90 text-primary-foreground font-mono font-bold text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-1 uppercase tracking-wider"
+                >
+                  <Plus size={14} /> Add
+                </button>
               </div>
             </form>
           </div>
@@ -7193,8 +7231,8 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
           </div>
         </div>
 
-        {/* Right Side: Voice Billing Assistant */}
-        <div className="lg:col-span-2 no-print">
+        {/* Right Side: Voice Billing Assistant - Compact Decreased Size */}
+        <div className="xl:col-span-2 no-print">
           <VoiceBillingAssistant
             type="in"
             products={products}

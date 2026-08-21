@@ -12,7 +12,11 @@
       "packingType": "Standard",
       "packingTypes": [
         "Standard"
-      ]
+      ],
+      "godownStocks": {
+        "A": 0
+      },
+      "stock": 0
     }
   ],
   "customers": [
@@ -539,8 +543,100 @@
           "amount": 168
         }
       ]
+    },
+    {
+      "id": "e_27y5dis",
+      "productId": "p1_swz",
+      "godown": "A",
+      "type": "out",
+      "quantity": 32,
+      "pricePerUnit": 150,
+      "date": "2026-08-19",
+      "partner": "KENSA MALDIVES PVT LTD",
+      "note": "Sales Quotation",
+      "subType": "quotation",
+      "paymentType": "credit",
+      "partnerAddress": "Rising Sun, Ground Floor Finifenmaa Goali, Maldives 20014",
+      "partnerPhone": "+9607896188",
+      "partnerGST": "1138601GST501",
+      "gstPercent": 8,
+      "subTotal": 4800,
+      "grandTotal": 5184,
+      "invoiceNo": "QTN-260819-0001",
+      "items": [
+        {
+          "productId": "p1_swz",
+          "godown": "A",
+          "quantity": 32,
+          "pricePerUnit": 150,
+          "gstPercent": 8,
+          "subTotal": 4800,
+          "grandTotal": 5184
+        }
+      ],
+      "payments": [
+        {
+          "method": "credit",
+          "amount": 5184
+        }
+      ]
+    },
+    {
+      "id": "e_uz7rer8",
+      "productId": "p1_swz",
+      "godown": "A",
+      "type": "in",
+      "quantity": 100,
+      "pricePerUnit": 100,
+      "expiryDate": "12/10-26",
+      "date": "2026-08-19",
+      "partner": "rasvi",
+      "note": "Purchase Order",
+      "subType": "purchase_order",
+      "paymentType": "cash",
+      "partnerAddress": "queen palace, north street, chennai, tamil nadu",
+      "partnerPhone": "8667677179",
+      "partnerGST": "123654789632541",
+      "gstPercent": 8,
+      "subTotal": 10000,
+      "grandTotal": 10800,
+      "invoiceNo": "PO-260819-0001",
+      "items": [
+        {
+          "productId": "p1_swz",
+          "godown": "A",
+          "quantity": 100,
+          "pricePerUnit": 100,
+          "gstPercent": 8,
+          "subTotal": 10000,
+          "grandTotal": 10800,
+          "expiryDate": "12/10-26"
+        }
+      ],
+      "payments": [
+        {
+          "method": "cash",
+          "amount": 10800
+        }
+      ]
     }
   ],
   "vouchers": [],
-  "spoilages": []
+  "spoilages": [
+    {
+      "id": "spl_jcdmzj9",
+      "spoilageNo": "SPL-260819-0001",
+      "productId": "p1_swz",
+      "productName": "pista",
+      "godown": "A",
+      "quantity": 10,
+      "unit": "kg",
+      "unitCost": 100,
+      "totalLoss": 1000,
+      "date": "2026-08-19",
+      "reason": "Moisture Damage & Rot",
+      "loggedBy": "Warehouse Inspector",
+      "notes": "sankjmnsaknk\n"
+    }
+  ]
 }
