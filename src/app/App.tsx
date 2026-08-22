@@ -5333,9 +5333,9 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-card border border-border p-4 rounded-xl shadow-sm">
 
             {/* Invoice Header Details */}
-            <div className="md:col-span-2 grid grid-cols-2 gap-3">
+            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase tracking-wider">Customer Account</label>
+                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase tracking-wider font-bold">Customer Account</label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <input
@@ -5396,7 +5396,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
               </div>
 
               <div>
-                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase tracking-wider">Billing Date</label>
+                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase tracking-wider font-bold">Billing Date</label>
                 <DDMMYYYYDateInput
                   inputRef={dateInputRef}
                   value={date}
@@ -5411,15 +5411,39 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                 />
               </div>
 
+              <div>
+                <label className="block text-[10px] font-mono text-emerald-600 dark:text-emerald-400 mb-1 uppercase tracking-wider font-bold flex items-center gap-1">
+                  <User size={12} className="text-emerald-500" />
+                  <span>Sales Person / Agent</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    list="salesperson-datalist-top"
+                    value={salesPerson}
+                    onChange={e => setSalesPerson(e.target.value)}
+                    placeholder="Type or select staff..."
+                    className="w-full px-3 py-1.5 border border-emerald-500/30 rounded-lg bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                  <datalist id="salesperson-datalist-top">
+                    {employeesList.map(emp => (
+                      <option key={emp.id} value={emp.employeeName || emp.username}>
+                        {emp.employeeName || emp.username} ({emp.role || "Staff"})
+                      </option>
+                    ))}
+                  </datalist>
+                </div>
+              </div>
+
               {activeCustomer && (
-                <div className="col-span-2 p-2 bg-secondary/15 rounded-lg border text-[11px] flex justify-between items-center gap-4">
+                <div className="sm:col-span-3 p-2 bg-secondary/15 rounded-lg border text-[11px] flex justify-between items-center gap-4">
                   <div><span className="text-muted-foreground font-mono">Address: </span><span className="font-semibold">{activeCustomer.address || "N/A"}</span></div>
                   <div><span className="text-muted-foreground font-mono">GSTIN: </span><span className="font-mono text-primary font-bold">{activeCustomer.gstNo || "N/A"}</span></div>
                 </div>
               )}
 
               {transactionType === "billing" ? (
-                <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <>
                   <div>
                     <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase tracking-wider font-bold text-indigo-600 flex items-center justify-between">
                       <span className="flex items-center gap-1"><Sparkles size={11} /> Pull Quotation</span>
@@ -5481,11 +5505,11 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                       })}
                     </select>
                   </div>
-                </div>
+                </>
               ) : null}
 
               <div>
-                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase tracking-wider">Ledger Note</label>
+                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase tracking-wider font-bold">Ledger Note</label>
                 <input
                   ref={noteInputRef}
                   value={note}
