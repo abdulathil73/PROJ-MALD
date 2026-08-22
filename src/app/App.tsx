@@ -165,6 +165,8 @@ interface StockEntry {
   deliveryNoteNo?: string;
   poNo?: string;
   grnNo?: string;
+  salesPerson?: string;
+  purchasePerson?: string;
   
   items?: InvoiceItem[];
   payments?: { method: "cash" | "card" | "transfer" | "credit"; amount: number }[];
@@ -1360,6 +1362,14 @@ function InvoiceModal({
               )}
               {invoice.poNo && (
                 <div className="text-[10px] font-mono text-purple-800 font-bold">Purchase Order #: <span className="underline">{invoice.poNo}</span></div>
+              )}
+
+              {/* Sales Person & Purchase Person Details */}
+              {invoice.salesPerson && (
+                <div className="text-[10px] font-mono text-emerald-900 font-bold">Sales Executive: <span className="underline">{invoice.salesPerson}</span></div>
+              )}
+              {invoice.purchasePerson && (
+                <div className="text-[10px] font-mono text-amber-900 font-bold">Purchase Officer: <span className="underline">{invoice.purchasePerson}</span></div>
               )}
 
               <div className="text-[10px] font-mono text-gray-600">Payment Method: <span className="font-bold text-black uppercase">{
