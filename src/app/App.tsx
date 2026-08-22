@@ -6098,6 +6098,21 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
     headerAccent = "border-l-4 border-l-red-500 pl-3";
   }
   const [selectedSupplierId, setSelectedSupplierId] = useState("");
+  const [purchasePerson, setPurchasePerson] = useState("");
+  const [employeesList, setEmployeesList] = useState<{ id: string; employeeName?: string; username: string; role: string }[]>([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("master_users");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setEmployeesList(parsed);
+      }
+    } catch (err) {
+      console.error("Failed to load employees for purchase person datalist", err);
+    }
+  }, []);
+
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [note, setNote] = useState("");
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
@@ -6135,6 +6150,8 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
       setSupplierSearch(activeEditRecord.partner);
     }
 
+    if (activeEditRecord.salesPerson) setPurchasePerson(activeEditRecord.salesPerson);
+    if (activeEditRecord.purchasePerson) setPurchasePerson(activeEditRecord.purchasePerson);
     if (activeEditRecord.date) setDate(activeEditRecord.date);
     if (activeEditRecord.paymentType) setPaymentType(activeEditRecord.paymentType === "credit" ? "credit" : "cash");
 
@@ -6658,6 +6675,8 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
       type: (transactionType === "debit_note" ? "out" : "in") as const,
       date,
       partner: activeSupplier ? activeSupplier.name : supplierSearch.trim(),
+      salesPerson: purchasePerson.trim() || undefined,
+      purchasePerson: purchasePerson.trim() || undefined,
       note: note || (transactionType === "purchase_order" ? "Purchase Order" : transactionType === "grn" ? "GRN Receive" : transactionType === "debit_note" ? "Debit Note Return" : "Multi-product Purchase"),
       paymentType: isSplitPayment 
         ? (splitPayments.credit > 0 ? "credit" as const : (splitPayments.cash > 0 ? "cash" as const : paymentType))
@@ -6677,6 +6696,7 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
     if (entry) {
       setCartItems([]);
       setNote("");
+      setPurchasePerson("");
       setSelectedSupplierId("");
       setSupplierSearch("");
       setSplitPayments({ cash: 0, card: 0, transfer: 0, credit: 0 });
