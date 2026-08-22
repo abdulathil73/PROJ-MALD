@@ -4270,6 +4270,21 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
   const [historyPaymentFilter, setHistoryPaymentFilter] = useState("all");
 
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [salesPerson, setSalesPerson] = useState("");
+  const [employeesList, setEmployeesList] = useState<{ id: string; employeeName?: string; username: string; role: string }[]>([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("master_users");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setEmployeesList(parsed);
+      }
+    } catch (err) {
+      console.error("Failed to load employees for sales person datalist", err);
+    }
+  }, []);
+
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [dueDate, setDueDate] = useState(() => {
     const d = new Date();
@@ -4308,6 +4323,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
       setCustomerSearch(activeEditRecord.partner);
     }
 
+    if (activeEditRecord.salesPerson) setSalesPerson(activeEditRecord.salesPerson);
     if (activeEditRecord.date) setDate(activeEditRecord.date);
     if (activeEditRecord.paymentType) setPaymentType(activeEditRecord.paymentType);
 
@@ -4994,6 +5010,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
       type: (transactionType === "credit_note" ? "in" : "out") as const,
       date,
       partner: activeCustomer ? activeCustomer.name : customerSearch.trim(),
+      salesPerson: salesPerson.trim() || undefined,
       note: note || (transactionType === "quotation" ? "Sales Quotation" : transactionType === "delivery_note" ? "Delivery Note" : transactionType === "credit_note" ? "Credit Note Return" : "Multi-product Sale"),
       paymentType: isSplitPayment 
         ? (splitPayments.credit > 0 ? "credit" as const : (splitPayments.cash > 0 ? "cash" as const : paymentType))
@@ -5013,6 +5030,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
     if (entry) {
       setCartItems([]);
       setNote("");
+      setSalesPerson("");
       setSelectedCustomerId("");
       setCustomerSearch("");
       setSplitPayments({ cash: 0, card: 0, transfer: 0, credit: 0 });
