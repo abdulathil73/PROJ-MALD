@@ -336,12 +336,21 @@ export default function MasterConsoleView({
   // Dynamic list of employee roles with LocalStorage persistence
   const [availableRoles, setAvailableRoles] = useState<string[]>(() => {
     const saved = localStorage.getItem("master_employee_roles");
+    const defaultRoles = [
+      "Sales Person", "Purchase Person", "Data entry", "Cashier", "Accountant", "Manager", "General Manager", "Owner", "Worker", "Staff", "Admin", "Salesman", "Driver", "Supervisor", "Warehouse Staff", "Security"
+    ];
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const merged = [...parsed];
+          if (!merged.includes("Sales Person")) merged.unshift("Sales Person");
+          if (!merged.includes("Purchase Person")) merged.unshift("Purchase Person");
+          return merged;
+        }
       } catch (e) {}
     }
-    return ["Data entry", "Cashier", "Accountant", "Manager", "General Manager", "Owner", "Worker", "Staff", "Admin", "Salesman", "Driver", "Supervisor", "Warehouse Staff", "Security"];
+    return defaultRoles;
   });
 
   useEffect(() => {
@@ -692,7 +701,7 @@ export default function MasterConsoleView({
           password: autoPassword,
           role: userForm.role || "Staff",
           totalSalary: (userForm.basicSalary || 0) + (userForm.allowances || 0) + (userForm.overtime || 0),
-          allowedFeatures: userForm.allowedFeatures && userForm.allowedFeatures.length > 0 ? userForm.allowedFeatures : ALL_WEBSITE_FEATURES.map(f => f.id)
+          allowedFeatures: Array.isArray(userForm.allowedFeatures) ? userForm.allowedFeatures : ALL_WEBSITE_FEATURES.map(f => f.id)
         };
 
         setUsers(prev => {
@@ -722,7 +731,7 @@ export default function MasterConsoleView({
             username: userForm.username ? userForm.username.trim().toLowerCase() : x.username,
             password: userForm.password ? userForm.password.trim() : (x.password || "123"),
             totalSalary: (userForm.basicSalary || 0) + (userForm.allowances || 0) + (userForm.overtime || 0),
-            allowedFeatures: userForm.allowedFeatures && userForm.allowedFeatures.length > 0 ? userForm.allowedFeatures : x.allowedFeatures
+            allowedFeatures: Array.isArray(userForm.allowedFeatures) ? userForm.allowedFeatures : (x.allowedFeatures || [])
           } : x);
           localStorage.setItem("master_users", JSON.stringify(nextList));
           return nextList;
@@ -2055,8 +2064,146 @@ export default function MasterConsoleView({
                         />
                       </div>
 
+                    </div>
 
+                    {/* ── Feature Responsibilities & Side Navigation Permissions Checkbox Grid ── */}
+                    <div className="border border-border/80 bg-card/80 rounded-xl p-3.5 space-y-3 mt-4 text-left shadow-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/60 pb-2.5">
+                        <div>
+                          <div className="text-xs font-mono font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+                            <ShieldCheck size={16} className="text-emerald-500" />
+                            <span>Side Navigation Responsibilities & Feature Access Permissions</span>
+                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                              {(userForm.allowedFeatures || []).length} / {ALL_WEBSITE_FEATURES.length} Features Enabled
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                            Tick the feature checkboxes below. Only ticked features will be visual in the side navigation bar when this user logs in with their User ID and Password.
+                          </p>
+                        </div>
 
+                        {/* Quick Presets */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => setUserForm(prev => ({ ...prev, allowedFeatures: ALL_WEBSITE_FEATURES.map(f => f.id) }))}
+                            className="px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded text-[9px] font-mono font-bold transition-all cursor-pointer"
+                          >
+                            ✓ Select All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setUserForm(prev => ({ ...prev, allowedFeatures: [] }))}
+                            className="px-2 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 rounded text-[9px] font-mono font-bold transition-all cursor-pointer"
+                          >
+                            ✗ Deselect All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setUserForm(prev => ({
+                              ...prev,
+                              role: "Sales Person",
+                              responsibility: "Sales Billing, Quotations, Proforma & Customer Directory",
+                              allowedFeatures: ["sales-billing", "sales-quotation", "sales-proforma", "sales-delivery", "sales-credit-note", "sales-pos", "inventory-items", "master-accounts-customer"]
+                            }))}
+                            className="px-2 py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30 rounded text-[9px] font-mono font-bold transition-all cursor-pointer"
+                          >
+                            🏷️ Preset: Sales Person
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setUserForm(prev => ({
+                              ...prev,
+                              role: "Purchase Person",
+                              responsibility: "Purchase Orders, Inward GRN Bills, Supplier Debit Notes & Supplier Directory",
+                              allowedFeatures: ["purchase-order", "purchase-bill", "inventory-items", "inventory-godowns", "inventory-spoilage", "costing", "master-accounts-supplier"]
+                            }))}
+                            className="px-2 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded text-[9px] font-mono font-bold transition-all cursor-pointer"
+                          >
+                            🛍️ Preset: Purchase Person
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Categorized Checkbox Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
+                        {Array.from(new Set(ALL_WEBSITE_FEATURES.map(f => f.category))).map(cat => {
+                          const catFeatures = ALL_WEBSITE_FEATURES.filter(f => f.category === cat);
+                          const selectedCatCount = catFeatures.filter(f => userForm.allowedFeatures?.includes(f.id)).length;
+                          const isAllCatSelected = selectedCatCount === catFeatures.length;
+
+                          return (
+                            <div key={cat} className="bg-secondary/20 border border-border/70 rounded-xl p-2.5 space-y-2">
+                              <div className="flex items-center justify-between border-b border-border/40 pb-1.5">
+                                <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                                  <span>{cat}</span>
+                                  <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-bold ${selectedCatCount > 0 ? "bg-emerald-500/20 text-emerald-600" : "bg-muted text-muted-foreground"}`}>
+                                    {selectedCatCount}/{catFeatures.length}
+                                  </span>
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setUserForm(prev => {
+                                      const current = prev.allowedFeatures || [];
+                                      const catIds = catFeatures.map(f => f.id);
+                                      let updated: string[];
+                                      if (isAllCatSelected) {
+                                        updated = current.filter(id => !catIds.includes(id));
+                                      } else {
+                                        updated = Array.from(new Set([...current, ...catIds]));
+                                      }
+                                      return { ...prev, allowedFeatures: updated };
+                                    });
+                                  }}
+                                  className="text-[9px] font-mono text-primary hover:underline font-semibold cursor-pointer"
+                                >
+                                  {isAllCatSelected ? "Uncheck All" : "Check All"}
+                                </button>
+                              </div>
+
+                              <div className="space-y-1.5">
+                                {catFeatures.map(feat => {
+                                  const isChecked = userForm.allowedFeatures?.includes(feat.id);
+                                  return (
+                                    <label
+                                      key={feat.id}
+                                      className={`flex items-start gap-2 p-1.5 rounded-lg border transition-all cursor-pointer select-none ${
+                                        isChecked
+                                          ? "bg-emerald-500/10 border-emerald-500/40 text-foreground"
+                                          : "bg-card/50 border-border/40 text-muted-foreground hover:bg-secondary/30"
+                                      }`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={() => {
+                                          setUserForm(prev => {
+                                            const current = prev.allowedFeatures || [];
+                                            const exists = current.includes(feat.id);
+                                            const updated = exists ? current.filter(id => id !== feat.id) : [...current, feat.id];
+                                            return { ...prev, allowedFeatures: updated };
+                                          });
+                                        }}
+                                        className="mt-0.5 w-3.5 h-3.5 accent-emerald-600 rounded cursor-pointer"
+                                      />
+                                      <div className="space-y-0.5 leading-none">
+                                        <div className="flex items-center gap-1 text-[11px] font-mono font-bold text-foreground">
+                                          <span>{feat.icon}</span>
+                                          <span>{feat.name}</span>
+                                        </div>
+                                        <div className="text-[9px] font-mono text-muted-foreground leading-tight">
+                                          {feat.description}
+                                        </div>
+                                      </div>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2 border-t border-border/30 mt-3">
                       <button
