@@ -4523,6 +4523,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
   // Focus Refs
   const partnerInputRef = useRef<HTMLInputElement>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
+  const salesPersonInputRef = useRef<HTMLInputElement>(null);
   const noteInputRef = useRef<HTMLInputElement>(null);
   const dueDateInputRef = useRef<HTMLInputElement>(null);
   const productSearchRef = useRef<HTMLInputElement>(null);
@@ -4705,7 +4706,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
           handleSelectCustomer(selected);
         }
       } else {
-        productSearchRef.current?.focus();
+        dateInputRef.current?.focus();
       }
     } else if (e.key === "Escape") {
       setShowCustomerSuggestions(false);
@@ -4716,7 +4717,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
     setSelectedCustomerId(cust.id);
     setCustomerSearch(cust.name);
     setShowCustomerSuggestions(false);
-    productSearchRef.current?.focus();
+    dateInputRef.current?.focus();
   };
 
   const availableGodowns = useMemo(() => {
@@ -5436,7 +5437,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                   onKeyDown={e => {
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      noteInputRef.current?.focus();
+                      salesPersonInputRef.current?.focus();
                     }
                   }}
                   className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring"
@@ -5450,10 +5451,17 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                 </label>
                 <div className="relative">
                   <input
+                    ref={salesPersonInputRef}
                     type="text"
                     list="salesperson-datalist-top"
                     value={salesPerson}
                     onChange={e => setSalesPerson(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        noteInputRef.current?.focus();
+                      }
+                    }}
                     placeholder="Type or select staff..."
                     className="w-full px-3 py-1.5 border border-emerald-500/30 rounded-lg bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
@@ -5548,7 +5556,11 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                   onKeyDown={e => {
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      productSearchRef.current?.focus();
+                      if (paymentType === "credit" && dueDateInputRef.current) {
+                        dueDateInputRef.current.focus();
+                      } else {
+                        productSearchRef.current?.focus();
+                      }
                     }
                   }}
                   className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring"
@@ -5562,6 +5574,12 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                     inputRef={dueDateInputRef}
                     value={dueDate}
                     onChange={setDueDate}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        productSearchRef.current?.focus();
+                      }
+                    }}
                     className="w-full px-3 py-1.5 border border-red-200 rounded-lg bg-red-50/10 text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-red-400 font-semibold"
                   />
                 </div>
@@ -6322,6 +6340,7 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
   // Focus Refs
   const partnerInputRef = useRef<HTMLInputElement>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
+  const purchasePersonInputRef = useRef<HTMLInputElement>(null);
   const noteInputRef = useRef<HTMLInputElement>(null);
   const productSearchRef = useRef<HTMLInputElement>(null);
   const godownInputRef = useRef<HTMLInputElement>(null);
@@ -6419,7 +6438,7 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
           handleSelectSupplier(selected);
         }
       } else {
-        productSearchRef.current?.focus();
+        dateInputRef.current?.focus();
       }
     } else if (e.key === "Escape") {
       setShowSupplierSuggestions(false);
@@ -6430,7 +6449,7 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
     setSelectedSupplierId(supp.id);
     setSupplierSearch(supp.name);
     setShowSupplierSuggestions(false);
-    productSearchRef.current?.focus();
+    dateInputRef.current?.focus();
   };
 
   // Details
@@ -6883,7 +6902,7 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
                   onKeyDown={e => {
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      noteInputRef.current?.focus();
+                      purchasePersonInputRef.current?.focus();
                     }
                   }}
                   className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring"
@@ -6897,8 +6916,15 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
                 </label>
                 <div className="relative">
                   <input
+                    ref={purchasePersonInputRef}
                     value={purchasePerson}
                     onChange={e => setPurchasePerson(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        noteInputRef.current?.focus();
+                      }
+                    }}
                     placeholder="Search or enter purchase rep..."
                     list="purchase-persons-list"
                     className="w-full px-3 py-1.5 border border-emerald-500/30 rounded-lg bg-input-background text-foreground text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -15101,21 +15127,30 @@ export default function App() {
     else if (featId === "sales-pos") key = "sales-pos";
     else if (featId === "purchase" || featId === "purchase-billing" || featId === "purchase-bill") key = "purchase-bill";
     else if (featId === "purchase-order" || featId === "purchase-grn") key = "purchase-order";
-    else if (featId === "purchase-debit") key = "purchase-bill";
+    else if (featId === "purchase-debit") key = "sales-debit-note";
     else if (featId === "purchase-spoilage" || featId === "inventory-spoilage") key = "inventory-spoilage";
     else if (featId === "godowns" || featId === "godown-hub" || featId === "inventory-godowns" || featId === "master-godowns") key = "inventory-godowns";
-    else if (featId === "inventory" || featId === "inventory-items") key = "inventory-items";
+    else if (featId === "inventory" || featId === "inventory-items" || featId === "master-inventory-items") key = "inventory-items";
     else if (featId === "costing" || featId.startsWith("costing-")) key = "costing";
     else if (featId === "currency" || featId === "currency-convert") key = "currency-convert";
     else if (featId === "expiry" || featId.startsWith("expiry-") || featId === "perishables") key = "expiry";
     else if (featId === "offers") key = "offers";
-    else if (featId === "vouchers" || featId === "vouchers-all" || featId === "vouchers-receipt") key = "vouchers-receipt";
+    else if (featId === "vouchers" || featId === "vouchers-all") key = "vouchers-receipt";
+    else if (featId === "vouchers-receipt") key = "vouchers-receipt";
     else if (featId === "vouchers-payment") key = "vouchers-payment";
     else if (featId === "vouchers-journal") key = "vouchers-journal";
     else if (featId === "vouchers-contra") key = "vouchers-contra";
     else if (featId === "credit-recovery") key = "credit-recovery";
-    else if (featId === "reports" || featId.startsWith("reports-") || featId === "pl") key = "reports-pnl";
-    else if (featId === "master-console" || featId.startsWith("master-")) key = featId === "master-console" ? "master-users" : featId;
+    else if (featId === "reports-pnl" || featId === "reports-pl" || featId === "pl") key = "reports-pnl";
+    else if (featId === "reports-bs") key = "reports-bs";
+    else if (featId === "reports-trial" || featId === "reports-tb") key = "reports-trial";
+    else if (featId === "reports-ledger" || featId === "reports-group" || featId === "reports-payable" || featId === "reports-receivable" || featId === "reports-outstanding" || featId === "reports-closing-stock") key = "reports-ledger";
+    else if (featId === "reports-daybook" || featId === "reports-day-book") key = "reports-daybook";
+    else if (featId === "reports-sales-person") key = "reports-sales-person";
+    else if (featId === "reports-purchase-person") key = "reports-purchase-person";
+    else if (featId === "reports-sales-purchase" || featId === "reports-all" || featId === "reports") key = "reports-pnl";
+    else if (featId === "master-console") key = "master-accounts-groups";
+    else if (featId.startsWith("master-")) key = featId;
     else if (featId === "ai") key = "dashboard";
 
     return allowed.includes(key);
