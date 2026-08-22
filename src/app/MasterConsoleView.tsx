@@ -128,6 +128,7 @@ export const ALL_WEBSITE_FEATURES: FeaturePermissionOption[] = [
   { id: "reports-daybook", name: "Daybook & Cash Flow", category: "Reports & Financials", icon: "📅", description: "Daily transactional cash/bank activity" },
   { id: "reports-sales-person", name: "Sales Person Performance Report", category: "Reports & Financials", icon: "👤", description: "Sales representative invoice totals, payments & revenue breakdown" },
   { id: "reports-purchase-person", name: "Purchase Person Procurement Report", category: "Reports & Financials", icon: "🛍️", description: "Purchasing officer GRN bills count, supplier payments & order totals" },
+  { id: "reports-under-cost", name: "Under-Cost Sales Report", category: "Reports & Financials", icon: "🔻", description: "Log of products sold below actual buying price (selling rate < buying rate)" },
 
   // ── 🏛️ MASTER CONSOLE ─────────────────────
   { id: "master-accounts-groups", name: "Accounting Groups Master", category: "Master Console", icon: "📁", description: "Define parent asset, liability & income groups" },

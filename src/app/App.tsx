@@ -136,6 +136,7 @@ interface InvoiceItem {
   grandTotal: number;
   expiryDate?: string;
   packingType?: string;
+  buyPrice?: number;
 }
 
 interface StockEntry {
