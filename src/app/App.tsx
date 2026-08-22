@@ -4916,6 +4916,11 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
     const subTotalVal = qtyVal * rateVal;
     const taxVal = subTotalVal * (gstVal / 100);
 
+    if (activeProduct && transactionType !== "delivery_note" && rateVal > 0 && activeProduct.buyPrice > 0 && rateVal < activeProduct.buyPrice) {
+      const lossPerUnit = activeProduct.buyPrice - rateVal;
+      toast.warning(`⚠️ Low Price Alert: "${activeProduct.name}" selling rate (MVR ${rateVal}) is lower than buying cost (MVR ${activeProduct.buyPrice})! Loss: MVR ${lossPerUnit.toFixed(2)}/unit.`);
+    }
+
     const newItem: InvoiceItem = {
       productId,
       godown,
@@ -4926,6 +4931,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
       grandTotal: subTotalVal + taxVal,
       expiryDate: itemExpiryDate || undefined,
       packingType: packingType || undefined,
+      buyPrice: activeProduct?.buyPrice || 0,
     };
 
     setCartItems(prev => [...prev, newItem]);
