@@ -15108,7 +15108,7 @@ export default function App() {
       allowedFeatures: [
         "dashboard", "sales-billing", "sales-quotation", "sales-proforma", "sales-delivery", "sales-credit-note", "sales-debit-note", "sales-pos",
         "purchase-order", "purchase-bill", "inventory-items", "inventory-godowns", "inventory-spoilage", "vouchers-receipt", "vouchers-payment",
-        "vouchers-journal", "vouchers-contra", "credit-recovery", "reports-pnl", "reports-bs", "reports-trial", "reports-ledger", "reports-daybook", "reports-sales-person", "reports-purchase-person",
+        "vouchers-journal", "vouchers-contra", "credit-recovery", "reports-pnl", "reports-bs", "reports-trial", "reports-ledger", "reports-daybook", "reports-sales-person", "reports-purchase-person", "reports-under-cost",
         "master-accounts-groups", "master-accounts-ledger", "master-accounts-customer", "master-accounts-supplier", "master-inventory-categories",
         "master-inventory-unit", "master-inventory-packing", "master-godowns", "master-users"
       ]
