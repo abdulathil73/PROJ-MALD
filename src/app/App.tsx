@@ -8742,7 +8742,7 @@ function ReportsPage({
   onEditEntryFromHistory?: (entryOrRef: any) => void;
   onClearHistory?: () => void;
 }) {
-  const [activeReportTab, setActiveReportTab] = useState<"sales-purchase" | "pl" | "bs" | "tb" | "ledger" | "group" | "payable" | "receivable" | "outstanding" | "closing-stock" | "day-book" | "spoilage" | "sales-person" | "purchase-person">(() => {
+  const [activeReportTab, setActiveReportTab] = useState<"sales-purchase" | "pl" | "bs" | "tb" | "ledger" | "group" | "payable" | "receivable" | "outstanding" | "closing-stock" | "day-book" | "spoilage" | "sales-person" | "purchase-person" | "under-cost">(() => {
     if (currentPage === "reports-pl") return "pl";
     if (currentPage === "reports-bs") return "bs";
     if (currentPage === "reports-tb") return "tb";
@@ -8756,6 +8756,7 @@ function ReportsPage({
     if (currentPage === "reports-spoilage") return "spoilage";
     if (currentPage === "reports-sales-person") return "sales-person";
     if (currentPage === "reports-purchase-person") return "purchase-person";
+    if (currentPage === "reports-under-cost") return "under-cost";
     return "sales-purchase";
   });
 
@@ -8773,6 +8774,7 @@ function ReportsPage({
     else if (currentPage === "reports-spoilage") setActiveReportTab("spoilage");
     else if (currentPage === "reports-sales-person") setActiveReportTab("sales-person");
     else if (currentPage === "reports-purchase-person") setActiveReportTab("purchase-person");
+    else if (currentPage === "reports-under-cost") setActiveReportTab("under-cost");
     else if (currentPage === "reports-sales-purchase" || currentPage === "reports-all" || currentPage === "reports") setActiveReportTab("sales-purchase");
   }, [currentPage]);
 
