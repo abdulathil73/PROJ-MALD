@@ -6112,6 +6112,13 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
       console.error("Failed to load employees for purchase person datalist", err);
     }
   }, []);
+  const availablePurchasePersons = useMemo(() => {
+    const fromUsers = employeesList
+      .filter(u => u.role === "Purchase Person" || u.role === "Manager" || u.role === "Admin" || u.role === "Staff")
+      .map(u => u.employeeName || u.username);
+    const defaults = ["Purchase Department", "Inventory Executive", "Store Keeper", "Admin"];
+    return Array.from(new Set([...fromUsers, ...defaults])).filter(Boolean);
+  }, [employeesList]);
 
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [note, setNote] = useState("");
@@ -6762,9 +6769,9 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-card border border-border p-4 rounded-xl shadow-sm">
 
             {/* Invoice Header Details */}
-            <div className="md:col-span-2 grid grid-cols-2 gap-3">
+            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase tracking-wider">Supplier Vendor</label>
+                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase tracking-wider font-bold">Supplier Vendor</label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <input
@@ -6819,7 +6826,7 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
               </div>
 
               <div>
-                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase tracking-wider">Purchase Date</label>
+                <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase tracking-wider font-bold">Purchase Date</label>
                 <DDMMYYYYDateInput
                   inputRef={dateInputRef}
                   value={date}
@@ -6834,15 +6841,36 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
                 />
               </div>
 
+              <div>
+                <label className="block text-[10px] font-mono text-emerald-600 dark:text-emerald-400 mb-1 uppercase tracking-wider font-bold flex items-center gap-1">
+                  <User size={12} className="text-emerald-500" />
+                  <span>Purchase Person / Agent</span>
+                </label>
+                <div className="relative">
+                  <input
+                    value={purchasePerson}
+                    onChange={e => setPurchasePerson(e.target.value)}
+                    placeholder="Search or enter purchase rep..."
+                    list="purchase-persons-list"
+                    className="w-full px-3 py-1.5 border border-emerald-500/30 rounded-lg bg-input-background text-foreground text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                  <datalist id="purchase-persons-list">
+                    {availablePurchasePersons.map(pp => (
+                      <option key={pp} value={pp} />
+                    ))}
+                  </datalist>
+                </div>
+              </div>
+
               {activeSupplier && (
-                <div className="col-span-2 p-2 bg-secondary/15 rounded-lg border text-[11px] flex justify-between items-center gap-4">
+                <div className="col-span-1 sm:col-span-3 p-2 bg-secondary/15 rounded-lg border text-[11px] flex justify-between items-center gap-4">
                   <div><span className="text-muted-foreground font-mono">Office Address: </span><span className="font-semibold">{activeSupplier.address || "N/A"}</span></div>
                   <div><span className="text-muted-foreground font-mono">GSTIN: </span><span className="font-mono text-primary font-bold">{activeSupplier.gstNo || "N/A"}</span></div>
                 </div>
               )}
 
               {transactionType === "billing" ? (
-                <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="col-span-1 sm:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase tracking-wider font-bold text-violet-600 flex items-center justify-between">
                       <span className="flex items-center gap-1"><Sparkles size={11} /> Pull Purchase Order</span>
@@ -6907,7 +6935,7 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
                 </div>
               ) : null}
 
-              <div className={transactionType === "billing" ? "" : "col-span-2"}>
+              <div className="col-span-1 sm:col-span-3">
                 <label className="block text-[10px] font-mono text-muted-foreground mb-1 uppercase tracking-wider">Acquisition Notes</label>
                 <input
                   ref={noteInputRef}
