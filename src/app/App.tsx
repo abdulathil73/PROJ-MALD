@@ -4666,7 +4666,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
 
   const customerSuggestions = useMemo(() => {
     const list = customers || [];
-    if (!customerSearch.trim()) return list;
+    if (!customerSearch.trim()) return [];
     return list.filter(c => c && c.name && c.name.toLowerCase().includes(customerSearch.toLowerCase()));
   }, [customerSearch, customers]);
 
@@ -5376,7 +5376,7 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                       placeholder="Type customer name..."
                       className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring"
                     />
-                    {showCustomerSuggestions && (
+                    {showCustomerSuggestions && customerSearch.trim().length > 0 && (
                       <div className="absolute left-0 mt-1 min-w-[320px] sm:min-w-[420px] max-w-[500px] max-h-72 overflow-y-auto bg-card border border-border rounded-xl shadow-2xl z-30 font-sans text-xs divide-y divide-border/40">
                         {customerSuggestions.map((c, idx) => (
                           <button
