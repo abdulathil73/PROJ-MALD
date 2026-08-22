@@ -6814,13 +6814,13 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
                         setSelectedSupplierId("");
                         setShowSupplierSuggestions(true);
                       }}
-                      onFocus={() => setShowSupplierSuggestions(true)}
+                      onFocus={() => { if (supplierSearch.trim()) setShowSupplierSuggestions(true); }}
                       onBlur={() => setTimeout(() => setShowSupplierSuggestions(false), 200)}
                       onKeyDown={handleSupplierSearchKeyDown}
                       placeholder="Type supplier name..."
                       className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring"
                     />
-                    {showSupplierSuggestions && (
+                    {showSupplierSuggestions && supplierSearch.trim().length > 0 && (
                       <div className="absolute left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-card border border-border rounded-lg shadow-lg z-30 font-sans text-xs">
                         {supplierSuggestions.map((s, idx) => (
                           <button
