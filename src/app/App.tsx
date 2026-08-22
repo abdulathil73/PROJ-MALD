@@ -4266,6 +4266,22 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
     setViewMode("new");
   }, [transactionType]);
 
+  // Auto-focus customer input and open dropdown suggestions when selecting/navigating to Sales feature
+  useEffect(() => {
+    if (viewMode === "new") {
+      const timer = setTimeout(() => {
+        if (partnerInputRef.current) {
+          partnerInputRef.current.focus();
+          if (!customerSearch.trim()) {
+            setShowCustomerSuggestions(true);
+            toast.info(`👉 Please select or enter Customer Name for ${pageTitle}`);
+          }
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [viewMode, transactionType]);
+
   const [historySearch, setHistorySearch] = useState("");
   const [historyPaymentFilter, setHistoryPaymentFilter] = useState("all");
 
@@ -4857,6 +4873,14 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
   const handleAddItem = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
+    if (!selectedCustomerId && !customerSearch.trim()) {
+      toast.error("⚠️ Please select or enter Customer Name first!");
+      if (partnerInputRef.current) {
+        partnerInputRef.current.focus();
+        setShowCustomerSuggestions(true);
+      }
+      return;
+    }
     if (!productId) {
       toast.error("Please select a product first.");
       productSearchRef.current?.focus();
@@ -6535,6 +6559,14 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
   const handleAddItem = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
+    if (!selectedSupplierId && !supplierSearch.trim()) {
+      toast.error("⚠️ Please select or enter Supplier Name first!");
+      if (partnerInputRef.current) {
+        partnerInputRef.current.focus();
+        setShowSupplierSuggestions(true);
+      }
+      return;
+    }
     if (!productId) {
       toast.error("Please select a product first.");
       productSearchRef.current?.focus();
