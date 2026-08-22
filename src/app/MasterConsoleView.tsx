@@ -126,6 +126,8 @@ export const ALL_WEBSITE_FEATURES: FeaturePermissionOption[] = [
   { id: "reports-trial", name: "Trial Balance", category: "Reports & Financials", icon: "📊", description: "Debit & Credit ledger balances verification" },
   { id: "reports-ledger", name: "Ledger Books & Statements", category: "Reports & Financials", icon: "📖", description: "Detailed customer/supplier ledger accounts" },
   { id: "reports-daybook", name: "Daybook & Cash Flow", category: "Reports & Financials", icon: "📅", description: "Daily transactional cash/bank activity" },
+  { id: "reports-sales-person", name: "Sales Person Performance Report", category: "Reports & Financials", icon: "👤", description: "Sales representative invoice totals, payments & revenue breakdown" },
+  { id: "reports-purchase-person", name: "Purchase Person Procurement Report", category: "Reports & Financials", icon: "🛍️", description: "Purchasing officer GRN bills count, supplier payments & order totals" },
 
   // ── 🏛️ MASTER CONSOLE ─────────────────────
   { id: "master-accounts-groups", name: "Accounting Groups Master", category: "Master Console", icon: "📁", description: "Define parent asset, liability & income groups" },
@@ -2103,8 +2105,8 @@ export default function MasterConsoleView({
                             onClick={() => setUserForm(prev => ({
                               ...prev,
                               role: "Sales Person",
-                              responsibility: "Sales Billing, Quotations, Proforma & Customer Directory",
-                              allowedFeatures: ["sales-billing", "sales-quotation", "sales-proforma", "sales-delivery", "sales-credit-note", "sales-pos", "inventory-items", "master-accounts-customer"]
+                              responsibility: "Sales Billing, Quotations, Proforma, Customer Directory & Sales Person Performance Report",
+                              allowedFeatures: ["sales-billing", "sales-quotation", "sales-proforma", "sales-delivery", "sales-credit-note", "sales-pos", "inventory-items", "master-accounts-customer", "reports-sales-person"]
                             }))}
                             className="px-2 py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30 rounded text-[9px] font-mono font-bold transition-all cursor-pointer"
                           >
@@ -2115,8 +2117,8 @@ export default function MasterConsoleView({
                             onClick={() => setUserForm(prev => ({
                               ...prev,
                               role: "Purchase Person",
-                              responsibility: "Purchase Orders, Inward GRN Bills, Supplier Debit Notes & Supplier Directory",
-                              allowedFeatures: ["purchase-order", "purchase-bill", "inventory-items", "inventory-godowns", "inventory-spoilage", "costing", "master-accounts-supplier"]
+                              responsibility: "Purchase Orders, Inward GRN Bills, Supplier Debit Notes, Supplier Directory & Purchase Person Report",
+                              allowedFeatures: ["purchase-order", "purchase-bill", "inventory-items", "inventory-godowns", "inventory-spoilage", "costing", "master-accounts-supplier", "reports-purchase-person"]
                             }))}
                             className="px-2 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded text-[9px] font-mono font-bold transition-all cursor-pointer"
                           >

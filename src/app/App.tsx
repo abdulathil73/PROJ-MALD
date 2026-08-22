@@ -4301,6 +4301,14 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
     }
   }, []);
 
+  const availableSalesPersons = useMemo(() => {
+    const fromUsers = employeesList
+      .filter(u => u.role === "Sales Person")
+      .map(u => u.employeeName || u.username);
+    if (fromUsers.length > 0) return Array.from(new Set(fromUsers));
+    return employeesList.map(u => u.employeeName || u.username);
+  }, [employeesList]);
+
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [dueDate, setDueDate] = useState(() => {
     const d = new Date();
@@ -5450,10 +5458,8 @@ function SalesPage({ products = [], customers = [], suppliers = [], entries = []
                     className="w-full px-3 py-1.5 border border-emerald-500/30 rounded-lg bg-input-background text-foreground text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                   <datalist id="salesperson-datalist-top">
-                    {employeesList.map(emp => (
-                      <option key={emp.id} value={emp.employeeName || emp.username}>
-                        {emp.employeeName || emp.username} ({emp.role || "Staff"})
-                      </option>
+                    {availableSalesPersons.map(spName => (
+                      <option key={spName} value={spName} />
                     ))}
                   </datalist>
                 </div>
@@ -6138,10 +6144,10 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
   }, []);
   const availablePurchasePersons = useMemo(() => {
     const fromUsers = employeesList
-      .filter(u => u.role === "Purchase Person" || u.role === "Manager" || u.role === "Admin" || u.role === "Staff")
+      .filter(u => u.role === "Purchase Person")
       .map(u => u.employeeName || u.username);
-    const defaults = ["Purchase Department", "Inventory Executive", "Store Keeper", "Admin"];
-    return Array.from(new Set([...fromUsers, ...defaults])).filter(Boolean);
+    if (fromUsers.length > 0) return Array.from(new Set(fromUsers));
+    return employeesList.map(u => u.employeeName || u.username);
   }, [employeesList]);
 
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -8703,7 +8709,7 @@ function ReportsPage({
   onEditEntryFromHistory?: (entryOrRef: any) => void;
   onClearHistory?: () => void;
 }) {
-  const [activeReportTab, setActiveReportTab] = useState<"sales-purchase" | "pl" | "bs" | "tb" | "ledger" | "group" | "payable" | "receivable" | "outstanding" | "closing-stock" | "day-book" | "spoilage">(() => {
+  const [activeReportTab, setActiveReportTab] = useState<"sales-purchase" | "pl" | "bs" | "tb" | "ledger" | "group" | "payable" | "receivable" | "outstanding" | "closing-stock" | "day-book" | "spoilage" | "sales-person" | "purchase-person">(() => {
     if (currentPage === "reports-pl") return "pl";
     if (currentPage === "reports-bs") return "bs";
     if (currentPage === "reports-tb") return "tb";
@@ -8715,6 +8721,8 @@ function ReportsPage({
     if (currentPage === "reports-closing-stock") return "closing-stock";
     if (currentPage === "reports-day-book") return "day-book";
     if (currentPage === "reports-spoilage") return "spoilage";
+    if (currentPage === "reports-sales-person") return "sales-person";
+    if (currentPage === "reports-purchase-person") return "purchase-person";
     return "sales-purchase";
   });
 
@@ -8730,6 +8738,8 @@ function ReportsPage({
     else if (currentPage === "reports-closing-stock") setActiveReportTab("closing-stock");
     else if (currentPage === "reports-day-book") setActiveReportTab("day-book");
     else if (currentPage === "reports-spoilage") setActiveReportTab("spoilage");
+    else if (currentPage === "reports-sales-person") setActiveReportTab("sales-person");
+    else if (currentPage === "reports-purchase-person") setActiveReportTab("purchase-person");
     else if (currentPage === "reports-sales-purchase" || currentPage === "reports-all" || currentPage === "reports") setActiveReportTab("sales-purchase");
   }, [currentPage]);
 
@@ -8752,6 +8762,43 @@ function ReportsPage({
   const [selectedLedger, setSelectedLedger] = useState<string>("HDFC Bank A/C");
   const [payableSearch, setPayableSearch] = useState<string>("");
   const [receivableSearch, setReceivableSearch] = useState<string>("");
+  const [selectedSalesPerson, setSelectedSalesPerson] = useState<string>("all");
+  const [selectedPurchasePerson, setSelectedPurchasePerson] = useState<string>("all");
+  const [salesPersonSearch, setSalesPersonSearch] = useState<string>("");
+  const [purchasePersonSearch, setPurchasePersonSearch] = useState<string>("");
+  const [employeesList, setEmployeesList] = useState<{ id: string; employeeName?: string; username: string; role: string }[]>([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("master_users");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setEmployeesList(parsed);
+      }
+    } catch (err) {
+      console.error("Failed to load employees for ReportsView", err);
+    }
+  }, []);
+
+  const allSalesPersons = useMemo(() => {
+    const fromUsers = employeesList
+      .filter(u => u.role === "Sales Person")
+      .map(u => u.employeeName || u.username);
+    const fromEntries = (entries || [])
+      .map(e => e.salesPerson)
+      .filter((sp): sp is string => Boolean(sp && sp.trim()));
+    return Array.from(new Set([...fromUsers, ...fromEntries])).filter(Boolean);
+  }, [employeesList, entries]);
+
+  const allPurchasePersons = useMemo(() => {
+    const fromUsers = employeesList
+      .filter(u => u.role === "Purchase Person")
+      .map(u => u.employeeName || u.username);
+    const fromEntries = (entries || [])
+      .map(e => e.purchasePerson || e.salesPerson)
+      .filter((pp): pp is string => Boolean(pp && pp.trim()));
+    return Array.from(new Set([...fromUsers, ...fromEntries])).filter(Boolean);
+  }, [employeesList, entries]);
 
   const ledgerDetails = useMemo(() => {
     const options = [
@@ -9680,6 +9727,24 @@ function ReportsPage({
           }`}
         >
           📈 Accounts Receivable
+        </button>
+
+        <button
+          onClick={() => { setActiveReportTab("sales-person"); setPage("reports-sales-person"); }}
+          className={`px-3 py-1.5 text-xs font-mono font-bold rounded-lg transition-colors flex items-center gap-1.5 shrink-0 ${
+            activeReportTab === "sales-person" ? "bg-emerald-600 text-white shadow-sm" : "text-muted-foreground hover:bg-secondary"
+          }`}
+        >
+          👤 Sales Person Report
+        </button>
+
+        <button
+          onClick={() => { setActiveReportTab("purchase-person"); setPage("reports-purchase-person"); }}
+          className={`px-3 py-1.5 text-xs font-mono font-bold rounded-lg transition-colors flex items-center gap-1.5 shrink-0 ${
+            activeReportTab === "purchase-person" ? "bg-amber-600 text-white shadow-sm" : "text-muted-foreground hover:bg-secondary"
+          }`}
+        >
+          🛍️ Purchase Person Report
         </button>
 
         <button
@@ -10784,6 +10849,484 @@ function ReportsPage({
           </div>
         </div>
       )}
+
+      {/* VIEW 5: SALES PERSON PERFORMANCE REPORT */}
+      {activeReportTab === "sales-person" && (() => {
+        const salesInvoices = (entries || []).filter(e => {
+          if (e.type !== "out" || e.subType === "quotation") return false;
+          if (e.date < startDate || e.date > endDate) return false;
+          if (selectedSalesPerson !== "all") {
+            const sp = (e.salesPerson || "").trim().toLowerCase();
+            if (sp !== selectedSalesPerson.toLowerCase()) return false;
+          }
+          if (salesPersonSearch.trim()) {
+            const term = salesPersonSearch.toLowerCase();
+            const invMatch = (e.invoiceNo || "").toLowerCase().includes(term);
+            const partnerMatch = (e.partner || "").toLowerCase().includes(term);
+            const spMatch = (e.salesPerson || "").toLowerCase().includes(term);
+            if (!invMatch && !partnerMatch && !spMatch) return false;
+          }
+          return true;
+        });
+
+        const totalRevenue = salesInvoices.reduce((sum, e) => sum + (e.grandTotal || 0), 0);
+        const invoiceCount = salesInvoices.length;
+        const avgInvoiceVal = invoiceCount > 0 ? totalRevenue / invoiceCount : 0;
+
+        // Grouping by Sales Person
+        const personMap: Record<string, { name: string; count: number; paid: number; credit: number; total: number }> = {};
+        
+        allSalesPersons.forEach(name => {
+          personMap[name.toLowerCase()] = { name, count: 0, paid: 0, credit: 0, total: 0 };
+        });
+        personMap["unassigned"] = { name: "Unassigned / Direct Counter", count: 0, paid: 0, credit: 0, total: 0 };
+
+        salesInvoices.forEach(e => {
+          const spName = (e.salesPerson || "").trim();
+          const key = spName ? spName.toLowerCase() : "unassigned";
+          if (!personMap[key]) {
+            personMap[key] = { name: spName || "Unassigned / Direct Counter", count: 0, paid: 0, credit: 0, total: 0 };
+          }
+          const tot = e.grandTotal || 0;
+          personMap[key].count += 1;
+          personMap[key].total += tot;
+
+          const pays = e.payments && e.payments.length > 0 ? e.payments : [{ method: e.paymentType || "cash", amount: tot }];
+          pays.forEach(p => {
+            if (p.method === "credit") personMap[key].credit += (p.amount || 0);
+            else personMap[key].paid += (p.amount || 0);
+          });
+        });
+
+        const personList = Object.values(personMap)
+          .filter(p => p.count > 0 || (selectedSalesPerson !== "all" && p.name.toLowerCase() === selectedSalesPerson.toLowerCase()) || allSalesPersons.some(sp => sp.toLowerCase() === p.name.toLowerCase()))
+          .sort((a, b) => b.total - a.total);
+
+        const topSalesPerson = personList.length > 0 && personList[0].total > 0 ? personList[0].name : "N/A";
+
+        return (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Filter Bar */}
+            <div className="bg-card border border-border p-4 rounded-xl shadow-sm flex flex-col md:flex-row gap-3 justify-between items-center no-print">
+              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono font-bold text-muted-foreground flex items-center gap-1">
+                    <User size={14} className="text-emerald-500" /> Sales Rep:
+                  </span>
+                  <select
+                    value={selectedSalesPerson}
+                    onChange={e => setSelectedSalesPerson(e.target.value)}
+                    className="px-3 py-1.5 border border-emerald-500/30 rounded-lg bg-input-background text-foreground text-xs font-mono font-bold focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="all">👥 All Sales Persons ({allSalesPersons.length})</option>
+                    {allSalesPersons.map(sp => (
+                      <option key={sp} value={sp}>👤 {sp}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="relative flex-1 min-w-[200px]">
+                  <input
+                    type="text"
+                    placeholder="Search bill no, customer, agent..."
+                    value={salesPersonSearch}
+                    onChange={e => setSalesPersonSearch(e.target.value)}
+                    className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-xs font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-mono font-bold transition-all shadow flex items-center gap-1.5 cursor-pointer"
+                >
+                  🖨️ Print / Export PDF
+                </button>
+              </div>
+            </div>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl">
+                <span className="text-[10px] font-mono text-emerald-600 font-bold uppercase tracking-wider block">Total Sales Revenue</span>
+                <span className="text-xl font-mono font-black text-emerald-600 dark:text-emerald-400 mt-1 block">{fmt(totalRevenue)}</span>
+                <span className="text-[10px] text-muted-foreground font-mono mt-0.5 block">{invoiceCount} invoices processed</span>
+              </div>
+              <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl">
+                <span className="text-[10px] font-mono text-blue-600 font-bold uppercase tracking-wider block">Invoices / Bills Count</span>
+                <span className="text-xl font-mono font-black text-blue-600 dark:text-blue-400 mt-1 block">{invoiceCount}</span>
+                <span className="text-[10px] text-muted-foreground font-mono mt-0.5 block">Issued in selected period</span>
+              </div>
+              <div className="bg-purple-500/10 border border-purple-500/20 p-4 rounded-xl">
+                <span className="text-[10px] font-mono text-purple-600 font-bold uppercase tracking-wider block">Average Invoice Value</span>
+                <span className="text-xl font-mono font-black text-purple-600 dark:text-purple-400 mt-1 block">{fmt(avgInvoiceVal)}</span>
+                <span className="text-[10px] text-muted-foreground font-mono mt-0.5 block">Per sales ticket</span>
+              </div>
+              <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl">
+                <span className="text-[10px] font-mono text-amber-600 font-bold uppercase tracking-wider block">Top Sales Representative</span>
+                <span className="text-base font-mono font-black text-amber-600 dark:text-amber-400 mt-1 truncate block" title={topSalesPerson}>🏆 {topSalesPerson}</span>
+                <span className="text-[10px] text-muted-foreground font-mono mt-0.5 block">Highest revenue generator</span>
+              </div>
+            </div>
+
+            {/* Sales Person Performance Summary Table */}
+            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+              <div className="px-4 py-3 bg-emerald-500/10 border-b border-border flex justify-between items-center">
+                <span className="text-xs font-mono font-bold text-foreground uppercase tracking-widest flex items-center gap-2">
+                  <User size={14} className="text-emerald-500" /> Sales Representative Performance Breakdown ({personList.length} Reps)
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-secondary/20 border-b border-border text-[10px] font-mono text-muted-foreground uppercase">
+                      <th className="px-4 py-3">Sales Person Name</th>
+                      <th className="px-4 py-3 text-center">Bills Count</th>
+                      <th className="px-4 py-3 text-right text-emerald-600">Paid Collections</th>
+                      <th className="px-4 py-3 text-right text-amber-600">Credit Outstanding</th>
+                      <th className="px-4 py-3 text-right">Total Revenue (INR)</th>
+                      <th className="px-4 py-3 text-center">Contribution %</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {personList.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground italic">No sales persons recorded for this period.</td>
+                      </tr>
+                    ) : (
+                      personList.map(p => {
+                        const pct = totalRevenue > 0 ? (p.total / totalRevenue) * 100 : 0;
+                        return (
+                          <tr
+                            key={p.name}
+                            onClick={() => setSelectedSalesPerson(p.name)}
+                            className={`hover:bg-emerald-500/10 transition-colors cursor-pointer ${selectedSalesPerson.toLowerCase() === p.name.toLowerCase() ? "bg-emerald-500/15 font-bold" : ""}`}
+                          >
+                            <td className="px-4 py-3 font-semibold flex items-center gap-2">
+                              <span>👤</span>
+                              <span>{p.name}</span>
+                            </td>
+                            <td className="px-4 py-3 text-center font-mono font-bold">{p.count}</td>
+                            <td className="px-4 py-3 text-right font-mono text-emerald-600 font-bold">{fmt(p.paid)}</td>
+                            <td className="px-4 py-3 text-right font-mono text-amber-600 font-bold">{fmt(p.credit)}</td>
+                            <td className="px-4 py-3 text-right font-mono font-black text-foreground">{fmt(p.total)}</td>
+                            <td className="px-4 py-3 text-center font-mono">
+                              <span className="px-2 py-0.5 rounded bg-secondary font-bold">{pct.toFixed(1)}%</span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Detailed Transaction List */}
+            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+              <div className="px-4 py-3 bg-secondary/20 border-b border-border flex justify-between items-center">
+                <span className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                  <FileText size={14} className="text-primary" /> Itemized Invoices List ({salesInvoices.length} Invoices)
+                </span>
+                {selectedSalesPerson !== "all" && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSalesPerson("all")}
+                    className="text-[10px] font-mono text-emerald-600 underline font-bold"
+                  >
+                    Reset Filter (Show All Reps)
+                  </button>
+                )}
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-secondary/10 border-b border-border text-[10px] font-mono text-muted-foreground uppercase">
+                      <th className="px-4 py-3 text-center">Invoice No</th>
+                      <th className="px-4 py-3">Date</th>
+                      <th className="px-4 py-3">Customer Name</th>
+                      <th className="px-4 py-3">Sales Person</th>
+                      <th className="px-4 py-3 text-center">Payment</th>
+                      <th className="px-4 py-3 text-right">Grand Total (INR)</th>
+                      <th className="px-4 py-3 text-center no-print">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {salesInvoices.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground italic">No sales invoices found for selected criteria.</td>
+                      </tr>
+                    ) : (
+                      salesInvoices.map(e => (
+                        <tr key={e.id} className="hover:bg-secondary/30 transition-colors">
+                          <td className="px-4 py-3 text-center font-mono font-bold text-emerald-600">{e.invoiceNo || `INV-${e.id.slice(0, 6)}`}</td>
+                          <td className="px-4 py-3 font-mono text-muted-foreground">{formatDDMMYYYY(e.date)}</td>
+                          <td className="px-4 py-3 font-semibold text-foreground">{e.partner}</td>
+                          <td className="px-4 py-3 font-mono text-emerald-600 font-bold">{e.salesPerson || "Unassigned"}</td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="font-mono text-[10px] uppercase px-1.5 py-0.5 bg-secondary rounded border border-border">{e.paymentType || "cash"}</span>
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono font-bold text-foreground">{fmt(e.grandTotal || 0)}</td>
+                          <td className="px-4 py-3 text-center no-print">
+                            <button
+                              type="button"
+                              onClick={() => onEditEntryFromHistory && onEditEntryFromHistory(e)}
+                              className="px-2 py-0.5 bg-primary text-primary-foreground rounded text-[10px] font-mono font-bold"
+                            >
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* VIEW 6: PURCHASE PERSON PROCUREMENT REPORT */}
+      {activeReportTab === "purchase-person" && (() => {
+        const purchaseInvoices = (entries || []).filter(e => {
+          if (e.type !== "in" || e.subType === "purchase_order") return false;
+          if (e.date < startDate || e.date > endDate) return false;
+          if (selectedPurchasePerson !== "all") {
+            const pp = (e.purchasePerson || e.salesPerson || "").trim().toLowerCase();
+            if (pp !== selectedPurchasePerson.toLowerCase()) return false;
+          }
+          if (purchasePersonSearch.trim()) {
+            const term = purchasePersonSearch.toLowerCase();
+            const invMatch = (e.invoiceNo || "").toLowerCase().includes(term);
+            const partnerMatch = (e.partner || "").toLowerCase().includes(term);
+            const ppMatch = (e.purchasePerson || e.salesPerson || "").toLowerCase().includes(term);
+            if (!invMatch && !partnerMatch && !ppMatch) return false;
+          }
+          return true;
+        });
+
+        const totalSpend = purchaseInvoices.reduce((sum, e) => sum + (e.grandTotal || 0), 0);
+        const grnCount = purchaseInvoices.length;
+        const avgOrderVal = grnCount > 0 ? totalSpend / grnCount : 0;
+
+        // Grouping by Purchase Person
+        const personMap: Record<string, { name: string; count: number; paid: number; credit: number; total: number }> = {};
+        
+        allPurchasePersons.forEach(name => {
+          personMap[name.toLowerCase()] = { name, count: 0, paid: 0, credit: 0, total: 0 };
+        });
+        personMap["unassigned"] = { name: "Unassigned / Store Officer", count: 0, paid: 0, credit: 0, total: 0 };
+
+        purchaseInvoices.forEach(e => {
+          const ppName = (e.purchasePerson || e.salesPerson || "").trim();
+          const key = ppName ? ppName.toLowerCase() : "unassigned";
+          if (!personMap[key]) {
+            personMap[key] = { name: ppName || "Unassigned / Store Officer", count: 0, paid: 0, credit: 0, total: 0 };
+          }
+          const tot = e.grandTotal || 0;
+          personMap[key].count += 1;
+          personMap[key].total += tot;
+
+          const pays = e.payments && e.payments.length > 0 ? e.payments : [{ method: e.paymentType || "cash", amount: tot }];
+          pays.forEach(p => {
+            if (p.method === "credit") personMap[key].credit += (p.amount || 0);
+            else personMap[key].paid += (p.amount || 0);
+          });
+        });
+
+        const personList = Object.values(personMap)
+          .filter(p => p.count > 0 || (selectedPurchasePerson !== "all" && p.name.toLowerCase() === selectedPurchasePerson.toLowerCase()) || allPurchasePersons.some(pp => pp.toLowerCase() === p.name.toLowerCase()))
+          .sort((a, b) => b.total - a.total);
+
+        const topProcurementOfficer = personList.length > 0 && personList[0].total > 0 ? personList[0].name : "N/A";
+
+        return (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Filter Bar */}
+            <div className="bg-card border border-border p-4 rounded-xl shadow-sm flex flex-col md:flex-row gap-3 justify-between items-center no-print">
+              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono font-bold text-muted-foreground flex items-center gap-1">
+                    <User size={14} className="text-amber-500" /> Purchase Officer:
+                  </span>
+                  <select
+                    value={selectedPurchasePerson}
+                    onChange={e => setSelectedPurchasePerson(e.target.value)}
+                    className="px-3 py-1.5 border border-amber-500/30 rounded-lg bg-input-background text-foreground text-xs font-mono font-bold focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="all">🛍️ All Purchase Persons ({allPurchasePersons.length})</option>
+                    {allPurchasePersons.map(pp => (
+                      <option key={pp} value={pp}>🛍️ {pp}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="relative flex-1 min-w-[200px]">
+                  <input
+                    type="text"
+                    placeholder="Search GRN bill, supplier, officer..."
+                    value={purchasePersonSearch}
+                    onChange={e => setPurchasePersonSearch(e.target.value)}
+                    className="w-full px-3 py-1.5 border border-border rounded-lg bg-input-background text-xs font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-mono font-bold transition-all shadow flex items-center gap-1.5 cursor-pointer"
+                >
+                  🖨️ Print / Export PDF
+                </button>
+              </div>
+            </div>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl">
+                <span className="text-[10px] font-mono text-amber-600 font-bold uppercase tracking-wider block">Total Procurement Volume</span>
+                <span className="text-xl font-mono font-black text-amber-600 dark:text-amber-400 mt-1 block">{fmt(totalSpend)}</span>
+                <span className="text-[10px] text-muted-foreground font-mono mt-0.5 block">{grnCount} inward GRN bills processed</span>
+              </div>
+              <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl">
+                <span className="text-[10px] font-mono text-blue-600 font-bold uppercase tracking-wider block">Inward GRN Bills Count</span>
+                <span className="text-xl font-mono font-black text-blue-600 dark:text-blue-400 mt-1 block">{grnCount}</span>
+                <span className="text-[10px] text-muted-foreground font-mono mt-0.5 block">Recorded in selected period</span>
+              </div>
+              <div className="bg-purple-500/10 border border-purple-500/20 p-4 rounded-xl">
+                <span className="text-[10px] font-mono text-purple-600 font-bold uppercase tracking-wider block">Average Order Value</span>
+                <span className="text-xl font-mono font-black text-purple-600 dark:text-purple-400 mt-1 block">{fmt(avgOrderVal)}</span>
+                <span className="text-[10px] text-muted-foreground font-mono mt-0.5 block">Per GRN procurement ticket</span>
+              </div>
+              <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl">
+                <span className="text-[10px] font-mono text-emerald-600 font-bold uppercase tracking-wider block">Top Procurement Officer</span>
+                <span className="text-base font-mono font-black text-emerald-600 dark:text-emerald-400 mt-1 truncate block" title={topProcurementOfficer}>🎖️ {topProcurementOfficer}</span>
+                <span className="text-[10px] text-muted-foreground font-mono mt-0.5 block">Highest acquisition manager</span>
+              </div>
+            </div>
+
+            {/* Purchase Person Breakdown Table */}
+            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+              <div className="px-4 py-3 bg-amber-500/10 border-b border-border flex justify-between items-center">
+                <span className="text-xs font-mono font-bold text-foreground uppercase tracking-widest flex items-center gap-2">
+                  <User size={14} className="text-amber-500" /> Procurement Officer Performance Breakdown ({personList.length} Officers)
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-secondary/20 border-b border-border text-[10px] font-mono text-muted-foreground uppercase">
+                      <th className="px-4 py-3">Purchase Officer Name</th>
+                      <th className="px-4 py-3 text-center">GRN Bills</th>
+                      <th className="px-4 py-3 text-right text-emerald-600">Paid to Vendors</th>
+                      <th className="px-4 py-3 text-right text-red-600">Supplier Credit</th>
+                      <th className="px-4 py-3 text-right">Total Procurement Value (INR)</th>
+                      <th className="px-4 py-3 text-center">Share %</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {personList.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground italic">No purchase officers recorded for this period.</td>
+                      </tr>
+                    ) : (
+                      personList.map(p => {
+                        const pct = totalSpend > 0 ? (p.total / totalSpend) * 100 : 0;
+                        return (
+                          <tr
+                            key={p.name}
+                            onClick={() => setSelectedPurchasePerson(p.name)}
+                            className={`hover:bg-amber-500/10 transition-colors cursor-pointer ${selectedPurchasePerson.toLowerCase() === p.name.toLowerCase() ? "bg-amber-500/15 font-bold" : ""}`}
+                          >
+                            <td className="px-4 py-3 font-semibold flex items-center gap-2">
+                              <span>🛍️</span>
+                              <span>{p.name}</span>
+                            </td>
+                            <td className="px-4 py-3 text-center font-mono font-bold">{p.count}</td>
+                            <td className="px-4 py-3 text-right font-mono text-emerald-600 font-bold">{fmt(p.paid)}</td>
+                            <td className="px-4 py-3 text-right font-mono text-red-600 font-bold">{fmt(p.credit)}</td>
+                            <td className="px-4 py-3 text-right font-mono font-black text-foreground">{fmt(p.total)}</td>
+                            <td className="px-4 py-3 text-center font-mono">
+                              <span className="px-2 py-0.5 rounded bg-secondary font-bold">{pct.toFixed(1)}%</span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Detailed Transaction List */}
+            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+              <div className="px-4 py-3 bg-secondary/20 border-b border-border flex justify-between items-center">
+                <span className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                  <FileText size={14} className="text-primary" /> Itemized Inward GRN Bills List ({purchaseInvoices.length} Bills)
+                </span>
+                {selectedPurchasePerson !== "all" && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPurchasePerson("all")}
+                    className="text-[10px] font-mono text-amber-600 underline font-bold"
+                  >
+                    Reset Filter (Show All Officers)
+                  </button>
+                )}
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-secondary/10 border-b border-border text-[10px] font-mono text-muted-foreground uppercase">
+                      <th className="px-4 py-3 text-center">GRN Bill No</th>
+                      <th className="px-4 py-3">Date</th>
+                      <th className="px-4 py-3">Supplier Name</th>
+                      <th className="px-4 py-3">Purchase Officer</th>
+                      <th className="px-4 py-3 text-center">Payment</th>
+                      <th className="px-4 py-3 text-right">Grand Total (INR)</th>
+                      <th className="px-4 py-3 text-center no-print">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {purchaseInvoices.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground italic">No purchase bills found for selected criteria.</td>
+                      </tr>
+                    ) : (
+                      purchaseInvoices.map(e => (
+                        <tr key={e.id} className="hover:bg-secondary/30 transition-colors">
+                          <td className="px-4 py-3 text-center font-mono font-bold text-amber-600">{e.invoiceNo || `GRN-${e.id.slice(0, 6)}`}</td>
+                          <td className="px-4 py-3 font-mono text-muted-foreground">{formatDDMMYYYY(e.date)}</td>
+                          <td className="px-4 py-3 font-semibold text-foreground">{e.partner}</td>
+                          <td className="px-4 py-3 font-mono text-amber-600 font-bold">{e.purchasePerson || e.salesPerson || "Unassigned"}</td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="font-mono text-[10px] uppercase px-1.5 py-0.5 bg-secondary rounded border border-border">{e.paymentType || "cash"}</span>
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono font-bold text-foreground">{fmt(e.grandTotal || 0)}</td>
+                          <td className="px-4 py-3 text-center no-print">
+                            <button
+                              type="button"
+                              onClick={() => onEditEntryFromHistory && onEditEntryFromHistory(e)}
+                              className="px-2 py-0.5 bg-primary text-primary-foreground rounded text-[10px] font-mono font-bold"
+                            >
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -14532,7 +15075,7 @@ export default function App() {
       allowedFeatures: [
         "dashboard", "sales-billing", "sales-quotation", "sales-proforma", "sales-delivery", "sales-credit-note", "sales-debit-note", "sales-pos",
         "purchase-order", "purchase-bill", "inventory-items", "inventory-godowns", "inventory-spoilage", "vouchers-receipt", "vouchers-payment",
-        "vouchers-journal", "vouchers-contra", "credit-recovery", "reports-pnl", "reports-bs", "reports-trial", "reports-ledger", "reports-daybook",
+        "vouchers-journal", "vouchers-contra", "credit-recovery", "reports-pnl", "reports-bs", "reports-trial", "reports-ledger", "reports-daybook", "reports-sales-person", "reports-purchase-person",
         "master-accounts-groups", "master-accounts-ledger", "master-accounts-customer", "master-accounts-supplier", "master-inventory-categories",
         "master-inventory-unit", "master-inventory-packing", "master-godowns", "master-users"
       ]
@@ -17560,7 +18103,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
             if (item.id === "sales" && !hasAnyFeature("sales-billing", "sales-quotation", "sales-delivery", "sales-credit-note", "sales-debit-note", "sales-pos", "sales-proforma")) return null;
             if (item.id === "purchase" && !hasAnyFeature("purchase-bill", "purchase-order", "inventory-spoilage")) return null;
             if (item.id === "vouchers" && !hasAnyFeature("vouchers-receipt", "vouchers-payment", "vouchers-journal", "vouchers-contra")) return null;
-            if (item.id === "reports" && !hasAnyFeature("reports-pnl", "reports-bs", "reports-trial", "reports-ledger", "reports-daybook")) return null;
+            if (item.id === "reports" && !hasAnyFeature("reports-pnl", "reports-bs", "reports-trial", "reports-ledger", "reports-daybook", "reports-sales-person", "reports-purchase-person")) return null;
             if (item.id === "master-console" && !hasAnyFeature("master-accounts-groups", "master-accounts-ledger", "master-accounts-customer", "master-accounts-supplier", "master-inventory-categories", "master-inventory-unit", "master-inventory-packing", "master-godowns", "master-users")) return null;
 
             const itemElement = (
@@ -18088,6 +18631,24 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
                         >
                           <span>Day Book</span>
                           <span className="text-[9px] text-pink-500 font-bold">DB</span>
+                        </button>
+                        <button
+                          onClick={() => { setPage("reports-sales-person"); setSidebarOpen(false); }}
+                          className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
+                            page === "reports-sales-person" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
+                          }`}
+                        >
+                          <span>Sales Person Report</span>
+                          <span className="text-[9px] text-emerald-500 font-bold">SP</span>
+                        </button>
+                        <button
+                          onClick={() => { setPage("reports-purchase-person"); setSidebarOpen(false); }}
+                          className={`w-full text-left px-2 py-1 rounded text-[10px] font-mono transition-all flex items-center justify-between ${
+                            page === "reports-purchase-person" ? "bg-primary/20 text-foreground font-bold" : "text-muted-foreground hover:bg-sidebar-accent/30"
+                          }`}
+                        >
+                          <span>Purchase Person Report</span>
+                          <span className="text-[9px] text-amber-500 font-bold">PP</span>
                         </button>
                         <button
                           onClick={() => { setPage("reports-sales-purchase"); setSidebarOpen(false); }}
