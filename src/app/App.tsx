@@ -6328,6 +6328,16 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
   const [showGodownSuggestions, setShowGodownSuggestions] = useState(false);
   const [godownSuggestionIdx, setGodownSuggestionIdx] = useState(0);
 
+  // Auto-focus supplier input when selecting/navigating to Purchase feature
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (partnerInputRef.current) {
+        partnerInputRef.current.focus();
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [transactionType]);
+
   // Auto-scroll active suggestion into view
   useEffect(() => {
     const activeEl = document.querySelector("[data-active='true']");
@@ -6740,6 +6750,7 @@ function PurchasePage({ products = [], suppliers = [], customers = [], entries =
       setSupplierSearch("");
       setSplitPayments({ cash: 0, card: 0, transfer: 0, credit: 0 });
       setIsSplitPayment(false);
+      partnerInputRef.current?.focus();
     }
   }
 
